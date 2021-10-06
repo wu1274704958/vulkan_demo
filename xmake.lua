@@ -1,11 +1,13 @@
 add_rules("mode.debug", "mode.release")
-add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw")
+add_repositories("local-repo deps")
+add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
+
 
 target("vulkan_demo")
     set_languages("c99", "c++17")   
     set_kind("binary")
     add_files("src/*.cpp")
-    add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw")
+    add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
     after_build(function()
         os.cp("$(curdir)/res","$(buildir)/res")
         print("after_build $(buildir) $(curdir)")
