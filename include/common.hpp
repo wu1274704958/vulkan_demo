@@ -74,4 +74,15 @@ namespace vkd{
 		}
 		return true;
 	}
+
+	template<typename T,T F, T ...N>
+	bool eq_enum(T n)
+	{
+		if constexpr(sizeof...(N) == 0)
+		{ 
+			return n == F;
+		}else{
+			return n == F || eq_enum<T,N...>(n);
+		}
+	}
 }

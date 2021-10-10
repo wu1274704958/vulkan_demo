@@ -59,6 +59,7 @@ namespace vkd {
 			}
 			onFillDeviceNeedExtensions(DeviceNeedExtensions);
 			initWindow(w,h);
+			onCreate();
 			createInstance();
 			setUpDebugCallback();
 			createSurface();
@@ -77,6 +78,8 @@ namespace vkd {
 
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+			onCreateWindow();
 
 			window = glfwCreateWindow(w, h, sample_name, nullptr, nullptr);
 
@@ -328,7 +331,25 @@ namespace vkd {
 			return imageCount;
 		}
 
+		void createRenderPass()
+		{
+			auto depthImageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+			if(eq_enum<vk::Format,vk::Format::eD16Unorm,vk::Format::eD32Sfloat>(depthFormat))
+				depthImageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+			std::vector<vk::AttachmentDescription> attachment = {
+				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),surfaceFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
+				vk::AttachmentLoadOp::eDontCare,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,vk::ImageLayout::ePresentSrcKHR),
+
+				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),depthFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
+				vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthImageLayout)
+			};
+
+			//vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(),attachment,)
+		}
+
 		virtual void onInit() = 0;
+		virtual void onCreate() = 0;
+		virtual void onCreateWindow() = 0;
 		virtual void onWindowResize(uint32_t w, uint32_t h)
 		{
 			width = w;height =  h;
@@ -366,6 +387,7 @@ namespace vkd {
 		vk::Queue graphicsQueue,presentQueue;
 		vk::SwapchainKHR swapchain;
 		vk::Format surfaceFormat;
+		vk::Format depthFormat = vk::Format::eD24UnormS8Uint;
 		vk::Extent2D surfaceExtent;
 		std::vector<vk::Image> swapchainImages;
 		std::vector<vk::ImageView> swapChainImageViews;
