@@ -7,6 +7,10 @@
 #include <json.hpp>
 namespace vkd {
 
+	VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback);
+
+	void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT pCallback, const VkAllocationCallbacks* pAllocator);
+
 	struct QueueFamilyIndices {
 		int graphicsFamily = -1;
 		int presentFamily = -1;
@@ -46,7 +50,7 @@ namespace vkd {
 		SampleRender(SampleRender&&) = delete;
 		~SampleRender()
 		{
-			
+			DestroyDebugReportCallbackEXT(instance,debugReport,nullptr);	
 		}
 		
 		void init(int w,int h)
@@ -139,7 +143,7 @@ namespace vkd {
 			vk::InstanceCreateInfo info(vk::InstanceCreateFlags(),&app_info,enabledLayerNames,enabledExtensionNames); 
 
 			instance = vk::createInstance(info);
-			if (instance)
+			if (!instance)
 			{
 				throw std::runtime_error("Create instance failed!");
 			}
@@ -148,11 +152,16 @@ namespace vkd {
 		{
 			if (!enableValidationLayers)
 				return;
-			vk::DebugReportCallbackCreateInfoEXT info(vk::DebugReportFlagsEXT(), DebugReportCallbackEXT,(void*)this);
-			if (instance.createDebugReportCallbackEXT(info))
+
+			VkDebugReportCallbackCreateInfoEXT callback_info = {};
+			callback_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+			callback_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+			callback_info.pfnCallback = &SampleRender::DebugReportCallbackEXT;
+			if (CreateDebugReportCallbackEXT(instance, &callback_info, nullptr, &debugReport) != VK_SUCCESS)
 			{
 				throw std::runtime_error("create Debug Report Callback failed!");
-			}	
+			}
+
 		}
 		void createSurface()
 		{
@@ -377,6 +386,9 @@ namespace vkd {
 			auto imgAspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 			if (eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
 				imgAspect = vk::ImageAspectFlagBits::eDepth;
+			auto req = device.getImageMemoryRequirements(depthAttachment.image);
+			
+			vk::MemoryAllocateInfo allocInfo(req.size,);
 			vk::ImageViewCreateInfo viewInfo({},depthAttachment.image,vk::ImageViewType::e2D,depthFormat,{},vk::ImageSubresourceRange(imgAspect,0,1,0,1));
 			depthAttachment.view = device.createImageView(viewInfo);
 		}
@@ -438,7 +450,7 @@ namespace vkd {
 
 		virtual void onInit() = 0;
 		virtual void onCreate() = 0;
-		virtual void onCreateWindow() = 0;
+		virtual void onCreateWindow(){};
 		virtual void onWindowResize(uint32_t w, uint32_t h)
 		{
 			width = w;height =  h;
@@ -458,7 +470,9 @@ namespace vkd {
 			size_t                                      location,
 			int32_t                                     messageCode,
 			const char* pLayerPrefix,
-			const char* pMessage) = 0;
+			const char* pMessage) {
+			return false;
+		}
 		virtual vk::PhysicalDevice onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices)
 		{
 			return std::get<0>(devices[0]);
@@ -493,6 +507,7 @@ namespace vkd {
 		uint32_t width,height;
 		std::optional<std::vector<const char*>> ValidationLayers;
 		std::vector<const char*> DeviceNeedExtensions;
+		VkDebugReportCallbackEXT debugReport;
 		
 		QueueFamilyIndices queueFamilyIndices;
 
