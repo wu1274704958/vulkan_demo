@@ -67,6 +67,12 @@ namespace vkd {
 			createLogicalDevice(queueFamilyIndices);
 			createSwapChain();
 			createSwapchainImageViews();
+			createDepthStencilAttachment();
+			createRenderPass();
+			createFramebuffers();
+			createCommandPool();
+			createCommandBuffers();
+			createSemaphores();
 			onInit();
 		}
 	protected:
@@ -251,19 +257,22 @@ namespace vkd {
 			presentQueue = device.getQueue(indices.presentFamily, 0);
 		}
 
-		void createSwapChain()
+		void createSwapChain(bool recreate = false)
 		{
 			auto format = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(surface));
 			auto presentMode = chooseSwapPresent(physicalDevice.getSurfacePresentModesKHR(surface));
 			auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
-			auto extend = chooseSwapExtent(surfaceCapabilities);
+			auto extent = chooseSwapExtent(surfaceCapabilities);
 			const uint32_t temp [] = {queueFamilyIndices.graphicsFamily,queueFamilyIndices.presentFamily};
 			vk::ArrayProxyNoTemporaries<const uint32_t> familyIndicesArr = queueFamilyIndices.isSame() ? vk::ArrayProxyNoTemporaries(temp[0]) :
 				vk::ArrayProxyNoTemporaries(2,temp);
+			vk::SwapchainKHR oldSwapchain = {};
+			if(recreate && swapchain)
+				oldSwapchain = swapchain;
 			vk::SwapchainCreateInfoKHR info(vk::SwapchainCreateFlagsKHR(),surface,onSetSwapChainMinImageCount(surfaceCapabilities),format.format,
-				format.colorSpace,extend,1,vk::ImageUsageFlags(),
+				format.colorSpace, extent,1,vk::ImageUsageFlags(),
 				queueFamilyIndices.isSame() ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,familyIndicesArr,surfaceCapabilities.currentTransform,
-				vk::CompositeAlphaFlagBitsKHR::eOpaque,presentMode,1U
+				vk::CompositeAlphaFlagBitsKHR::eOpaque,presentMode,1U,oldSwapchain
 			);
 			
 			swapchain = device.createSwapchainKHR(info);
@@ -271,10 +280,11 @@ namespace vkd {
 
 			swapchainImages = device.getSwapchainImagesKHR(swapchain);
 			surfaceFormat = format.format;
-			surfaceExtent = extend;
+			surfaceExtent = extent;
 		}
 		void createSwapchainImageViews()
 		{
+			swapChainImageViews.clear();
 			swapChainImageViews.resize(swapchainImages.size());
 
 			for (int i = 0; i < swapChainImageViews.size(); ++i)
@@ -331,7 +341,47 @@ namespace vkd {
 			return imageCount;
 		}
 
-		void createRenderPass()
+		template<typename FT = vk::Format,typename TI = vk::ImageTiling,typename FE = vk::FormatFeatureFlagBits,TI Ti,FE Fe,FT FFt,FT...Ft>
+		FT findSupportedFormat() {
+			
+			vk::FormatProperties prop = physicalDevice.getFormatProperties(FFt);
+
+			if (Ti == vk::ImageTiling::eLinear && (prop.linearTilingFeatures & Fe) == Fe) {
+				return FFt;
+			}
+			else if (Ti == vk::ImageTiling::eOptimal && (prop.optimalTilingFeatures & Fe) == Fe) {
+				return FFt;
+			}
+
+			if constexpr (sizeof...(Ft) > 0)
+			{
+				return findSupportedFormat<FT,TI,FE,Ti,Fe,Ft...>();
+			}
+			else {
+				throw std::runtime_error("failed to find supported format!");
+			}
+		}
+
+		virtual vk::Format onChooseDepthStencilFormat()
+		{
+			return findSupportedFormat<vk::Format,vk::ImageTiling,vk::FormatFeatureFlagBits,vk::ImageTiling::eOptimal,vk::FormatFeatureFlagBits::eDepthStencilAttachment,
+				vk::Format::eD24UnormS8Uint, vk::Format::eD16UnormS8Uint, vk::Format::eD16Unorm>();
+		}
+
+		void createDepthStencilAttachment()
+		{
+			depthFormat = onChooseDepthStencilFormat();
+			vk::ImageCreateInfo imgInfo({},vk::ImageType::e2D,depthFormat,vk::Extent3D(surfaceExtent.width,surfaceExtent.height,1),1,1,vk::SampleCountFlagBits::e1,vk::ImageTiling::eOptimal,
+				vk::ImageUsageFlagBits::eDepthStencilAttachment,vk::SharingMode::eExclusive,{});
+			depthAttachment.image = device.createImage(imgInfo);
+			auto imgAspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+			if (eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
+				imgAspect = vk::ImageAspectFlagBits::eDepth;
+			vk::ImageViewCreateInfo viewInfo({},depthAttachment.image,vk::ImageViewType::e2D,depthFormat,{},vk::ImageSubresourceRange(imgAspect,0,1,0,1));
+			depthAttachment.view = device.createImageView(viewInfo);
+		}
+
+		virtual void createRenderPass()
 		{
 			auto depthImageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 			if(eq_enum<vk::Format,vk::Format::eD16Unorm,vk::Format::eD32Sfloat>(depthFormat))
@@ -339,12 +389,51 @@ namespace vkd {
 			std::vector<vk::AttachmentDescription> attachment = {
 				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),surfaceFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 				vk::AttachmentLoadOp::eDontCare,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,vk::ImageLayout::ePresentSrcKHR),
-
 				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),depthFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 				vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthImageLayout)
 			};
+			 
+			vk::AttachmentReference attachmentRef(0,vk::ImageLayout::eColorAttachmentOptimal);
+			vk::AttachmentReference depthAttachmentRef(1,depthImageLayout);
 
-			//vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(),attachment,)
+
+			std::vector<vk::SubpassDescription> subpassDesc = {
+				vk::SubpassDescription({},vk::PipelineBindPoint::eGraphics,{}, &attachmentRef,{}, &depthAttachmentRef)
+			};
+
+			vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(),attachment,subpassDesc);
+			renderPass = device.createRenderPass(info);
+		}
+
+		void createFramebuffers()
+		{
+			std::vector<vk::ImageView> attachments = { swapChainImageViews[0],depthAttachment.view };
+			vk::FramebufferCreateInfo info({},renderPass,attachments,surfaceExtent.width,surfaceExtent.height,1);
+			framebuffers.clear();
+			framebuffers.reserve(swapChainImageViews.size());
+			for (int i = 0; i < swapChainImageViews.size(); ++i)
+			{
+				attachments[0] = swapChainImageViews[i];
+				framebuffers.push_back(device.createFramebuffer(info));
+			}
+		}
+
+		void createCommandPool()
+		{
+			vk::CommandPoolCreateInfo info({},queueFamilyIndices.graphicsFamily);
+			commandPool = device.createCommandPool(info);
+		}
+
+		void createCommandBuffers()
+		{
+			vk::CommandBufferAllocateInfo info(commandPool,vk::CommandBufferLevel::ePrimary,framebuffers.size());
+			 commandbuffers = device.allocateCommandBuffers(info);
+		}
+		void createSemaphores()
+		{
+			vk::SemaphoreCreateInfo info;
+			acquired_image_ready = device.createSemaphore(info);
+			render_complete = device.createSemaphore(info);
 		}
 
 		virtual void onInit() = 0;
@@ -389,11 +478,22 @@ namespace vkd {
 		vk::Format surfaceFormat;
 		vk::Format depthFormat = vk::Format::eD24UnormS8Uint;
 		vk::Extent2D surfaceExtent;
+		vk::RenderPass renderPass;
+		vk::Semaphore render_complete, acquired_image_ready;
+		struct 
+		{
+			vk::Image image;
+			vk::ImageView view;
+		} depthAttachment;
 		std::vector<vk::Image> swapchainImages;
 		std::vector<vk::ImageView> swapChainImageViews;
+		std::vector<vk::Framebuffer> framebuffers;
+		std::vector<vk::CommandBuffer> commandbuffers;
+		vk::CommandPool commandPool;
 		uint32_t width,height;
 		std::optional<std::vector<const char*>> ValidationLayers;
 		std::vector<const char*> DeviceNeedExtensions;
+		
 		QueueFamilyIndices queueFamilyIndices;
 
 		static void WindowReSize(GLFWwindow* window, int w, int h);
