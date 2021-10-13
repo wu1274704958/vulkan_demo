@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <optional>
 
 
 namespace vkd{
@@ -85,4 +86,59 @@ namespace vkd{
 			return n == F || eq_enum<T,N...>(n);
 		}
 	}
+
+	template<typename T, typename ...Args>
+	struct VarCache;
+
+	template<typename T>
+	struct VarCache<T,std::tuple<>>
+	{
+	public:
+		using IN = std::tuple<>;
+		VarCache() {}
+		VarCache(std::function<T()> f) {
+			constructor = f;
+		}
+		operator std::shared_ptr<T>()
+		{
+			if (!ptr)
+			{
+				ptr = std::shared_ptr(new T(constructor()));
+			}
+			return ptr;
+		}
+		void clear()
+		{
+			ptr.reset();
+		}
+	private:
+		std::function<T()> constructor;
+		std::shared_ptr<T> ptr;
+	};
+
+	template<typename T,typename ...Args>
+	struct VarCache
+	{	
+	public:
+		using IN = std::tuple<Args&...>;
+		VarCache(){}
+		VarCache(std::function<T(IN&)> f,Args&...args) : constructor(f),in(std::forward<Args&>(args)...) {
+		}
+		operator std::shared_ptr<T> ()
+		{
+			if (!ptr && in.has_value())
+			{
+				ptr = std::shared_ptr<T>(new T(constructor(in.value())));
+			}
+			return ptr;
+		}
+		void clear()
+		{
+			ptr.reset();
+		}
+	private:
+		std::function<T(IN&)> constructor;
+		std::shared_ptr<T> ptr;
+		std::optional<IN> in;
+	};
 }

@@ -13,5 +13,5 @@ void main()
 {
 	auto quad = new Quad();
 	quad->init(800,600);
-	
+	printf("Ok!!!");
 }

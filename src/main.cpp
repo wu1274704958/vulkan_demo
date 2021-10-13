@@ -158,10 +158,11 @@ private:
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
-		createDescriptorSetLayout();
-		createGraphicsPipeline();
 		createFrameBuffers();
 		createCommandPool();
+		createSemaphores();
+		createDescriptorSetLayout();
+		createGraphicsPipeline();
 		createTextureImage();
 		createVertexBuffer();
 		createIndexBuffer();
@@ -169,7 +170,6 @@ private:
 		createDescriptorPool();
 		createDescriptorSet();
 		createCommandBuffers();
-		createSemaphores();
 	}
 	void drawFrame() {
 		uint32_t imageIndex;

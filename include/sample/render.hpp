@@ -41,8 +41,15 @@ namespace vkd {
 
 	class SampleRender {
 	public:
-		SampleRender(){}
-		SampleRender(bool enableValidationLayers,const char* sample_name) {
+		SampleRender() 
+			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args){
+				return std::get<0>(args).getMemoryProperties();
+			}),physicalDevice) {}
+		SampleRender(bool enableValidationLayers,const char* sample_name) 
+			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args) {
+				return std::get<0>(args).getMemoryProperties();
+			}), physicalDevice)
+		{
 			this->enableValidationLayers = enableValidationLayers;
 			this->sample_name = sample_name;
 		}
@@ -377,6 +384,18 @@ namespace vkd {
 				vk::Format::eD24UnormS8Uint, vk::Format::eD16UnormS8Uint, vk::Format::eD16Unorm>();
 		}
 
+		uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlagBits properties) {
+			std::shared_ptr<vk::PhysicalDeviceMemoryProperties> memProperties = memPropCache;
+			for (uint32_t i = 0; i < memProperties->memoryTypeCount; i++)
+			{
+				if (typeFilter & (1 << i) && ((memProperties->memoryTypes[i].propertyFlags & properties) == properties))
+				{
+					return i;
+				}
+			}
+			throw std::runtime_error("failed to find memory type!");
+		}
+
 		void createDepthStencilAttachment()
 		{
 			depthFormat = onChooseDepthStencilFormat();
@@ -388,7 +407,11 @@ namespace vkd {
 				imgAspect = vk::ImageAspectFlagBits::eDepth;
 			auto req = device.getImageMemoryRequirements(depthAttachment.image);
 			
-			vk::MemoryAllocateInfo allocInfo(req.size,);
+			vk::MemoryAllocateInfo allocInfo(req.size,findMemoryType(req.memoryTypeBits,vk::MemoryPropertyFlagBits::eDeviceLocal));
+			depthAttachment.mem = device.allocateMemory(allocInfo);
+
+			device.bindImageMemory(depthAttachment.image,depthAttachment.mem,0);
+
 			vk::ImageViewCreateInfo viewInfo({},depthAttachment.image,vk::ImageViewType::e2D,depthFormat,{},vk::ImageSubresourceRange(imgAspect,0,1,0,1));
 			depthAttachment.view = device.createImageView(viewInfo);
 		}
@@ -498,6 +521,7 @@ namespace vkd {
 		{
 			vk::Image image;
 			vk::ImageView view;
+			vk::DeviceMemory mem;
 		} depthAttachment;
 		std::vector<vk::Image> swapchainImages;
 		std::vector<vk::ImageView> swapChainImageViews;
@@ -510,6 +534,8 @@ namespace vkd {
 		VkDebugReportCallbackEXT debugReport;
 		
 		QueueFamilyIndices queueFamilyIndices;
+
+		VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
 
 		static void WindowReSize(GLFWwindow* window, int w, int h);
 		static VkBool32 DebugReportCallbackEXT(
