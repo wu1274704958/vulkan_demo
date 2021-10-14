@@ -223,14 +223,15 @@ private:
 			throw std::runtime_error("failed to present swap chain image!");
 		}
 
-		vkQueueWaitIdle(presentQueue);
+		//vkQueueWaitIdle(presentQueue);
 	}
 	void mainLoop() {
 		while (!glfwWindowShouldClose(window))
 		{
 			glfwPollEvents();
 			updateUniformBuffer();
-			drawFrame();
+			if(!isMinSized)			
+				drawFrame();
 		}
 		vkDeviceWaitIdle(device);
 	}
@@ -1284,6 +1285,7 @@ private:
 	VkDescriptorSet descriptorSet;
 	VkImage textureImag;
 	VkDeviceMemory textureImageMem;
+	bool isMinSized = false;
 public:
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userData) {
 		std::cerr << "validation layer: " << msg << std::endl;
@@ -1292,11 +1294,15 @@ public:
 	}
 	static void WindowReSize(GLFWwindow* window, int w, int h)
 	{
+		Demo* d = reinterpret_cast<Demo*>(glfwGetWindowUserPointer(window));
 		if (w == 0 || h == 0)
+		{
+			d->isMinSized = true;
 			return;
+		}
+		d->isMinSized = false;
 		WIDTH = w;
 		HEIGHT = h;
-		Demo* d = reinterpret_cast<Demo*>(glfwGetWindowUserPointer(window));
 		d->recreateSwapChain();
 	}
 };
