@@ -44,12 +44,18 @@ namespace vkd {
 		SampleRender() 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args){
 				return std::get<0>(args).getMemoryProperties();
-			}),physicalDevice) {}
+			}),physicalDevice),
+			clearColorValue(clearColorArr) {
+				clearColorValue.depthStencil.depth = 1.0f;
+			}
 		SampleRender(bool enableValidationLayers,const char* sample_name) 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args) {
 				return std::get<0>(args).getMemoryProperties();
-			}), physicalDevice)
+			}), physicalDevice),
+			clearColorValue(clearColorArr)
 		{
+			clearColorValue.depthStencil.depth = 1.0f;
+
 			this->enableValidationLayers = enableValidationLayers;
 			this->sample_name = sample_name;
 		}
@@ -85,6 +91,16 @@ namespace vkd {
 			createCommandBuffers();
 			createSemaphores();
 			onInit();
+		}
+		virtual void mainLoop() {
+			while (!glfwWindowShouldClose(window))
+			{
+				glfwPollEvents();
+				onUpdate(lastFrameDelta);
+				if (!minWindowSize)
+					drawFrame();
+			}
+			device.waitIdle();
 		}
 	protected:
 		void initWindow(uint32_t w, uint32_t h) {
@@ -162,8 +178,9 @@ namespace vkd {
 
 			VkDebugReportCallbackCreateInfoEXT callback_info = {};
 			callback_info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-			callback_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+			callback_info.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT  ;
 			callback_info.pfnCallback = &SampleRender::DebugReportCallbackEXT;
+			callback_info.pUserData = this;
 			if (CreateDebugReportCallbackEXT(instance, &callback_info, nullptr, &debugReport) != VK_SUCCESS)
 			{
 				throw std::runtime_error("create Debug Report Callback failed!");
@@ -286,7 +303,7 @@ namespace vkd {
 			if(recreate && swapchain)
 				oldSwapchain = swapchain;
 			vk::SwapchainCreateInfoKHR info(vk::SwapchainCreateFlagsKHR(),surface,onSetSwapChainMinImageCount(surfaceCapabilities),format.format,
-				format.colorSpace, extent,1,vk::ImageUsageFlags(),
+				format.colorSpace, extent,1,vk::ImageUsageFlagBits::eColorAttachment,
 				queueFamilyIndices.isSame() ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,familyIndicesArr,surfaceCapabilities.currentTransform,
 				vk::CompositeAlphaFlagBitsKHR::eOpaque,presentMode,1U,oldSwapchain
 			);
@@ -455,7 +472,7 @@ namespace vkd {
 
 		void createCommandPool()
 		{
-			vk::CommandPoolCreateInfo info({},queueFamilyIndices.graphicsFamily);
+			vk::CommandPoolCreateInfo info(vk::CommandPoolCreateFlagBits::eResetCommandBuffer ,queueFamilyIndices.graphicsFamily);
 			commandPool = device.createCommandPool(info);
 		}
 
@@ -470,14 +487,88 @@ namespace vkd {
 			acquired_image_ready = device.createSemaphore(info);
 			render_complete = device.createSemaphore(info);
 		}
+		
 
+		virtual void drawFrame()
+		{
+			auto[res,imageIndex] = device.acquireNextImageKHR(swapchain,std::numeric_limits<uint64_t>::max(),acquired_image_ready);
+
+			if (res == vk::Result::eErrorOutOfDateKHR)
+			{
+				if(!minWindowSize)
+					recreateSwapChain();
+			}
+			else if (res != vk::Result::eSuccess && res != vk::Result::eSuboptimalKHR)
+			{
+				throw std::runtime_error("failed to present swap chain image!");
+			}
+			auto cmdBuf = commandbuffers[imageIndex];
+			onDraw(cmdBuf,framebuffers[imageIndex]);
+			vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			vk::SubmitInfo info(1,&acquired_image_ready,&waitStage,1,&cmdBuf,1,&render_complete);
+			vk::Fence drawFence = device.createFence(vk::FenceCreateInfo());
+			graphicsQueue.submit(info,drawFence);
+			vk::Result presentRes;
+			vk::PresentInfoKHR presentInfo(1,&render_complete,1,&swapchain,&imageIndex,&presentRes);
+
+			presentQueue.presentKHR(presentInfo);
+			switch (presentRes)
+			{
+			case vk::Result::eSuccess:
+				break;
+			case vk::Result::eErrorOutOfDateKHR:
+			case vk::Result::eSuboptimalKHR:
+				if (!minWindowSize)recreateSwapChain();
+				break;
+			default:
+				throw std::runtime_error("failed to present swap chain image!");
+				break;
+			}
+			while (vk::Result::eTimeout == device.waitForFences(drawFence, VK_TRUE, std::numeric_limits<std::uint64_t>::max()));
+			device.destroyFence(drawFence);
+		}
+
+		virtual void onDraw(vk::CommandBuffer& cmd,vk::Framebuffer frameBuf)
+		{
+			vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+			cmd.begin(beginInfo);
+			std::array<vk::ClearValue,2> clearVals = { clearColorValue,vk::ClearValue(vk::ClearDepthStencilValue(1.0f,0)) };
+			vk::RenderPassBeginInfo renderPassBeginInfo(renderPass,frameBuf,vk::Rect2D({0,0},surfaceExtent),clearVals);
+			cmd.beginRenderPass(renderPassBeginInfo,vk::SubpassContents::eInline);
+
+			onRealDraw(cmd);
+
+			cmd.endRenderPass();
+			cmd.end();
+		}
+
+		virtual void onRealDraw(vk::CommandBuffer& cmd)=0;
+
+		void recreateSwapChain()
+		{
+			device.waitIdle();
+
+			createSwapChain(true);
+			createSwapchainImageViews();
+			createFramebuffers();
+			createDepthStencilAttachment();
+			createRenderPass();
+			onReCreateSwapChain();
+		}
+		
 		virtual void onInit() = 0;
-		virtual void onCreate() = 0;
+		virtual void onCreate(){};
 		virtual void onCreateWindow(){};
+		virtual void onUpdate(float delta) {};
 		virtual void onWindowResize(uint32_t w, uint32_t h)
 		{
 			width = w;height =  h;
+			minWindowSize = (w == 0 || h == 0);
+			if(minWindowSize)
+				return;
+			recreateSwapChain();
 		}
+		virtual void onReCreateSwapChain() = 0;
 		virtual void onFillValidationLayers(std::vector<const char*>& vec)
 		{
 			vec.push_back("VK_LAYER_KHRONOS_validation");
@@ -506,6 +597,8 @@ namespace vkd {
 		GLFWwindow* window;
 		VkSurfaceKHR surface;
 		bool enableValidationLayers = false;
+		bool minWindowSize = false;
+		float lastFrameDelta = 0.0f;
 		const char* sample_name = "";
 		vk::Instance instance;
 		vk::PhysicalDevice physicalDevice;
@@ -532,6 +625,8 @@ namespace vkd {
 		std::optional<std::vector<const char*>> ValidationLayers;
 		std::vector<const char*> DeviceNeedExtensions;
 		VkDebugReportCallbackEXT debugReport;
+		std::array<float,4> clearColorArr{ 1.0f,0.0f,0.0f,1.0f };
+		vk::ClearValue clearColorValue;
 		
 		QueueFamilyIndices queueFamilyIndices;
 

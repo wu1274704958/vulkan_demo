@@ -3,9 +3,7 @@
 void vkd::SampleRender::WindowReSize(GLFWwindow* window, int w, int h)
 {
 	auto ptr = (SampleRender*)glfwGetWindowUserPointer(window);
-	if (w == 0 || h == 0 || ptr == nullptr)
-		return;
-	ptr->onWindowResize((uint32_t)w, (uint32_t)h);
+	if(ptr)ptr->onWindowResize((uint32_t)w, (uint32_t)h);
 }
 
 VkBool32 vkd::SampleRender::DebugReportCallbackEXT(
