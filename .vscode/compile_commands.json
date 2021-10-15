@@ -1,6 +1,0 @@
-[
-{
-  "directory": "D:\\cpp_project\\vulkan_demo",
-  "arguments": ["clang.exe", "-c", "-Qunused-arguments", "-m64", "-std=c++17", "-o", "build\\.objs\\vulkan_demo\\windows\\x64\\src\\main.cpp.obj", "src\\main.cpp"],
-  "file": "src\\main.cpp"
-}]
