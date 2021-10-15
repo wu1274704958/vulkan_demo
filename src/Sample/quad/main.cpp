@@ -14,6 +14,12 @@ private:
 	void onRealDraw(vk::CommandBuffer& cmd) override {
 
 	}
+	void onCleanUp() override {
+
+	}
+	void onCleanUpPipeline() override {
+
+	}
 };
 
 void main()

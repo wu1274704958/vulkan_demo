@@ -46,7 +46,6 @@ namespace vkd {
 				return std::get<0>(args).getMemoryProperties();
 			}),physicalDevice),
 			clearColorValue(clearColorArr) {
-				clearColorValue.depthStencil.depth = 1.0f;
 			}
 		SampleRender(bool enableValidationLayers,const char* sample_name) 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args) {
@@ -54,7 +53,6 @@ namespace vkd {
 			}), physicalDevice),
 			clearColorValue(clearColorArr)
 		{
-			clearColorValue.depthStencil.depth = 1.0f;
 
 			this->enableValidationLayers = enableValidationLayers;
 			this->sample_name = sample_name;
@@ -63,7 +61,7 @@ namespace vkd {
 		SampleRender(SampleRender&&) = delete;
 		~SampleRender()
 		{
-			DestroyDebugReportCallbackEXT(instance,debugReport,nullptr);	
+			cleanUp();
 		}
 		
 		void init(int w,int h)
@@ -297,7 +295,7 @@ namespace vkd {
 			auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 			auto extent = chooseSwapExtent(surfaceCapabilities);
 			const uint32_t temp [] = {queueFamilyIndices.graphicsFamily,queueFamilyIndices.presentFamily};
-			vk::ArrayProxyNoTemporaries<const uint32_t> familyIndicesArr = queueFamilyIndices.isSame() ? vk::ArrayProxyNoTemporaries(temp[0]) :
+			vk::ArrayProxyNoTemporaries<const uint32_t> familyIndicesArr = queueFamilyIndices.isSame() ? vk::ArrayProxyNoTemporaries<const uint32_t>() :
 				vk::ArrayProxyNoTemporaries(2,temp);
 			vk::SwapchainKHR oldSwapchain = {};
 			if(recreate && swapchain)
@@ -305,7 +303,7 @@ namespace vkd {
 			vk::SwapchainCreateInfoKHR info(vk::SwapchainCreateFlagsKHR(),surface,onSetSwapChainMinImageCount(surfaceCapabilities),format.format,
 				format.colorSpace, extent,1,vk::ImageUsageFlagBits::eColorAttachment,
 				queueFamilyIndices.isSame() ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent,familyIndicesArr,surfaceCapabilities.currentTransform,
-				vk::CompositeAlphaFlagBitsKHR::eOpaque,presentMode,1U,oldSwapchain
+				vk::CompositeAlphaFlagBitsKHR::eOpaque,presentMode,1u,oldSwapchain
 			);
 			
 			swapchain = device.createSwapchainKHR(info);
@@ -441,7 +439,7 @@ namespace vkd {
 			std::vector<vk::AttachmentDescription> attachment = {
 				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),surfaceFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 				vk::AttachmentLoadOp::eDontCare,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,vk::ImageLayout::ePresentSrcKHR),
-				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),depthFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
+				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),depthFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,
 				vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthImageLayout)
 			};
 			 
@@ -449,11 +447,21 @@ namespace vkd {
 			vk::AttachmentReference depthAttachmentRef(1,depthImageLayout);
 
 
-			std::vector<vk::SubpassDescription> subpassDesc = {
-				vk::SubpassDescription({},vk::PipelineBindPoint::eGraphics,{}, &attachmentRef,{}, &depthAttachmentRef)
+			std::array<vk::SubpassDescription,1> subpassDesc = {};
+			subpassDesc[0] = vk::SubpassDescription();
+			subpassDesc[0].setColorAttachments(attachmentRef);
+			subpassDesc[0].setPDepthStencilAttachment(&depthAttachmentRef);
+			subpassDesc[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+
+
+			std::array<vk::SubpassDependency, 2> dependencies = {
+				vk::SubpassDependency(VK_SUBPASS_EXTERNAL,0,vk::PipelineStageFlagBits::eBottomOfPipe,vk::PipelineStageFlagBits::eColorAttachmentOutput,vk::AccessFlagBits::eMemoryRead,
+				vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eColorAttachmentWrite,vk::DependencyFlagBits::eByRegion),
+				vk::SubpassDependency(0,VK_SUBPASS_EXTERNAL,vk::PipelineStageFlagBits::eColorAttachmentOutput,vk::PipelineStageFlagBits::eBottomOfPipe,
+				vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eColorAttachmentWrite,vk::AccessFlagBits::eMemoryRead,vk::DependencyFlagBits::eByRegion)
 			};
 
-			vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(),attachment,subpassDesc);
+			vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(),attachment,subpassDesc,dependencies);
 			renderPass = device.createRenderPass(info);
 		}
 
@@ -472,7 +480,7 @@ namespace vkd {
 
 		void createCommandPool()
 		{
-			vk::CommandPoolCreateInfo info(vk::CommandPoolCreateFlagBits::eResetCommandBuffer ,queueFamilyIndices.graphicsFamily);
+			vk::CommandPoolCreateInfo info(vk::CommandPoolCreateFlagBits::eResetCommandBuffer | vk::CommandPoolCreateFlagBits::eTransient,queueFamilyIndices.graphicsFamily);
 			commandPool = device.createCommandPool(info);
 		}
 
@@ -531,6 +539,7 @@ namespace vkd {
 		virtual void onDraw(vk::CommandBuffer& cmd,vk::Framebuffer frameBuf)
 		{
 			vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
 			cmd.begin(beginInfo);
 			std::array<vk::ClearValue,2> clearVals = { clearColorValue,vk::ClearValue(vk::ClearDepthStencilValue(1.0f,0)) };
 			vk::RenderPassBeginInfo renderPassBeginInfo(renderPass,frameBuf,vk::Rect2D({0,0},surfaceExtent),clearVals);
@@ -548,12 +557,52 @@ namespace vkd {
 		{
 			device.waitIdle();
 
-			createSwapChain(true);
+			cleanUpSwapChain();
+
+			createSwapChain();
 			createSwapchainImageViews();
-			createFramebuffers();
 			createDepthStencilAttachment();
 			createRenderPass();
+			createFramebuffers();
+			createCommandBuffers();
 			onReCreateSwapChain();
+		}
+		virtual void onCleanUpPipeline() = 0;
+		void cleanUpSwapChain()
+		{
+			device.freeCommandBuffers(commandPool,commandbuffers);
+			for (auto fb : framebuffers)
+			{
+				device.destroyFramebuffer(fb);
+			}
+
+			onCleanUpPipeline();
+			device.destroyRenderPass(renderPass);
+
+			for (int i = 0; i < swapChainImageViews.size(); ++i)
+			{
+				device.destroyImageView(swapChainImageViews[i]);
+			}
+			device.destroySwapchainKHR(swapchain);
+		}
+		virtual void onCleanUp() = 0;
+
+		void cleanUp() {
+
+			device.destroySemaphore(acquired_image_ready);
+			device.destroySemaphore(render_complete);
+
+			cleanUpSwapChain();
+			
+			onCleanUp();
+
+			device.destroyCommandPool(commandPool);
+			device.destroy();
+			vkDestroySurfaceKHR(instance, surface, nullptr);
+			DestroyDebugReportCallbackEXT(instance, debugReport, nullptr);
+			instance.destroy();
+			glfwDestroyWindow(window);
+			glfwTerminate();
 		}
 		
 		virtual void onInit() = 0;
@@ -625,7 +674,7 @@ namespace vkd {
 		std::optional<std::vector<const char*>> ValidationLayers;
 		std::vector<const char*> DeviceNeedExtensions;
 		VkDebugReportCallbackEXT debugReport;
-		std::array<float,4> clearColorArr{ 1.0f,0.0f,0.0f,1.0f };
+		std::array<float,4> clearColorArr{ 0.1019607f,0.10980392f,0.12941176f,1.0f };
 		vk::ClearValue clearColorValue;
 		
 		QueueFamilyIndices queueFamilyIndices;
