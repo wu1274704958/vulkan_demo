@@ -27,5 +27,6 @@ void main()
 	auto quad = new Quad(true,"Quad");
 	quad->init(800,600);
 	quad->mainLoop();
-	printf("Ok!!!");
+	quad->cleanUp();
+	delete quad;
 }

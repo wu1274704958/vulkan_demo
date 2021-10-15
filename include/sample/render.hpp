@@ -59,9 +59,9 @@ namespace vkd {
 		}
 		SampleRender(const SampleRender&) = delete;
 		SampleRender(SampleRender&&) = delete;
-		~SampleRender()
+		virtual ~SampleRender()
 		{
-			cleanUp();
+			
 		}
 		
 		void init(int w,int h)
@@ -88,7 +88,9 @@ namespace vkd {
 			createCommandPool();
 			createCommandBuffers();
 			createSemaphores();
+			createDrawFences();
 			onInit();
+			isInit = true;
 		}
 		virtual void mainLoop() {
 			while (!glfwWindowShouldClose(window))
@@ -99,6 +101,29 @@ namespace vkd {
 					drawFrame();
 			}
 			device.waitIdle();
+		}
+		void cleanUp() {
+			if (!isInit)return;
+			device.waitIdle();
+			device.destroySemaphore(acquired_image_ready);
+			device.destroySemaphore(render_complete);
+
+			for (auto f : drawFences)
+			{
+				device.destroyFence(f);
+			}
+
+			cleanUpSwapChain();
+
+			onCleanUp();
+
+			device.destroyCommandPool(commandPool);
+			device.destroy();
+			vkDestroySurfaceKHR(instance, surface, nullptr);
+			DestroyDebugReportCallbackEXT(instance, debugReport, nullptr);
+			instance.destroy();
+			glfwDestroyWindow(window);
+			glfwTerminate();
 		}
 	protected:
 		void initWindow(uint32_t w, uint32_t h) {
@@ -207,9 +232,12 @@ namespace vkd {
 			}
 			if (qualifiedDevices.empty())
 			{
+				printf("failed to find a suitable GPU!\n");
 				throw std::runtime_error("failed to find a suitable GPU!");
 			}
-			physicalDevice = onPickPhysicalDevice(qualifiedDevices);
+			auto[physicalDevice,indices] = onPickPhysicalDevice(qualifiedDevices);
+			this->physicalDevice = physicalDevice;
+			return indices;
 		}
 
 		std::tuple<bool,QueueFamilyIndices> isDeviceSuitable(const vk::PhysicalDevice& d)
@@ -267,7 +295,7 @@ namespace vkd {
 			return res;
 		}
 
-		void createLogicalDevice(QueueFamilyIndices indices)
+		void createLogicalDevice(const QueueFamilyIndices& indices)
 		{
 			std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 			float priority = 1.0f;
@@ -495,8 +523,14 @@ namespace vkd {
 			acquired_image_ready = device.createSemaphore(info);
 			render_complete = device.createSemaphore(info);
 		}
+		void createDrawFences()
+		{
+			for (int i = 0; i < commandbuffers.size(); ++i)
+			{
+				drawFences.push_back(device.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled)));
+			}
+		}
 		
-
 		virtual void drawFrame()
 		{
 			auto[res,imageIndex] = device.acquireNextImageKHR(swapchain,std::numeric_limits<uint64_t>::max(),acquired_image_ready);
@@ -510,11 +544,13 @@ namespace vkd {
 			{
 				throw std::runtime_error("failed to present swap chain image!");
 			}
+			while (device.waitForFences(1, &drawFences[imageIndex], true, std::numeric_limits<uint64_t>::max()) == vk::Result::eTimeout){}
 			auto cmdBuf = commandbuffers[imageIndex];
 			onDraw(cmdBuf,framebuffers[imageIndex]);
 			vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 			vk::SubmitInfo info(1,&acquired_image_ready,&waitStage,1,&cmdBuf,1,&render_complete);
-			vk::Fence drawFence = device.createFence(vk::FenceCreateInfo());
+			vk::Fence drawFence = drawFences[imageIndex];
+			device.resetFences(1,&drawFence);
 			graphicsQueue.submit(info,drawFence);
 			vk::Result presentRes;
 			vk::PresentInfoKHR presentInfo(1,&render_complete,1,&swapchain,&imageIndex,&presentRes);
@@ -532,8 +568,6 @@ namespace vkd {
 				throw std::runtime_error("failed to present swap chain image!");
 				break;
 			}
-			while (vk::Result::eTimeout == device.waitForFences(drawFence, VK_TRUE, std::numeric_limits<std::uint64_t>::max()));
-			device.destroyFence(drawFence);
 		}
 
 		virtual void onDraw(vk::CommandBuffer& cmd,vk::Framebuffer frameBuf)
@@ -577,33 +611,22 @@ namespace vkd {
 			}
 
 			onCleanUpPipeline();
+
 			device.destroyRenderPass(renderPass);
+
+			device.freeMemory(depthAttachment.mem);
+			device.destroyImage(depthAttachment.image);
+			device.destroyImageView(depthAttachment.view);
 
 			for (int i = 0; i < swapChainImageViews.size(); ++i)
 			{
 				device.destroyImageView(swapChainImageViews[i]);
 			}
 			device.destroySwapchainKHR(swapchain);
+
+			
 		}
 		virtual void onCleanUp() = 0;
-
-		void cleanUp() {
-
-			device.destroySemaphore(acquired_image_ready);
-			device.destroySemaphore(render_complete);
-
-			cleanUpSwapChain();
-			
-			onCleanUp();
-
-			device.destroyCommandPool(commandPool);
-			device.destroy();
-			vkDestroySurfaceKHR(instance, surface, nullptr);
-			DestroyDebugReportCallbackEXT(instance, debugReport, nullptr);
-			instance.destroy();
-			glfwDestroyWindow(window);
-			glfwTerminate();
-		}
 		
 		virtual void onInit() = 0;
 		virtual void onCreate(){};
@@ -636,9 +659,9 @@ namespace vkd {
 			const char* pMessage) {
 			return false;
 		}
-		virtual vk::PhysicalDevice onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices)
+		virtual std::tuple<vk::PhysicalDevice, QueueFamilyIndices> onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices)
 		{
-			return std::get<0>(devices[0]);
+			return devices[0];
 		}
 
 		protected:
@@ -647,6 +670,7 @@ namespace vkd {
 		VkSurfaceKHR surface;
 		bool enableValidationLayers = false;
 		bool minWindowSize = false;
+		bool isInit = false;
 		float lastFrameDelta = 0.0f;
 		const char* sample_name = "";
 		vk::Instance instance;
@@ -659,6 +683,7 @@ namespace vkd {
 		vk::Extent2D surfaceExtent;
 		vk::RenderPass renderPass;
 		vk::Semaphore render_complete, acquired_image_ready;
+		std::vector<vk::Fence> drawFences;
 		struct 
 		{
 			vk::Image image;
