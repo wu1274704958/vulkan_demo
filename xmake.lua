@@ -1,7 +1,7 @@
 add_rules("mode.debug", "mode.release")
 add_repositories("local-repo deps")
 add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
-set_languages("c99", "c++17")  
+set_languages("c17", "c++20")
 add_includedirs("include/") 
 add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
 after_build(function()
