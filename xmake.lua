@@ -1,22 +1,29 @@
 add_rules("mode.debug", "mode.release")
 add_repositories("local-repo deps")
-add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
+add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp")
 set_languages("c17", "c++20")
-add_includedirs("include/") 
-add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test")
+add_includedirs("include/","include/res_loader/") 
+add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp")
 after_build(function()
-    os.cp("$(curdir)/res","$(buildir)/res")
+    os.cp("$(curdir)/res","$(buildir)")
     print("after_build $(buildir) $(curdir)")
 end)
 
+if is_plat("windows") then
+    add_defines("PF_WIN32")
+end
+if is_plat("Android") then
+    add_defines("PF_ANDROID")
+end
+
 target("vulkan_demo")
     set_kind("binary")
-    add_files("src/*.cpp")
+    add_files("src/main.cpp")
     
 function example(name)
     target(name)
         set_kind("binary")
-        add_files("src/*.cpp|main.cpp","src/Sample/*.cpp","src/Sample/"..name.."/*.cpp")
+        add_files("src/*.cpp|main.cpp","src/Sample/*.cpp","src/Sample/"..name.."/*.cpp","src/ResLoader/*.cpp")
 end
 
 example("quad")    
