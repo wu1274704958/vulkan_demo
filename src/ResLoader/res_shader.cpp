@@ -10,7 +10,7 @@
 
 namespace gld::vkd {
 
-	LoadSpirvWithMetaData::ArgsTy LoadSpirvWithMetaData::default_args() { return spv_target_env::SPV_ENV_VULKAN_1_2; }
+	LoadSpirvWithMetaData::ArgsTy LoadSpirvWithMetaData::default_args() { return glslang::EShTargetClientVersion::EShTargetVulkan_1_2; }
 
 	std::string LoadSpirvWithMetaData::format_args(ArgsTy flag) {
 		auto t = std::make_tuple((int)flag);
@@ -49,7 +49,7 @@ namespace gld::vkd {
 		}
 	}
 
-	LoadSpirvWithMetaData::RealRetTy LoadSpirvWithMetaData::load(PathTy p, VKD_RES_MGR_KEY_TYPE k,spv_target_env env)
+	LoadSpirvWithMetaData::RealRetTy LoadSpirvWithMetaData::load(PathTy p, VKD_RES_MGR_KEY_TYPE k, glslang::EShTargetClientVersion env)
 	{
 		auto text = DefResMgr::instance()->load<ResType::glsl>(k.string());
 		if(!text) return std::make_tuple(false,nullptr);
@@ -59,36 +59,21 @@ namespace gld::vkd {
 			dbg::log << "Not support sharder type " << k << "\n";
 			return std::make_tuple(false, nullptr);
 		}
+		glslang::InitializeProcess();
 		glslang::TShader shader(*elang);
 		auto code = text->data();
 		int code_n = text->size();
 		shader.setStringsWithLengths(&code,&code_n,1);
+		shader.setEnvInput(glslang::EShSource::EShSourceGlsl,*elang,glslang::EShClient::EShClientVulkan,100);
+		shader.setEnvClient(glslang::EShClient::EShClientVulkan,env);
+		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv,glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
 		TBuiltInResource buildin;
-		shader.parse(&buildin,450,false,EShMessages::EShMsgDefault);
+		auto result = shader.parse(&buildin, 100, false, EShMessages::EShMsgDefault);
 		
 		std::vector<uint32_t> bin;
 		glslang::GlslangToSpv(*shader.getIntermediate(),bin);
 		
-		spvtools::SpirvTools tools(env);
-		tools.SetMessageConsumer([](spv_message_level_t level, const char* source,
-			const spv_position_t& position, const char* message) {
-			dbg::log << "Assemble Spirv Message \n" << 
-				'[' << position.line << ':' << position.column << '] ' << spv_message_level_to_str(level) << ' ' << message << "\n";
-		});
-		
-		if (!tools.Assemble(*text, &bin))
-		{
-			return std::make_tuple(false, nullptr);
-		}
-		spvtools::Context ctx(env);
-		spv_text res;
-		spv_diagnostic dia;
-		if (spvBinaryToText(ctx.CContext(), bin.data(), bin.size(), 0, &res, &dia) != SPV_SUCCESS)
-		{
-
-		}
-
-		
+		glslang::FinalizeProcess();
 
 		return std::make_tuple(true,std::make_shared<std::vector<uint32_t>>(bin));
 	}
