@@ -3,11 +3,6 @@
 #include <data_comm.hpp>
 #include <res_cache_mgr.hpp>
 
-namespace ft2 {
-    class Library;
-    class Face;
-}
-
 namespace gld
 {
     template<typename ...Plugs>
@@ -110,12 +105,7 @@ namespace gld
                 self = std::shared_ptr<DataMgr<Plugs...>>(new DataMgr<Plugs...>());
             return self;
         }
-        template<typename T>
-        inline static std::shared_ptr<DataMgr<Plugs...>> create_instance(T&& t)
-        {
-            self = std::shared_ptr<DataMgr<Plugs...>>(new DataMgr<Plugs...>(std::forward<T>(t)));
-            return self;
-        }
+        
 
         void clear_all()
         {
@@ -126,26 +116,6 @@ private:
     inline static std::shared_ptr<DataMgr<Plugs...>> self;
 
         DataMgr<Plugs...>() {}
-    };
-
-
-    struct LoadFontLibrary {
-        using RetTy = std::shared_ptr<ft2::Library>;
-        using ArgsTy = std::tuple<>;
-        using RealRetTy = std::tuple<bool, RetTy>;
-        static std::string key_from_args(ArgsTy args);
-        static RealRetTy load(ArgsTy args);
-        static ArgsTy default_args();
-    };
-
-    struct LoadFontFace {
-        using RetTy = std::shared_ptr<ft2::Face>;
-        using ArgsTy = std::tuple<std::string,int,int>;
-        using RealRetTy = std::tuple<bool, RetTy>;
-        static std::string key_from_args(ArgsTy args);
-        static std::string key_from_args(std::tuple<const char*, int,int> args);
-        static RealRetTy load(ArgsTy args);
-        static RealRetTy load(std::tuple<const char* ,int,int> args);
     };
 
     struct GenSquareVertices {
@@ -167,8 +137,6 @@ private:
     };
 
     typedef DataMgr<
-        DataLoadPlugTy<DataType::FontLibrary,LoadFontLibrary>,
-        DataLoadPlugTy<DataType::FontFace,LoadFontFace>,
         DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices>,
         DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>
         > DefDataMgr;

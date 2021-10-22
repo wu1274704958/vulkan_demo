@@ -28,17 +28,6 @@ gld::LoadScene::ArgsTy gld::LoadScene::default_args()
 	return aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
 }
 
-std::string gld::LoadFont::format_args(ArgsTy flag)
-{
-	return wws::to_string(flag);
-}
-
-
-gld::LoadFont::ArgsTy gld::LoadFont::default_args()
-{
-	return 0;
-}
-
 #ifndef PF_ANDROID
 namespace fs = std::filesystem;
 
@@ -115,47 +104,6 @@ gld::LoadScene::RealRetTy gld::LoadScene::load(gld::PathTy p,const fs::path& k,g
 	}
 }
 
-
-gld::LoadFont::RealRetTy gld::LoadFont::load(PathTy p, const fs::path& k, gld::LoadFont::ArgsTy flag)
-{
-	std::string path = p.string();
-	std::ifstream f(path.c_str(), std::ios::binary);
-	
-	if (f.good())
-	{
-		constexpr size_t MAX = 1024 * 50;
-		size_t max_size = MAX;
-		size_t size = 0;
-		char* data = reinterpret_cast<char*>( std::malloc(MAX) );
-		if(data == nullptr)
-			throw std::runtime_error("alloc failed!");
-		while (!f.eof())
-		{
-			char buf[MAX] = { 0 };
-			f.read(buf, wws::arrLen(buf));
-			size_t t_s = f.gcount();
-			if(t_s <= 0)
-				break;
-			if(size + t_s > max_size)
-			{
-				auto n_data = reinterpret_cast<char*>(std::realloc(data,max_size + MAX));
-				if (n_data == nullptr)
-				{
-					std::free(data);
-					throw std::runtime_error("realloc failed!");
-				}
-				max_size += MAX;
-				data = n_data;
-			}
-			std::memcpy(data + size,buf,t_s);
-			size += t_s;
-		}
-		Ft2Data *ft = new Ft2Data(reinterpret_cast<unsigned char*>(data),size,flag);
-		return std::make_tuple(true,std::shared_ptr<Ft2Data>(ft));
-	}
-	else
-		return std::make_tuple(false,std::shared_ptr<Ft2Data>());
-}
 
 #else
 
@@ -263,20 +211,6 @@ gld::LoadScene::RealRetTy gld::LoadScene::load(gld::AndroidCxtPtrTy cxt,gld::Pat
 	}
 	return std::make_tuple(false,std::shared_ptr<Assimp::Importer>());
 }
-
-
-gld::LoadFont::RealRetTy gld::LoadFont::load(gld::AndroidCxtPtrTy cxt,PathTy p,gld::LoadFont::ArgsTy flag) {
-	auto [ptr,len] = load_byte(cxt,p);
-	if(ptr)
-	{
-		char* p = ptr.release();
-		return std::make_tuple(true,std::shared_ptr<Ft2Data>(new Ft2Data(reinterpret_cast<unsigned char*>(p),len,flag)));
-	}else{
-		return std::make_tuple(false, nullptr);
-	};
-}
-
-
 
 bool gld::AAndIosSys::Exists( const char* pFile) const 
 {

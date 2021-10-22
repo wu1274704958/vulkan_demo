@@ -5,16 +5,6 @@
 
 namespace gld{
     enum class DataType{
-        Program = 0x100,
-        Texture2D,
-        Scene,
-        SceneNoMaterial,
-        TextureCube,
-        ProgramWithGeometry,
-        SceneWithGeometry,
-        SceneWithGeometryNoMaterial,
-        FontLibrary,
-        FontFace,
         SquareVertices,
         SquareIndices
     };

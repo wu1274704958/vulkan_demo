@@ -17,6 +17,7 @@
 #include <res_cache_mgr.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+#include "res_shader.hpp"
 
 #ifdef LoadImage
 #undef LoadImage
@@ -326,61 +327,12 @@ private:
         static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE_WITH_COMMA ArgsTy flag);
     };
 
-    struct Ft2Data{
-        
-
-        Ft2Data(unsigned char * d,size_t len,int idx) : data(d),index(idx),size(len)
-        {
-            
-        }
-
-        ~Ft2Data()
-        {
-            if(data)
-                delete [] data;
-            size = 0;
-        }
-        
-        unsigned char* get_data()
-        {
-            return data;
-        }
-
-        size_t get_size()
-        {
-            return size;
-        }
-
-        int get_index()
-        {
-            return index;
-        }
-
-    protected:
-        unsigned char* data = nullptr;
-        int index;
-        size_t size;
-    };
-
-    struct LoadFont
-    {
-        using RetTy = std::shared_ptr<Ft2Data>;
-        using ArgsTy = int;
-        using RealRetTy = std::tuple<bool,RetTy>;
-        static std::string format_args(ArgsTy flag);
-        static ArgsTy default_args();
-
-        static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE_WITH_COMMA ArgsTy flag);
-    };
-
-    typedef ResourceMgr<'/', ResLoadPlugTy<ResType::text, LoadText>,
+    typedef ResourceMgr<'/',
+        ResLoadPlugTy<ResType::text, LoadText>,
+        ResLoadPlugTy<ResType::glsl,LoadTextWithGlslPreprocess>,
         ResLoadPlugTy<ResType::image,LoadImage>,
         ResLoadPlugTy<ResType::model,LoadScene>,
-        ResLoadPlugTy<ResType::font,LoadFont>> DefResMgr;
-    typedef ResourceMgr<'/', ResLoadPlugTy<ResType::text, LoadTextWithGlslPreprocess>,
-        ResLoadPlugTy<ResType::image,LoadImage>,
-        ResLoadPlugTy<ResType::model,LoadScene>,
-        ResLoadPlugTy<ResType::font,LoadFont>> ResMgrWithGlslPreProcess;
+        ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData>> DefResMgr;
 }
 
 #ifdef PF_ANDROID

@@ -10,9 +10,11 @@ namespace gld
     
     enum class ResType{
         text = 0x0,
+        glsl,
         image,
         model,
-        font
+        font,
+        spirv_with_meta,
     };
 
 #ifndef PF_ANDROID

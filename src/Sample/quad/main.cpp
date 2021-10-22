@@ -2,6 +2,7 @@
 #include <json.hpp>
 #include <comm.hpp>
 #include <res_loader/resource_mgr.hpp>
+#include <res_loader/data_mgr.hpp>
 
 
 class Quad : public vkd::SampleRender {
@@ -30,17 +31,17 @@ private:
 void main()
 {
 	gld::DefResMgr::create_instance("../../../res");
-	gld::ResMgrWithGlslPreProcess::create_instance("../../../res");
 
 	try{
-		auto glsl = gld::ResMgrWithGlslPreProcess::instance()->load<gld::ResType::text>("shader_23/quad.vert");
-		printf("%s\n", glsl->c_str());
+		auto spv = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.vert");
 	}
 	catch (std::runtime_error e)
 	{
 		printf("%s\n",e.what());
 	}
 
+	PREPARE_CT_STR("abc");
+	PREPARE_CT_STR(L"abc");
 
 	auto quad = new Quad(true,"Quad");
 	quad->init(800,600);
