@@ -150,7 +150,7 @@ namespace vkd {
 				vkEnumerateInstanceLayerProperties(&count, nullptr);
 				std::vector<VkLayerProperties> props(count);
 				vkEnumerateInstanceLayerProperties(&count, props.data());
-				return IsContain(props,ValidationLayers.value(),std::function([](const VkLayerProperties& a)->const char*{
+				return wws::IsContain(props,ValidationLayers.value(),std::function([](const VkLayerProperties& a)->const char*{
 					return a.layerName;
 				}));
 			}
@@ -257,7 +257,7 @@ namespace vkd {
 		bool checkDeviceExtensionSupport(const vk::PhysicalDevice& d)
 		{
 			auto extensionProps = d.enumerateDeviceExtensionProperties();
-			return IsContain(extensionProps,DeviceNeedExtensions,std::function([](const vk::ExtensionProperties& a){
+			return wws::IsContain(extensionProps,DeviceNeedExtensions,std::function([](const vk::ExtensionProperties& a){
 				return (const char*)a.extensionName;
 			}));
 		}
@@ -446,7 +446,7 @@ namespace vkd {
 				vk::ImageUsageFlagBits::eDepthStencilAttachment,vk::SharingMode::eExclusive,{});
 			depthAttachment.image = device.createImage(imgInfo);
 			auto imgAspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-			if (eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
+			if (wws::eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
 				imgAspect = vk::ImageAspectFlagBits::eDepth;
 			auto req = device.getImageMemoryRequirements(depthAttachment.image);
 			
@@ -462,7 +462,7 @@ namespace vkd {
 		virtual void createRenderPass()
 		{
 			auto depthImageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-			if(eq_enum<vk::Format,vk::Format::eD16Unorm,vk::Format::eD32Sfloat>(depthFormat))
+			if(wws::eq_enum<vk::Format,vk::Format::eD16Unorm,vk::Format::eD32Sfloat>(depthFormat))
 				depthImageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
 			std::vector<vk::AttachmentDescription> attachment = {
 				vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),surfaceFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
@@ -704,7 +704,7 @@ namespace vkd {
 		
 		QueueFamilyIndices queueFamilyIndices;
 
-		VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
+		wws::VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
 
 		static void WindowReSize(GLFWwindow* window, int w, int h);
 		static VkBool32 DebugReportCallbackEXT(

@@ -3,7 +3,7 @@
 #include <optional>
 
 
-namespace vkd{
+namespace wws{
 
 	inline bool eq(const char* a,const char* b)
 	{
@@ -141,4 +141,87 @@ namespace vkd{
 		std::shared_ptr<T> ptr;
 		std::optional<IN> in;
 	};
+
+	template<typename T,T...Ts>
+	struct ValList
+	{
+		using Type = T;
+		static constexpr size_t Len = sizeof...(Ts);
+		template<size_t I>
+		static constexpr T get()
+		{
+			return get_<0,I,T,Ts...>();
+		}
+		static std::optional<T> get(size_t i)
+		{
+			return get_<0, T, Ts...>(i);
+		}
+		static int find(T t)
+		{
+			return find_<0,T,Ts...>(t);
+		}
+
+	private:
+		template<size_t I,size_t C,typename TT,TT F,TT ...S>
+		static constexpr T get_()
+		{
+			if constexpr (I == C)
+			{
+				return F;
+			}else
+			{
+				static_assert(sizeof...(S) > 0,"Not Found!!!");
+				return get_<I + 1,C,TT,S...>();
+			}
+		}
+
+		template<size_t I,typename TT, TT F, TT ...S>
+		static std::optional<T> get_(size_t c)
+		{
+			if (I == c)
+			{
+				return F;
+			}
+			else
+			{
+				if constexpr (sizeof...(S) == 0)
+				{
+					return std::nullopt;
+				}else{
+					return get_<I + 1, TT, S...>(c);
+				}
+			}
+		}
+		template<size_t I,typename TT,TT F,TT ...S>
+		inline static int find_(T t)
+		{
+			if (F == t)
+			{
+				return I;
+			}
+			else
+			{
+				if constexpr (sizeof...(S) == 0)
+				{
+					return -1;
+				}
+				else {
+					return find_<I + 1, TT, S...>(t);
+				}
+			}
+		}
+	};
+
+	template<typename T, typename T2>
+	std::optional<typename T2::Type> map_enum(typename T::Type t)
+	{
+		int idx = T::find(t);
+		if (idx >= 0)
+		{
+			return T2::get((size_t)idx);
+		}
+		else {
+			return std::nullopt;
+		}
+	}
 }

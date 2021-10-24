@@ -23,7 +23,7 @@ private:
 
 	}
 	void onCleanUpPipeline() override {
-
+ 
 	}
 };
 
@@ -31,9 +31,10 @@ private:
 void main()
 {
 	gld::DefResMgr::create_instance("../../../res");
-
+	std::cout <<  wws::ValList<size_t, 1, 2, 3>::find(7) << std::endl;
 	try{
-		auto spv = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.vert");
+		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.vert");
+		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.frag");
 	}
 	catch (std::runtime_error e)
 	{

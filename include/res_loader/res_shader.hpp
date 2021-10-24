@@ -1,10 +1,20 @@
 #pragma once
 #include <res_loader/res_comm.hpp>
 #include <glslang/Public/ShaderLang.h>
+#include <spirv_cross/spirv_glsl.hpp>
+#include <vulkan/vulkan.hpp>
 namespace gld::vkd {
+
+	struct SpirvRes {
+		std::vector<uint32_t> binary;
+		spirv_cross::ShaderResources shaderRes;
+		vk::ShaderStageFlagBits stage;
+		std::string entryPoint;
+	};
+
 	struct LoadSpirvWithMetaData
 	{
-		using RetTy = std::shared_ptr<std::vector<uint32_t>>;
+		using RetTy = std::shared_ptr<SpirvRes>;
 		using ArgsTy = glslang::EShTargetClientVersion;
 		using RealRetTy = std::tuple<bool, RetTy>;
 		static std::string format_args(ArgsTy flag);
