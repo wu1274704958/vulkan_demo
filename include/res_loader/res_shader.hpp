@@ -5,9 +5,37 @@
 #include <vulkan/vulkan.hpp>
 namespace gld::vkd {
 
+	struct Descriptor
+	{
+		uint32_t set;
+		uint32_t binding;
+		std::string name;
+		vk::DescriptorType type;
+	};
+	struct StageIO
+	{
+		uint32_t	binding;
+		uint32_t	location;
+		vk::Format	format;
+		uint32_t	offset;
+	};
+	struct PushConstant
+	{
+		uint32_t size;
+		uint32_t offset;
+	};
+
+	struct ShaderResources
+	{
+		std::vector<Descriptor> descriptors;
+		std::vector<uint32_t> inBindingStride;
+		std::vector<StageIO> stageInput;
+		std::vector<PushConstant> pushConstant;
+	};
+	
 	struct SpirvRes {
 		std::vector<uint32_t> binary;
-		spirv_cross::ShaderResources shaderRes;
+		ShaderResources shaderRes;
 		vk::ShaderStageFlagBits stage;
 		std::string entryPoint;
 	};

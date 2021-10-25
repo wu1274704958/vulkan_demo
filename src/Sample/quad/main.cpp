@@ -4,14 +4,13 @@
 #include <res_loader/resource_mgr.hpp>
 #include <res_loader/data_mgr.hpp>
 
-
 class Quad : public vkd::SampleRender {
 public:
 	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers,sample_name)
 	{}
 private:
 	void onInit() override {
-
+		 auto pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,"shader_23/quad.vert","shader_23/quad.frag");
 	}
 	void onReCreateSwapChain() override {
 
@@ -31,18 +30,6 @@ private:
 void main()
 {
 	gld::DefResMgr::create_instance("../../../res");
-	std::cout <<  wws::ValList<size_t, 1, 2, 3>::find(7) << std::endl;
-	try{
-		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.vert");
-		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>("shader_23/quad.frag");
-	}
-	catch (std::runtime_error e)
-	{
-		printf("%s\n",e.what());
-	}
-
-	PREPARE_CT_STR("abc");
-	PREPARE_CT_STR(L"abc");
 
 	auto quad = new Quad(true,"Quad");
 	quad->init(800,600);

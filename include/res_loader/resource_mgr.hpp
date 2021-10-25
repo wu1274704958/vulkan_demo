@@ -84,6 +84,15 @@ namespace gld{
 			return PathTy(uri);
 		}
 
+		PathTy as_path(std::string& uri) const
+		{
+#ifdef PF_ANDROID
+			return uri;
+#else
+			return PathTy(uri);
+#endif 
+		}
+
         PathTy as_path(std::string&& uri) const
         {
 #ifdef PF_ANDROID

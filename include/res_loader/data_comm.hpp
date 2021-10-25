@@ -6,7 +6,8 @@
 namespace gld{
     enum class DataType{
         SquareVertices,
-        SquareIndices
+        SquareIndices,
+        PipelineSimple,
     };
 
     namespace data_ck{

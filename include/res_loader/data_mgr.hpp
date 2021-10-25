@@ -2,6 +2,7 @@
 
 #include <data_comm.hpp>
 #include <res_cache_mgr.hpp>
+#include "data_pipeline.hpp"
 
 namespace gld
 {
@@ -57,14 +58,16 @@ namespace gld
 
             static_assert(data_ck::has_load_func3_vt<Ty,Args...>::value,"This load plug not has tuple load function!!!");
 
-            auto key = Ty::key_from_args(std::make_tuple(std::forward<Args>(args)...));
+            auto args_tup = std::make_tuple(std::forward<Args>(args)...);
+
+            auto key = Ty::key_from_args(args_tup);
 
             if(ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(key))
             {
                 return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(key);
             }
 
-            auto [success,res] = Ty::load(std::make_tuple(std::forward<Args>(args)...));
+            auto [success,res] = Ty::load(std::forward<ARGS_T>(args_tup));
 
             if(success)
                 ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(key,res);
@@ -138,6 +141,7 @@ private:
 
     typedef DataMgr<
         DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices>,
-        DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>
+        DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>,
+        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple>
         > DefDataMgr;
 } // namespace gld
