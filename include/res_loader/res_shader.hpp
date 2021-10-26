@@ -24,11 +24,16 @@ namespace gld::vkd {
 		uint32_t size;
 		uint32_t offset;
 	};
+	struct BindingStride
+	{
+		uint32_t binding;
+		uint32_t stride;
+	};
 
 	struct ShaderResources
 	{
 		std::vector<Descriptor> descriptors;
-		std::vector<uint32_t> inBindingStride;
+		std::vector<BindingStride> inBindingStride;
 		std::vector<StageIO> stageInput;
 		std::vector<PushConstant> pushConstant;
 	};
