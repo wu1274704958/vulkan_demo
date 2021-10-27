@@ -39,22 +39,24 @@ namespace gld::vkd {
 		}
 	}
 	
-	inline void fillPipelineInputState(ShaderResources& res, vk::PipelineVertexInputStateCreateInfo& inputState,const std::unordered_set<uint32_t>& is_instance_set)
+	inline std::tuple<std::shared_ptr<std::vector<vk::VertexInputBindingDescription>>, std::shared_ptr<std::vector<vk::VertexInputAttributeDescription>>>
+		fillPipelineInputState(ShaderResources& res, vk::PipelineVertexInputStateCreateInfo& inputState,const std::unordered_set<uint32_t>& is_instance_set)
 	{
-		std::vector<vk::VertexInputBindingDescription> binding;
+		std::shared_ptr<std::vector<vk::VertexInputBindingDescription>> binding = std::make_shared<std::vector<vk::VertexInputBindingDescription>>();
 		for (auto& r : res.inBindingStride)
 		{
-			binding.push_back(vk::VertexInputBindingDescription(r.binding,r.stride,
+			binding->push_back(vk::VertexInputBindingDescription(r.binding,r.stride,
 				is_instance_set.contains(r.binding) ? vk::VertexInputRate::eInstance : vk::VertexInputRate::eVertex));
 		}
-		std::vector<vk::VertexInputAttributeDescription> attr;
+		std::shared_ptr<std::vector<vk::VertexInputAttributeDescription>> attr = std::make_shared<std::vector<vk::VertexInputAttributeDescription>>();
 		for (auto& r : res.stageInput)
 		{
-			attr.push_back(vk::VertexInputAttributeDescription(r.location,r.binding,r.format,r.offset));
+			attr->push_back(vk::VertexInputAttributeDescription(r.location,r.binding,r.format,r.offset));
 		}
 		
-		inputState.setVertexBindingDescriptions(binding);
-		inputState.setVertexAttributeDescriptions(attr);
+		inputState.setVertexBindingDescriptions(*binding);
+		inputState.setVertexAttributeDescriptions(*attr);
+		return std::make_tuple(binding,attr);
 	}
 	template<size_t N>
 	LoadPipelineSimple::RealRetTy realCreatePipeline(const LoadPipelineSimple::ArgsTy& args,
@@ -88,7 +90,7 @@ namespace gld::vkd {
 			stages.push_back(vk::PipelineShaderStageCreateInfo({}, p->stage, sm, p->entryPoint.c_str()));
 		}
 		vk::PipelineVertexInputStateCreateInfo vertexInputStateInfo;
-		fillPipelineInputState(shaders[0]->shaderRes, vertexInputStateInfo, is_instance_set);
+		auto _ = fillPipelineInputState(shaders[0]->shaderRes, vertexInputStateInfo, is_instance_set);
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo({}, vk::PrimitiveTopology::eTriangleList, false);
 		vk::Viewport viewport(0.0f,0.0f,extent.width,extent.height,0.0f,1.0f);
 		vk::Rect2D scissor({0,0},extent);
@@ -109,11 +111,11 @@ namespace gld::vkd {
 		vk::PipelineDynamicStateCreateInfo dynamicState({},dynamicStates);
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo({},stages, &vertexInputStateInfo, &inputAssemblyStateInfo, nullptr,&viewportState,&rasterizationInfo,
 			&multsampleState,&depthStencilState,&colorBlendInfo,&dynamicState,pipelineLayout,renderPass);
-
+		
 		auto pipeline = dev.createGraphicsPipeline({}, pipelineCreateInfo);
-
 		auto data = std::make_shared<PipelineData>();
 		data->device = dev;
+
 		data->setLayout = descriptorSetLayout;
 		data->pipelineLayout = pipelineLayout;
 		data->pipeline = pipeline;
