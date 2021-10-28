@@ -10,95 +10,45 @@ namespace gld
     class DataMgr{
     public:
 
-        template<DataType Rt>
-        auto
-            load(typename MapResPlug<static_cast<size_t>(Rt),Plugs...>::type::ArgsTy args)
+        template<DataType Rt,typename ... Args>
+        auto load(Args&& ... args)
             ->typename MapResPlug<static_cast<size_t>(Rt),Plugs...>::type::RetTy
+            requires requires (Args&& ... args)
+            {
+                 MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::load(std::forward<Args>(args)...);
+                 MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::key_from_args(std::forward<Args>(args)...);
+            }
         {
             using Ty = typename MapResPlug<static_cast<size_t>(Rt),Plugs...>::type;
             using ARGS_T = typename Ty::ArgsTy;
             using RET_T = typename Ty::RetTy;
 
-            auto key = Ty::key_from_args(args);
+            auto key = Ty::key_from_args(std::forward<Args>(args)...);
 
             if(ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(key))
             {
                 return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(key);
             }
 
-            auto [success,res] = Ty::load(std::forward<typename Ty::ArgsTy>(args));
+            auto [success,res] = Ty::load(std::forward<Args>(args)...);
 
             if(success)
                 ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(key,res);
             return res;
         }
-
-        template<DataType Rt>
-        auto load()
-            ->typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::RetTy
-        {
-
-            static_assert(data_ck::has_default_args_func_vt<typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type>::value,
-                "Load plug args type must has default_args function!!!");
-
-            using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
-            using ARGS_T = typename Ty::ArgsTy;
-            using RET_T = typename Ty::RetTy;
-
-            return load<Rt>(Ty::default_args());
-        }
-
-        template<DataType Rt,typename ...Args>
-        decltype(auto)
-            load(Args&&... args)
-        {
-            using Ty = typename MapResPlug<static_cast<size_t>(Rt),Plugs...>::type;
-            using ARGS_T = typename Ty::ArgsTy;
-            using RET_T = typename Ty::RetTy;
-
-            static_assert(data_ck::has_load_func3_vt<Ty,Args...>::value,"This load plug not has tuple load function!!!");
-
-            auto args_tup = std::make_tuple(std::forward<Args>(args)...);
-
-            auto key = Ty::key_from_args(args_tup);
-
-            if(ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(key))
-            {
-                return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(key);
-            }
-
-            auto [success,res] = Ty::load(std::forward<ARGS_T>(args_tup));
-
-            if(success)
-                ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(key,res);
-            return res;
-        }
-
-        template<DataType Rt>
-        decltype(auto) rm_cache(typename MapResPlug<static_cast<size_t>(Rt),Plugs...>::type::ArgsTy args)
+		
+        template<DataType Rt, typename ... Args>
+        decltype(auto) rm_cache(Args&& ... args)
+			requires requires (Args&& ... args)
+		{
+			MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::key_from_args(std::forward<Args>(args)...);
+		}
         {
             using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
 
-            auto key = Ty::key_from_args(args);
+            auto key = Ty::key_from_args(std::forward<Args>(args)...);
 
             return ResCacheMgr<Plugs...>::instance()->template rm_cache<static_cast<size_t>(Rt)>(key);
-        }
-
-        template<DataType Rt,typename ...Args>
-        decltype(auto) rm_cache(Args&&... args)
-        {
-            using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
-            
-            return rm_cache(std::make_tuple(std::forward<Args>(args)...));
-        }
-
-        template<DataType Rt>
-        decltype(auto) rm_cache_def()
-        {
-            using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
-            static_assert(data_ck::has_default_args_func_vt<Ty>::value , "must has default_args function!!!");
-
-            return rm_cache(Ty::default_args());
         }
 
         inline static std::shared_ptr<DataMgr<Plugs...>> instance()
@@ -121,27 +71,27 @@ private:
         DataMgr<Plugs...>() {}
     };
 
-    struct GenSquareVertices {
+    template<typename...Args>
+    struct GenSquareVertices{
+   
         using RetTy = std::shared_ptr<std::vector<float>>;
-        using ArgsTy = std::tuple<float, float>;
+        using ArgsTy = std::tuple<Args...>;
         using RealRetTy = std::tuple<bool, RetTy>;
-        static std::string key_from_args(ArgsTy args);
-        static RealRetTy load(ArgsTy args);
-        static ArgsTy default_args();
+        static std::string key_from_args(Args...);
+        static RealRetTy load(Args...);
     };
-
+    template<typename...Args>
     struct GenSquareIndices {
         using RetTy = std::shared_ptr<std::vector<int>>;
-        using ArgsTy = std::tuple<>;
+        using ArgsTy = std::tuple<Args...>;
         using RealRetTy = std::tuple<bool, RetTy>;
-        static std::string key_from_args(ArgsTy args);
-        static RealRetTy load(ArgsTy args);
-        static ArgsTy default_args();
+        static std::string key_from_args(Args...);
+        static RealRetTy load(Args...);
     };
 
     typedef DataMgr<
-        DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices>,
+        DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices,float,float>,
         DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>,
-        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple>
+        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple,vk::Device,vk::RenderPass,const vk::Extent2D&,std::string,std::string,std::unordered_set<uint32_t>,std::function<void(vk::GraphicsPipelineCreateInfo)>>
         > DefDataMgr;
 } // namespace gld

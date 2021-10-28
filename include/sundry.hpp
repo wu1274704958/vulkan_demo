@@ -55,6 +55,18 @@ namespace sundry
         return res;
     }
 
+
+	template<char P = '\0', char B = '\0', typename ...Args>
+	std::string format_tup(char sepa,Args&&... args)
+	{
+		std::string res;
+        auto tup = std::make_tuple(std::forward<Args>(args)...);
+		if constexpr(P != '\0'){ res += P; }
+		format_tup_sub<0>(tup, res, sepa);
+		if constexpr(B != '\0'){ res += B; }
+		return res;
+	}
+
     inline float rd_0_1()
     {
         return glm::linearRand<float>(0.f, 1.f);

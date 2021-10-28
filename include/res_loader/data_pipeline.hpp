@@ -26,12 +26,15 @@ namespace gld::vkd {
 
 		}
 	};
-
+	template<typename ...Args>
 	struct LoadPipelineSimple {
 		using RetTy = std::shared_ptr<PipelineData>;
-		using ArgsTy = std::tuple<vk::Device,std::string,std::string,std::unordered_set<uint32_t>,vk::Extent2D,vk::RenderPass>;
+		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool, RetTy>;
-		static std::string key_from_args(const ArgsTy& args);
-		static RealRetTy load(ArgsTy args);
+		static std::string key_from_args(const std::string&,const std::string&);
+		static std::string key_from_args(vk::Device,vk::RenderPass,const vk::Extent2D&,
+			const std::string&,const std::string&,const std::unordered_set<uint32_t>& ins_set = {},std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
+		static RealRetTy load(vk::Device, vk::RenderPass, const vk::Extent2D&,
+			std::string, std::string, std::unordered_set<uint32_t> ins_set = {}, std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
 	};
 }

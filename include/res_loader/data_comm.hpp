@@ -65,23 +65,23 @@ namespace gld{
 
     }
 
+    template<typename T,typename R>
+    concept HasRealRetTy = std::is_same_v<typename T::RealRetTy,std::tuple<bool,R>>;
 
-    template<DataType ty,typename T>
-    struct DataLoadPlugTy
+    template<DataType ty,template<typename ...As> class T,typename ... ARGS>
+	requires requires (ARGS... args) {
+		T<ARGS...>::RetTy;
+		T<ARGS...>::ArgsTy;
+		T<ARGS...>::load(args...);
+		T<ARGS...>::key_from_args(args...);
+        requires HasRealRetTy<T<ARGS...>, typename T<ARGS...>::RetTy>;
+	}
+    struct DataLoadPlugTy    
     {
         constexpr static size_t res_type = static_cast<size_t>(ty);
-        using type = T;
-
-        static_assert(data_ck::has_ret_type_vt<T>::value,"this type must has RetTy!!!");
-        static_assert(data_ck::has_args_type_vt<T>::value,"this type must has ArgsTy!!!");
+        using type = T<ARGS...>;
         
-        
-        using Ret = typename T::RetTy;
-        using Args = typename T::ArgsTy;
-        static_assert(
-            data_ck::has_load_func_vt<T,Args>::value || (data_ck::has_load_func2_vt<T>::value && std::is_same_v<Args,void>),
-            "this type must has load func!!!");
-
-        static_assert(data_ck::has_key_from_args_func_vt<T,Args>::value,"this type must has key_from_args function!!!");
+        using Ret = typename T<ARGS...>::RetTy;
+        using Args = typename T<ARGS...>::ArgsTy;
     };
 }

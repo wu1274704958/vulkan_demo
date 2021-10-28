@@ -11,8 +11,8 @@ public:
 	{}
 private:
 	void onInit() override {
-		 pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,"shader_23/quad.vert","shader_23/quad.frag",std::unordered_set<uint32_t>{},
-			surfaceExtent,renderPass);
+		 pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,renderPass,surfaceExtent,"shader_23/quad.vert","shader_23/quad.frag");
+		 gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
 	}
 	void onReCreateSwapChain() override {
 

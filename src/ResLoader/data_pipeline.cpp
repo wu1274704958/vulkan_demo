@@ -4,16 +4,17 @@
 #include <common.hpp>
 namespace gld::vkd {
 
-	std::string LoadPipelineSimple::key_from_args(const ArgsTy& args)
+	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
+		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>
+		)
 	{
-		std::string s = std::get<1>(args);
-		s += '#';
-		s += std::get<2>(args);
-		for (auto i : std::get<3>(args))
-		{
-			s += wws::to_string(i);
-		}
-		return s;
+		return sundry::format_tup('#',v,f);
+	}
+	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
+		const std::string& v, const std::string& f
+	)
+	{
+		return sundry::format_tup('#', v, f);
 	}
 	inline void push_descriptor(std::vector<vk::DescriptorSetLayoutBinding>& bindings,std::vector<Descriptor>& descriptors,vk::ShaderStageFlagBits stage)
 	{
@@ -59,14 +60,10 @@ namespace gld::vkd {
 		return std::make_tuple(binding,attr);
 	}
 	template<size_t N>
-	LoadPipelineSimple::RealRetTy realCreatePipeline(const LoadPipelineSimple::ArgsTy& args,
+	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
+		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo)>& on,
 		const std::array<std::shared_ptr<SpirvRes>,N>& shaders)
 	{
-		auto& is_instance_set = std::get<3>(args);
-		auto dev = std::get<0>(args);
-		auto& extent = std::get<4>(args);
-		auto renderPass = std::get<5>(args);
-
 		std::vector<vk::DescriptorSetLayoutBinding> bindings;
 		for (auto& p : shaders)
 			push_descriptor(bindings, p->shaderRes.descriptors, p->stage);
@@ -111,7 +108,7 @@ namespace gld::vkd {
 		vk::PipelineDynamicStateCreateInfo dynamicState({},dynamicStates);
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo({},stages, &vertexInputStateInfo, &inputAssemblyStateInfo, nullptr,&viewportState,&rasterizationInfo,
 			&multsampleState,&depthStencilState,&colorBlendInfo,&dynamicState,pipelineLayout,renderPass);
-		
+		if(on)on(pipelineCreateInfo);
 		auto pipeline = dev.createGraphicsPipeline({}, pipelineCreateInfo);
 		auto data = std::make_shared<PipelineData>();
 		data->device = dev;
@@ -124,11 +121,13 @@ namespace gld::vkd {
 		return std::make_tuple(true, data);
 	}
 
-	LoadPipelineSimple::RealRetTy LoadPipelineSimple::load(LoadPipelineSimple::ArgsTy args)
+	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
+		LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::load(
+		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on
+	)
 	{
-		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(std::get<1>(args));
-		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(std::get<2>(args));
-		auto dev = std::get<0>(args);
+		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s);
+		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(frag_s);
 		if (!vert || !frag || !dev)
 			return std::make_tuple(false,nullptr);
 
@@ -136,6 +135,6 @@ namespace gld::vkd {
 			vert,frag
 		};
 
-		return realCreatePipeline(args,shaders);
+		return realCreatePipeline(dev,r,extent,is_ins,on,shaders);
 	}
 }
