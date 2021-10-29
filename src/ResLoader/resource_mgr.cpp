@@ -11,7 +11,42 @@
 #include <assimp/scene.h>
 using namespace std;
 
+namespace gld {
+	std::string PerfectUri::perfect(CxtTy& cxt, const std::string& uri) noexcept(true)
+	{
+		auto& [root] = cxt;
+		int b = 0, i = 0;
+		auto res = root;
+		for (; i < uri.size(); ++i)
+		{
+			if (uri[i] == '/')
+			{
+				std::string t = uri.substr(b, i - b);
+				if (!t.empty())
+					res.append(t.c_str());
+				b = i + 1;
+			}
+		}
+		if (b < i)
+		{
+			std::string t = uri.substr(b, i - b);
+			if (!t.empty())
+				res.append(t.c_str());
+		}
+		return res.generic_string();
+	}
+}
 
+gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::string& key)
+{
+	auto str = std::make_shared<string>();
+	stream->read([&str](const char * buf,size_t r) {
+		str->append(buf,r);
+	},1024 * 1024);
+	return std::make_tuple(true,str);
+}
+
+/*
 gld::StbImage::~StbImage()
 {
 	if (data)
@@ -31,27 +66,6 @@ gld::LoadScene::ArgsTy gld::LoadScene::default_args()
 #ifndef PF_ANDROID
 namespace fs = std::filesystem;
 
-
-gld::LoadText::RealRetTy gld::LoadText::load(fs::path p,const fs::path& k)
-{
-	std::string path = p.string();
-	std::ifstream f(path.c_str(), std::ios::binary);
-	
-	if (f.good())
-	{
-		string *res = new string();
-		res->reserve(1024);
-		while (!f.eof())
-		{
-			char buf[256] = { 0 };
-			f.read(buf, wws::arrLen(buf) - 1);
-			res->append(buf);
-		}
-		return std::make_tuple(true,std::shared_ptr<std::string>(res));
-	}
-	else
-		return std::make_tuple(false,std::shared_ptr<std::string>());
-}
 
 gld::LoadTextWithGlslPreprocess::RealRetTy gld::LoadTextWithGlslPreprocess::load(fs::path p,const fs::path& k)
 {
@@ -292,4 +306,106 @@ void gld::AAndIosStream::Flush()
 }
 
 
-#endif
+
+#endif*/
+
+void gld::DefStream::open(const char* p, const char* m) 
+{
+	file = fopen(p,m);
+	if (file != nullptr)
+	{
+		fseek(file,0,SEEK_END);
+		file_size = ftell(file);
+	}
+}	
+bool gld::DefStream::good()
+{
+	return file != nullptr;
+}
+void gld::DefStream::close()
+{
+	if(file != nullptr)
+		fclose(file);
+	file = nullptr;
+}
+size_t gld::DefStream::read(void* buf, size_t pSize, size_t pCount) {
+	return fread(buf,pSize,pCount,file);
+}
+size_t gld::DefStream::write(const void* buf, size_t pSize, size_t pCount) {
+	return fwrite(buf,pSize,pCount,file);
+}
+bool gld::DefStream::seek(size_t offset, int posAt)
+{
+	return fseek(file,offset,posAt) == 0;
+}
+size_t gld::DefStream::tell() const
+{
+	return ftell(file);
+}
+size_t gld::DefStream::size() const
+{
+	return file_size;
+}
+void gld::DefStream::flush() {
+	fflush(file);
+}
+
+gld::DefStream::DefStream(DefStream&& d)
+{
+	this->file = d.file;
+	this->file_size = d.file_size;
+
+	d.file = nullptr;
+	d.file_size = 0;
+}
+
+gld::DefStream& gld::DefStream::operator=(gld::DefStream&& d)
+{
+	this->close();
+	this->file = d.file;
+	this->file_size = d.file_size;
+	d.file = nullptr;
+	d.file_size = 0;
+	return *this;
+}
+
+bool gld::DefStream::eof() const
+{
+	return feof(file);
+}
+
+std::optional<std::vector<char>> gld::DefStream::read_all()
+{
+	if (!good()) return std::nullopt;
+	std::vector<char> arr;
+	constexpr size_t LEN = 1024 * 1024;
+	char buf[LEN] = {0};
+	size_t r = -1;
+	while (!eof())
+	{
+		r = read(buf, sizeof(char), wws::arrLen(buf));
+		if (r > 0)
+		{
+			size_t old = arr.size();
+			arr.resize(old + r,0);
+			memcpy((arr.data() + old),buf,r);
+		}
+	}
+	return arr;
+}
+
+void gld::DefStream::read(std::function<void(const char*, size_t)> f, const size_t buf_size)
+{	
+	if(!f) return;
+	char* buf  = new char[buf_size];
+	size_t r = -1;
+	while (!eof())
+	{
+		r = read(buf, sizeof(char), buf_size);
+		if (r > 0)
+		{
+			f(buf,r);
+		}
+	}
+	delete[] buf;
+}

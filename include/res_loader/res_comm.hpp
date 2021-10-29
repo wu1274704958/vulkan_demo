@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <comm.hpp>
+#include <functional>
 #ifdef PF_ANDROID
 struct EGLCxt;
 #endif
@@ -17,102 +18,57 @@ namespace gld
         spirv_with_meta,
     };
 
-#ifndef PF_ANDROID
-    using PathTy = std::filesystem::path;
-#define RES_MGR_CXT
-#define VKD_RES_MGR_KEY1 std::declval<PathTy>(),
-#define VKD_RES_MGR_KEY2 std::declval<PathTy>()
-
-#define VKD_RES_MGR_KEY_TYPE const PathTy&
-#define VKD_RES_MGR_KEY_TYPE_WITH_COMMA const PathTy&,
-#define VKD_RES_MGR_CXT_PTR_TYPE 
-#define VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA
-#define VKD_RES_MGR_CXT_TYPE 
-#define VKD_RES_MGR_CXT_VAR_NAME_WITH_SEM
-#define VKD_RES_MGR_CXT_VAR_NAME_WITH_COMMA
-#define VKD_RES_MGR_CXT_VAR_NAME
-
+#ifdef PF_ANDROID
+    using ResMgrCxtTy = std::tuple<std::shared_ptr<EGLCxt>>;
+    using ResMgrKeyTy = std::string;
 #else
-
-    using AndroidCxtPtrTy = std::shared_ptr<EGLCxt>;
-    using PathTy = std::string;
-#define VKD_RES_MGR_KEY1
-#define VKD_RES_MGR_KEY2
-#define VKD_RES_MGR_KEY 
-
-
-#define VKD_RES_MGR_KEY_TYPE 
-#define VKD_RES_MGR_KEY_TYPE_WITH_COMMA 
-
-#define VKD_RES_MGR_CXT_PTR_TYPE std::shared_ptr<EGLCxt>
-#define VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA VKD_RES_MGR_CXT_PTR_TYPE,
-#define VKD_RES_MGR_CXT_TYPE EGLCxt
-#define VKD_RES_MGR_CXT_VAR_NAME cxt
-#define VKD_RES_MGR_CXT_VAR_NAME_WITH_SEM VKD_RES_MGR_CXT_VAR_NAME;
-#define VKD_RES_MGR_CXT_VAR_NAME_WITH_COMMA VKD_RES_MGR_CXT_VAR_NAME,
-
+    using ResMgrCxtTy = std::tuple<std::filesystem::path>;
+    using ResMgrKeyTy = std::string;
 #endif
 
-namespace res_ck{
-
-    template <class T,typename ...Args>											
-    using has_load_func_t = decltype(T::load(RES_MGR_CXT std::declval<PathTy>(), VKD_RES_MGR_KEY1 std::declval<Args>()...));
-
-    template <typename T,typename ...Args>
-    using has_load_func_vt = wws::is_detected<has_load_func_t,T,Args...>;
-
-    template <class T>
-    using has_load_func2_t = decltype(T::load(RES_MGR_CXT std::declval<PathTy>(),VKD_RES_MGR_KEY2));
-
-    template <typename T>
-    using has_load_func2_vt = wws::is_detected<has_load_func2_t, T>;
-
-    template <class T,class ... Args>
-    using has_load_func3_t = decltype(T::load(RES_MGR_CXT std::declval<PathTy>(), VKD_RES_MGR_KEY1 std::declval<std::tuple<Args...>>()));
-
-    template <typename T,class ...Args>
-    using has_load_func3_vt = wws::is_detected<has_load_func3_t, T,std::decay_t<Args> ...>;
-
-    template <class T>											
-    using has_ret_type_t = typename T::RetTy;
-
-    template <typename T>
-    using has_ret_type_vt = wws::is_detected<has_ret_type_t,T>;
-
-     template <class T>											
-    using has_args_type_t = typename T::ArgsTy;
-
-    template <typename T>
-    using has_args_type_vt = wws::is_detected<has_args_type_t,T>;
-
-    template <class T,class Args>											
-    using has_format_args_func_t = decltype(T::format_args(std::declval<Args>()));
-
-    template <typename T,typename Args>
-    using has_format_args_func_vt = wws::is_detected<has_format_args_func_t,T,Args>;
-
-    template <class T>											
-    using has_default_args_func_t = decltype(T::default_args());
-
-    template <typename T>
-    using has_default_args_func_vt = wws::is_detected<has_default_args_func_t,T>;
-}
-
-    template<ResType ty,typename T>
-    struct ResLoadPlugTy
+    struct FStream
     {
-        constexpr static size_t res_type = static_cast<size_t>(ty);
-        using type = T;
+    public:
+        virtual void open(const char*, const char*) = 0;
+        virtual bool good() = 0;
+        virtual void close() = 0;
 
-        static_assert(res_ck::has_ret_type_vt<T>::value,"this type must has RetTy!!!");
-        static_assert(res_ck::has_args_type_vt<T>::value,"this type must has ArgsTy!!!");
-        
-        using Ret = typename T::RetTy;
-        using Args = typename T::ArgsTy;
-        static_assert(
-            res_ck::has_load_func_vt<T,Args>::value || (res_ck::has_load_func2_vt<T>::value && std::is_same_v<Args,void>),
-            "this type must has load func!!!");
+        virtual ~FStream()
+        {
+            if(good())
+                close();
+        }
+        virtual size_t read(void* buf,size_t pSize,size_t pCount) = 0;
+        virtual size_t write(const void* buf,size_t pSize, size_t pCount) = 0;
+        virtual bool seek(size_t offset,int posAt);
+        virtual size_t tell() const = 0;
+        virtual size_t size() const = 0;
+        virtual void flush() = 0;
+        virtual bool eof() const = 0;
+        virtual std::optional<std::vector<char>> read_all();
+        virtual void read(std::function<void(const char*,size_t)>, const size_t buf_size);
     };
+    
+    template<typename T, typename R>
+	concept HasRealRetTy = std::is_same_v<typename T::RealRetTy, std::tuple<bool, R>>;
+
+	template<ResType ty, template<typename ...As> class T, typename ... ARGS>
+	requires requires (ARGS... args) {
+		T<ARGS...>::RetTy;
+		T<ARGS...>::ArgsTy;
+		T<ARGS...>::load(std::declval<FStream*>(),std::declval<std::string&>(),std::forward<ARGS>(args)...);
+		//T<ARGS...>::key_from_args(args...);
+		requires HasRealRetTy<T<ARGS...>, typename T<ARGS...>::RetTy>;
+	}
+	struct ResLoadPlugTy
+	{
+		constexpr static size_t res_type = static_cast<size_t>(ty);
+		using type = T<ARGS...>;
+
+		using Ret = typename T<ARGS...>::RetTy;
+		using Args = typename T<ARGS...>::ArgsTy;
+	};
+	
 
     template<size_t Rt,typename ...Ts>
     struct MapResPlug;

@@ -12,7 +12,7 @@ public:
 private:
 	void onInit() override {
 		 pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,renderPass,surfaceExtent,"shader_23/quad.vert","shader_23/quad.frag");
-		 gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
+		 
 	}
 	void onReCreateSwapChain() override {
 
@@ -30,17 +30,17 @@ private:
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 };
 
-
+using namespace gld;
 void main()
 {
-	gld::DefResMgr::create_instance("../../../res");
-
-	auto quad = new Quad(true,"Quad");
+	DefResMgr::create_instance(std::make_tuple("../../../res"));
+	auto a = DefResMgr::instance()->load<ResType::text>("shader_23/quad.vert");
+	/*auto quad = new Quad(true,"Quad");
 	quad->init(800,600);
 	quad->mainLoop();
 	gld::DefDataMgr::instance()->clear_all();
 	quad->cleanUp();
-	delete quad;
+	delete quad;*/
 }
 
 

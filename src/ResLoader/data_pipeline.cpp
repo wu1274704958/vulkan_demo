@@ -2,6 +2,7 @@
 #include <sundry.hpp>
 #include <res_loader/resource_mgr.hpp>
 #include <common.hpp>
+#if 0
 namespace gld::vkd {
 
 	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
@@ -138,3 +139,4 @@ namespace gld::vkd {
 		return realCreatePipeline(dev,r,extent,is_ins,on,shaders);
 	}
 }
+#endif

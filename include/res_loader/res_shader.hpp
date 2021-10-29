@@ -52,6 +52,6 @@ namespace gld::vkd {
 		using RealRetTy = std::tuple<bool, RetTy>;
 		static std::string format_args(ArgsTy flag);
 		static ArgsTy default_args();
-		static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE_WITH_COMMA glslang::EShTargetClientVersion);
+		//static RealRetTy load(PathTy, glslang::EShTargetClientVersion);
 	};
 }

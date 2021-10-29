@@ -65,9 +65,6 @@ namespace gld{
 
     }
 
-    template<typename T,typename R>
-    concept HasRealRetTy = std::is_same_v<typename T::RealRetTy,std::tuple<bool,R>>;
-
     template<DataType ty,template<typename ...As> class T,typename ... ARGS>
 	requires requires (ARGS... args) {
 		T<ARGS...>::RetTy;

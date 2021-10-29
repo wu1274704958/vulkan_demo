@@ -8,7 +8,7 @@
 #include <res_loader/res_shader.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <common.hpp>
-
+#if 0
 namespace gld::vkd {
 
 	extern const TBuiltInResource k_default_conf;
@@ -34,9 +34,9 @@ namespace gld::vkd {
 		return "";
 	}
 
-	std::optional<EShLanguage> get_lang_by_suffix(VKD_RES_MGR_KEY_TYPE k)
+	std::optional<EShLanguage> get_lang_by_suffix(std::string& k)
 	{
-		auto e = k.extension();
+		std::string e = "";//k.extension();
 		if (e == "vert")
 		{
 			return EShLanguage::EShLangVertex;
@@ -217,7 +217,7 @@ namespace gld::vkd {
 				dbg::log << spv_message_level_to_str(level) << " [" << position.line <<':'<< position.column << "] " << key_str << " " << source << " " << message << dbg::endl;
 			});
 
-		auto v = spv_tools.Validate(res.binary);*/
+		auto v = spv_tools.Validate(res.binary);
 
 		spirv_cross::CompilerGLSL glsl(res.binary.data(),res.binary.size());
 
@@ -383,3 +383,5 @@ case spirv_cross::SPIRType::T:					\
 			/* .generalConstantMatrixVectorIndexing = */ true,
 		} };
 }
+
+#endif
