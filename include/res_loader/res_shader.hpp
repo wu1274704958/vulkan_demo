@@ -44,14 +44,13 @@ namespace gld::vkd {
 		vk::ShaderStageFlagBits stage;
 		std::string entryPoint;
 	};
-
+	template<typename ... Args>
 	struct LoadSpirvWithMetaData
 	{
 		using RetTy = std::shared_ptr<SpirvRes>;
-		using ArgsTy = glslang::EShTargetClientVersion;
+		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool, RetTy>;
-		static std::string format_args(ArgsTy flag);
-		static ArgsTy default_args();
-		//static RealRetTy load(PathTy, glslang::EShTargetClientVersion);
+		static std::string key_from_args(glslang::EShTargetClientVersion v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2);
+		static RealRetTy load(FStream*,const std::string&, glslang::EShTargetClientVersion  v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2);
 	};
 }

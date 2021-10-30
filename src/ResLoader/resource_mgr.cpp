@@ -11,6 +11,10 @@
 #include <assimp/scene.h>
 using namespace std;
 
+#ifdef LoadImage
+#undef LoadImage
+#endif
+
 namespace gld {
 	std::string PerfectUri::perfect(CxtTy& cxt, const std::string& uri) noexcept(true)
 	{
@@ -35,7 +39,7 @@ namespace gld {
 		}
 		return res.generic_string();
 	}
-}
+
 
 gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::string& key)
 {
@@ -46,48 +50,19 @@ gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::str
 	return std::make_tuple(true,str);
 }
 
-/*
+
 gld::StbImage::~StbImage()
 {
 	if (data)
 		stbi_image_free(data);
 }
 
-std::string gld::LoadScene::format_args(unsigned int flag)
-{
-    return wws::to_string(flag);
-}
-
-gld::LoadScene::ArgsTy gld::LoadScene::default_args()
-{
-	return aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
-}
-
 #ifndef PF_ANDROID
 namespace fs = std::filesystem;
 
-
-gld::LoadTextWithGlslPreprocess::RealRetTy gld::LoadTextWithGlslPreprocess::load(fs::path p,const fs::path& k)
+LoadImage<int>::RealRetTy LoadImage<int>::load(FStream* stream, const std::string& path, int req_comp)
 {
-	auto ptr = DefResMgr::instance()->load<ResType::text>(k.string());
-	
-	if (ptr)
-	{
-		glsl::PreprocessMgr<'#',glsl::IncludePreprocess> preprocess;
-
-		std::string res = preprocess.process(std::move(p),std::string(*ptr));
-		return std::make_tuple(true,std::shared_ptr<std::string>(new std::string(std::move(res))));
-	}
-	else
-		return std::make_tuple(false,std::shared_ptr<std::string>());
-}
-
-#ifdef LoadImage
-#undef LoadImage
-#endif
-gld::LoadImage::RealRetTy gld::LoadImage::load(std::filesystem::path p,const fs::path& k,int req_comp)
-{
-	std::string path = p.string();
+	stream->close();
 	int width, height, nrComponents;
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, req_comp);
 	if (data)
@@ -103,21 +78,30 @@ gld::LoadImage::RealRetTy gld::LoadImage::load(std::filesystem::path p,const fs:
 		return std::make_tuple(false,std::shared_ptr<gld::StbImage>());
 }
 
-
-gld::LoadScene::RealRetTy gld::LoadScene::load(gld::PathTy p,const fs::path& k,gld::LoadScene::ArgsTy flag)
+std::string LoadImage<int>::key_from_args(int req_comp)
 {
-	std::string path = p.string();
+	return wws::to_string(req_comp);
+}
+}
+
+std::string gld::LoadScene<uint32_t>::key_from_args(uint32_t flag)
+{
+	return wws::to_string(flag);
+}
+
+gld::LoadScene<uint32_t>::RealRetTy gld::LoadScene<uint32_t>::load(FStream* stream, const std::string& path, uint32_t flag)
+{
+	stream->close();
 	Assimp::Importer* importer = new Assimp::Importer();
     const aiScene* scene = importer->ReadFile(path, flag);
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
         delete importer;
-		return std::make_tuple(false,std::shared_ptr<Assimp::Importer>());
+		return std::make_tuple(false,nullptr);
     }else{
 		return std::make_tuple(true,std::shared_ptr<Assimp::Importer>(importer));
 	}
 }
-
 
 #else
 
@@ -305,9 +289,7 @@ void gld::AAndIosStream::Flush()
 
 }
 
-
-
-#endif*/
+#endif
 
 void gld::DefStream::open(const char* p, const char* m) 
 {
@@ -316,6 +298,7 @@ void gld::DefStream::open(const char* p, const char* m)
 	{
 		fseek(file,0,SEEK_END);
 		file_size = ftell(file);
+		fseek(file,0,SEEK_SET);
 	}
 }	
 bool gld::DefStream::good()

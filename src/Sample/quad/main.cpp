@@ -4,6 +4,7 @@
 #include <res_loader/resource_mgr.hpp>
 #include <res_loader/data_mgr.hpp>
 #include <res_loader/data_pipeline.hpp>
+#include <stb_image.h>
 
 class Quad : public vkd::SampleRender {
 public:
@@ -34,13 +35,12 @@ using namespace gld;
 void main()
 {
 	DefResMgr::create_instance(std::make_tuple("../../../res"));
-	auto a = DefResMgr::instance()->load<ResType::text>("shader_23/quad.vert");
-	/*auto quad = new Quad(true,"Quad");
+	auto quad = new Quad(true,"Quad");
 	quad->init(800,600);
 	quad->mainLoop();
 	gld::DefDataMgr::instance()->clear_all();
 	quad->cleanUp();
-	delete quad;*/
+	delete quad;
 }
 
 

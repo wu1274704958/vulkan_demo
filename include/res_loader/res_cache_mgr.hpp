@@ -22,19 +22,19 @@ namespace gld{
             return has(k);
         }
 
-        CacheTy get(Key& k)
+        CacheTy get(const Key& k)
         {
             if(!has(k))
                 throw std::runtime_error("Not cached this key!!!");
             return map[k];
         }
 
-        void cache(Key& k,CacheTy t)
+        void cache(const Key& k,CacheTy t)
         {
             map[k] = t;
         }
 
-        bool rm_cache(Key& k)
+        bool rm_cache(const Key& k)
         {
             if(has(k))
             {

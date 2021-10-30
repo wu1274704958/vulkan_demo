@@ -37,7 +37,11 @@ namespace gld{
 		virtual void open(const char*, const char*) override;
 		virtual bool good() override;
 		virtual void close() override;
-		virtual ~DefStream(){}
+		virtual ~DefStream()
+		{
+			if (good())
+				close();
+		}
 		virtual size_t read(void* buf, size_t pSize, size_t pCount) override;
 		virtual size_t write(const void* buf, size_t pSize, size_t pCount) override;
 		virtual bool seek(size_t offset, int posAt);
@@ -66,6 +70,38 @@ namespace gld{
         }
     class ResourceMgr{
     public:
+
+		template<ResType Rt, typename Uri>
+		auto load(Uri&& uri)
+			->typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::RetTy
+			requires requires (Uri&& uri)
+		{
+			PU::perfect(std::declval<TUP&>(), std::forward<Uri>(uri));
+			MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::load(std::declval<FStream*>(), std::declval<std::string&>());
+		}
+		{
+			using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
+			using ARGS_T = typename Ty::ArgsTy;
+			using RET_T = typename Ty::RetTy;
+
+			auto path = PU::perfect(cxt, std::forward<Uri>(uri));
+
+			if (ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(path))
+			{
+				return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(path);
+			}
+
+			Stream stream;
+			stream.open(path.c_str(), "r");
+			if (!stream.good())
+				return nullptr;
+
+			auto [success, res] = Ty::load(&stream, path);
+
+			if (success)
+				ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(path, res);
+			return res;
+		}
 
 		template<ResType Rt,typename Uri, typename ... Args>
 		auto load(Uri&& uri,Args&& ... args)
@@ -103,11 +139,10 @@ namespace gld{
 		}
 
 		template<ResType Rt, typename Uri>
-		auto load(Uri&& uri)
+		auto load(FStream* stream, Uri&& uri)
 			->typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::RetTy
 			requires requires (Uri&& uri)
 		{
-			PU::perfect(std::declval<TUP&>(), std::forward<Uri>(uri));
 			MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::load(std::declval<FStream*>(), std::declval<std::string&>());
 		}
 		{
@@ -115,22 +150,50 @@ namespace gld{
 			using ARGS_T = typename Ty::ArgsTy;
 			using RET_T = typename Ty::RetTy;
 
-			auto path = PU::perfect(cxt, std::forward<Uri>(uri));
-
-			if (ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(path))
+			if (ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(std::forward<Uri>(uri)))
 			{
-				return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(path);
+				return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(std::forward<Uri>(uri));
 			}
 
-			Stream stream;
-			stream.open(path.c_str(), "r");
-			if (!stream.good())
+			if (!stream->good())
 				return nullptr;
 
-			auto [success, res] = Ty::load(&stream, path);
+			auto [success, res] = Ty::load(stream, std::forward<Uri>(uri));
 
 			if (success)
-				ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(path, res);
+				ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(std::forward<Uri>(uri), res);
+			return res;
+		}
+		
+		template<ResType Rt,typename Uri,typename ... Args>
+		auto load(FStream* stream,Uri&& uri,Args&& ...args)
+			->typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::RetTy
+			requires requires (Uri&& uri,Args&& ...args)
+		{
+			std::string(std::forward<Uri>(uri));
+			MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::load(std::declval<FStream*>(), std::declval<std::string&>(),std::forward<Args>(args)...);
+			MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::key_from_args(std::forward<Args>(args)...);
+		}
+		{
+			using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
+			using ARGS_T = typename Ty::ArgsTy;
+			using RET_T = typename Ty::RetTy;
+			auto path = std::string(std::forward<Uri>(uri));
+			auto key_ex = Ty::key_from_args(std::forward<Args>(args)...);
+			auto key = path + key_ex;
+
+			if (ResCacheMgr<Plugs...>::instance()->template has<static_cast<size_t>(Rt)>(key))
+			{
+				return ResCacheMgr<Plugs...>::instance()->template get<static_cast<size_t>(Rt)>(key);
+			}
+
+			if (!stream->good())
+				return nullptr;
+
+			auto [success, res] = Ty::load(stream, path,std::forward<Args>(args)...);
+
+			if (success)
+				ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(key, res);
 			return res;
 		}
 
@@ -173,12 +236,13 @@ namespace gld{
 
         inline static decltype(auto) create_instance(TUP t)
         {
-            self = std::make_shared<ResourceMgr<TUP,Stream,PU,Plugs...>>(std::forward<TUP>(t)); 
+            self = std::shared_ptr<ResourceMgr<TUP,Stream,PU,Plugs...>>(
+				new ResourceMgr<TUP, Stream, PU, Plugs... >(std::forward<TUP>(t)));
             return self;
         }
     protected:
         TUP cxt;
-        static std::shared_ptr<ResourceMgr<TUP, Stream, PU, Plugs...>> self;
+        static inline std::shared_ptr<ResourceMgr<TUP, Stream, PU, Plugs...>> self = nullptr;
         ResourceMgr(TUP t) : cxt(t) {}
     };
 
@@ -192,49 +256,46 @@ namespace gld{
 		static RealRetTy load(FStream*,const std::string&);
 	};
 
-	/*struct LoadTextWithGlslPreprocess
+	/*template<typename ... Args>
+	struct LoadTextWithGlslPreprocess
 	{
 		using RetTy = std::shared_ptr<std::string>;
 		using ArgsTy = void;
 		using RealRetTy = std::tuple<bool,RetTy>;
 
 		static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE);
-	};
+	};*/
 
-	/*struct StbImage {
+	struct StbImage {
 		unsigned char* data = nullptr;
 		int width = 0;
 		int height = 0;
 		int channel = 0;
 		~StbImage();
 	};
-
+	template<typename ... Args>
 	struct LoadImage
 	{
 		using RetTy = std::shared_ptr<StbImage>;
-		using ArgsTy = int;
+		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool,RetTy>;
-		static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE_WITH_COMMA int req_comp);
+		static RealRetTy load(FStream*,const std::string&,int req_comp = 0);
+		static std::string key_from_args(int req_comp = 0);
 	};
-
+	template<typename ... Args>
 	struct LoadScene
 	{
 		using RetTy = std::shared_ptr<Assimp::Importer>;
-		using ArgsTy = unsigned int;
+		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool,RetTy>;
-		static std::string format_args(ArgsTy flag);
-		static ArgsTy default_args();
-		static RealRetTy load(VKD_RES_MGR_CXT_PTR_TYPE_WITH_COMMA PathTy, VKD_RES_MGR_KEY_TYPE_WITH_COMMA ArgsTy flag);
+		static std::string key_from_args(uint32_t flag = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+		static RealRetTy load(FStream*, const std::string&, uint32_t flag = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	};
 
-	typedef ResourceMgr<'/',
-		ResLoadPlugTy<ResType::text, LoadText>,
-		ResLoadPlugTy<ResType::glsl,LoadTextWithGlslPreprocess>,
-		ResLoadPlugTy<ResType::image,LoadImage>,
-		ResLoadPlugTy<ResType::model,LoadScene>,
-		ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData>> DefResMgr;*/
-
-	typedef ResourceMgr<ResMgrCxtTy,DefStream,PerfectUri,ResLoadPlugTy<ResType::text,LoadText>> DefResMgr;
+	typedef ResourceMgr<ResMgrCxtTy,DefStream,PerfectUri,ResLoadPlugTy<ResType::text,LoadText>,
+	ResLoadPlugTy<ResType::image,LoadImage,int>,
+	ResLoadPlugTy<ResType::model,LoadScene,uint32_t>,
+	ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion>> DefResMgr;
 }
 
 #ifdef PF_ANDROID

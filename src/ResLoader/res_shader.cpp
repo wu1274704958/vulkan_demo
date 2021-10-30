@@ -8,16 +8,13 @@
 #include <res_loader/res_shader.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <common.hpp>
-#if 0
+
 namespace gld::vkd {
 
 	extern const TBuiltInResource k_default_conf;
 
-	LoadSpirvWithMetaData::ArgsTy LoadSpirvWithMetaData::default_args() { return glslang::EShTargetClientVersion::EShTargetVulkan_1_2; }
-
-	std::string LoadSpirvWithMetaData::format_args(ArgsTy flag) {
-		auto t = std::make_tuple((int)flag);
-		return sundry::format_tup(t,'#');
+	std::string LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::key_from_args(glslang::EShTargetClientVersion v) {
+		return wws::to_string((int)v);
 	}
 
 	const char* spv_message_level_to_str(spv_message_level_t l)
@@ -34,15 +31,13 @@ namespace gld::vkd {
 		return "";
 	}
 
-	std::optional<EShLanguage> get_lang_by_suffix(std::string& k)
+	std::optional<EShLanguage> get_lang_by_suffix(const std::string& k)
 	{
-		std::string e = "";//k.extension();
-		if (e == "vert")
-		{
-			return EShLanguage::EShLangVertex;
-		}
-		int idx = eq_ct_str_ret(e.c_str(),PREPARE_CT_STR(L".vert"), PREPARE_CT_STR(L".frag"), PREPARE_CT_STR(L".comp"), PREPARE_CT_STR(L".geom"),
-			PREPARE_CT_STR(L".tese"), PREPARE_CT_STR(L".tesc"));
+		int i = k.find_last_of('.');
+		if (i <= -1) return std::nullopt;
+		std::string e = k.substr(i);
+		int idx = eq_ct_str_ret(e.c_str(),PREPARE_CT_STR(".vert"), PREPARE_CT_STR(".frag"), PREPARE_CT_STR(".comp"), PREPARE_CT_STR(".geom"),
+			PREPARE_CT_STR(".tese"), PREPARE_CT_STR(".tesc"));
 		constexpr std::array<EShLanguage,6> flags = std::array<EShLanguage,6>{ EShLanguage::EShLangVertex, EShLanguage::EShLangFragment, EShLanguage::EShLangCompute,EShLanguage::EShLangGeometry,
 			EShLanguage::EShLangTessEvaluation, EShLanguage::EShLangTessControl};
 		if(idx == -1)
@@ -159,18 +154,18 @@ namespace gld::vkd {
 		(res.*bindingStride).push_back({ (uint32_t)curr_binding,last_size });
 	}
 
-	LoadSpirvWithMetaData::RealRetTy LoadSpirvWithMetaData::load(PathTy p, VKD_RES_MGR_KEY_TYPE k, glslang::EShTargetClientVersion env)
+	LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::RealRetTy 
+		LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::load(FStream* stream,const std::string& path, glslang::EShTargetClientVersion env)
 	{
 		auto tar_env = get_spv_target_env(env);
 		if(!tar_env)
 			return std::make_tuple(false,nullptr);
-		auto key_str = k.string();
-		auto text = DefResMgr::instance()->load<ResType::glsl>(key_str);
+		auto text = DefResMgr::instance()->load<ResType::text>(stream,path);
 		if(!text) return std::make_tuple(false,nullptr);
-		auto elang = get_lang_by_suffix(k);
+		auto elang = get_lang_by_suffix(path);
 		if (!elang)
 		{
-			dbg::log << "Not support sharder type " << k << "\n";
+			dbg::log << "Not support sharder type " << path << "\n";
 			return std::make_tuple(false, nullptr);
 		}
 		glslang::InitializeProcess();
@@ -189,7 +184,7 @@ namespace gld::vkd {
 		if (!shader.parse(&k_default_conf, 100, false, EShMessages::EShMsgDefault))
 		{
 			auto info = shader.getInfoLog();
-			dbg::log << "parse glsl failed " << k << " " << info << dbg::endl;
+			dbg::log << "parse glsl failed " << path << " " << info << dbg::endl;
 			glslang::FinalizeProcess();
 			return std::make_tuple(false,nullptr);
 		}
@@ -199,7 +194,7 @@ namespace gld::vkd {
 		if (!prog.link(EShMsgDefault))
 		{
 			auto info = prog.getInfoLog();
-			dbg::log << "link program failed " << k << " " << info << dbg::endl;
+			dbg::log << "link program failed " << path << " " << info << dbg::endl;
 			glslang::FinalizeProcess();
 			return std::make_tuple(false, nullptr);
 		}
@@ -210,11 +205,11 @@ namespace gld::vkd {
 		
 		glslang::FinalizeProcess();
 
-		/*spvtools::SpirvTools spv_tools(*tar_env);
+		spvtools::SpirvTools spv_tools(*tar_env);
 
-		spv_tools.SetMessageConsumer([&key_str](spv_message_level_t  level , const char* source,
+		spv_tools.SetMessageConsumer([&path](spv_message_level_t  level , const char* source,
 			const spv_position_t&  position , const char*  message ) {
-				dbg::log << spv_message_level_to_str(level) << " [" << position.line <<':'<< position.column << "] " << key_str << " " << source << " " << message << dbg::endl;
+				dbg::log << spv_message_level_to_str(level) << " [" << position.line <<':'<< position.column << "] " << path << " " << source << " " << message << dbg::endl;
 			});
 
 		auto v = spv_tools.Validate(res.binary);
@@ -384,4 +379,3 @@ case spirv_cross::SPIRType::T:					\
 		} };
 }
 
-#endif
