@@ -180,7 +180,7 @@ namespace gld::vkd {
 			if(!key) return nullptr;
 			auto v = gld::DefResMgr::instance()->load<ResType::text>(*key);
 			if(!v) return nullptr;
-			IncludeResult*  r = new IncludeResult("",v->data(),v->size(),nullptr);
+			IncludeResult*  r = new IncludeResult(headerName,v->data(),v->size(),nullptr);
 			return r;
 		}
 

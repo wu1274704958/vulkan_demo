@@ -25,17 +25,21 @@ namespace gld {
 		{
 			if (uri[i] == '/')
 			{
-				std::string t = uri.substr(b, i - b);
+				std::string_view sv = uri;
+				auto t = sv.substr(b,i - b);
+				//std::string t = uri.substr(b, i - b);
 				if (!t.empty())
-					res.append(t.c_str());
+					res.append(t.begin(), t.end());
 				b = i + 1;
 			}
 		}
 		if (b < i)
 		{
-			std::string t = uri.substr(b, i - b);
+			std::string_view sv = uri;
+			auto t = sv.substr(b, i - b);
+			//std::string t = uri.substr(b, i - b);
 			if (!t.empty())
-				res.append(t.c_str());
+				res.append(t.begin(),t.end());
 		}
 		return res.generic_string();
 	}
