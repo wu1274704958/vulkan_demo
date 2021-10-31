@@ -224,4 +224,57 @@ namespace wws{
 			return std::nullopt;
 		}
 	}
+	template<char Ap = '/'>
+	bool up_path(std::string& res)
+	{
+		if (res.empty()) return false;
+		while (res.back() != Ap)
+		{
+			if (res.empty()) return false;
+			res.pop_back();
+		}
+		res.pop_back();
+		return true;
+	}
+
+	template<char Ap = '/'>
+	std::optional<std::string> append_path(const std::string& path, const char* str)
+	{
+		if(str[0] == '\0' || (str[1] == '\0' && str[0] == '.')) return path;
+		std::string res = path;
+		int b = 0;
+		int i = 0;
+		for(;;)
+		{
+			if(str[i] == '\0') break;
+			if (str[i] == Ap)
+			{
+				if(i == b) ++i;continue;
+				auto c = i - b;
+				if(c == 1 && str[b] == '.') b = i + 1;++i;continue;
+				if (c == 2 && str[b] == '.' && str[b + 1] == '.')
+				{
+					if(!up_path(res))return std::nullopt; 
+					b == i + 1;++i;continue;
+				}
+				res += Ap;
+				res.append(str + b,i - b);
+				b == i + 1;
+			}
+			++i;
+		}
+		if (str[b] != '\0')
+		{
+			auto c = i - b;
+			if (c == 1 && str[b] == '.')  return res;
+			if (c == 2 && str[b] == '.' && str[b + 1] == '.')
+			{
+				if (!up_path(res))return std::nullopt;
+				return res;
+			}
+			res += Ap;
+			res.append(str + b, i - b);
+		}
+		return res;
+	}
 }

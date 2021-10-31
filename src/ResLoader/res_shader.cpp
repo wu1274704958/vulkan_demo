@@ -160,7 +160,7 @@ namespace gld::vkd {
 		virtual IncludeResult* includeSystem(const char* headerName,
 			const char* includerName,
 			size_t inclusionDepth) override {
-			return nullptr;
+			return include_dir(system_dir, headerName);
 		} 
 
 		// For the "local"-only aspect of a "" include. Should not search in the
@@ -169,9 +169,17 @@ namespace gld::vkd {
 		virtual IncludeResult* includeLocal(const char* headerName,
 			const char* includerName,
 			size_t inclusionDepth) override{
-			int a = 1 +1;
-			a +=1;
-			return nullptr;
+			return include_dir(cur,headerName);
+		}
+
+		IncludeResult* include_dir(const std::string & dir,const char* headerName)
+		{
+			auto res = wws::append_path(dir,headerName);
+			if(!res) return nullptr;
+			auto v = gld::DefResMgr::instance()->load<ResType::text>(*res);
+			if(!v) return nullptr;
+			IncludeResult*  r = new IncludeResult("",v->data(),v->size(),nullptr);
+			return r;
 		}
 
 		// Signals that the parser will no longer use the contents of the
@@ -181,13 +189,8 @@ namespace gld::vkd {
 		};
 	public:
 		Includer() :cur(""),system_dir("") {}
-		Includer(const char* path) : cur(path) {
-			if (cur.size() > 0 && cur[cur.size() - 1] != '/')
-			{
-				int a = cur.find_last_of('/');
-				if (a + 1 < cur.size())
-					cur = cur.substr(0,a + 1);
-			}
+		Includer(std::string&& path) : cur(path) {
+			
 		}
 		template<typename T>
 		void set_sys_dir(T&& t)
@@ -213,8 +216,10 @@ namespace gld::vkd {
 		shader.setEnvClient(glslang::EShClient::EShClientVulkan, env);
 		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
 		std::string res;
-		Includer incl;
-		incl.set_sys_dir("shaders/comm/");
+		std::string r = path;
+		wws::up_path(r);
+		Includer incl(std::move(r));
+		incl.set_sys_dir("shaders/comm");
 		if (!shader.preprocess(&k_default_conf, 100, ENoProfile, false, false, EShMessages::EShMsgDefault, &res, incl))
 		{
 			auto info = shader.getInfoLog();
