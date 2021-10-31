@@ -31,10 +31,10 @@ private:
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 };
 
-using namespace gld;
+
 void main()
 {
-	DefResMgr::create_instance(std::make_tuple("../../../res"));
+	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
 	auto quad = new Quad(true,"Quad");
 	quad->init(800,600);
 	quad->mainLoop();

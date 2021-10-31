@@ -1,3 +1,5 @@
+#extension GL_GOOGLE_include_directive : enable
+#include "test.glsl"
 #version 450 core
 
 layout(binding = 0, std140) uniform UniformBufferObject

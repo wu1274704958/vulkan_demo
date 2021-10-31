@@ -154,6 +154,75 @@ namespace gld::vkd {
 		(res.*bindingStride).push_back({ (uint32_t)curr_binding,last_size });
 	}
 
+	class Includer : public glslang::TShader::Includer
+	{
+		
+		virtual IncludeResult* includeSystem(const char* headerName,
+			const char* includerName,
+			size_t inclusionDepth) override {
+			return nullptr;
+		} 
+
+		// For the "local"-only aspect of a "" include. Should not search in the
+		// "system" paths, because on returning a failure, the parser will
+		// call includeSystem() to look in the "system" locations.
+		virtual IncludeResult* includeLocal(const char* headerName,
+			const char* includerName,
+			size_t inclusionDepth) override{
+			int a = 1 +1;
+			a +=1;
+			return nullptr;
+		}
+
+		// Signals that the parser will no longer use the contents of the
+		// specified IncludeResult.
+		virtual void releaseInclude(IncludeResult* ptr) {
+			
+		};
+	public:
+		Includer() :cur(""),system_dir("") {}
+		Includer(const char* path) : cur(path) {
+			if (cur.size() > 0 && cur[cur.size() - 1] != '/')
+			{
+				int a = cur.find_last_of('/');
+				if (a + 1 < cur.size())
+					cur = cur.substr(0,a + 1);
+			}
+		}
+		template<typename T>
+		void set_sys_dir(T&& t)
+			requires requires(std::string s,T&& t)
+		{
+			s = std::forward<T>(t);
+		}
+		{
+			system_dir = std::forward<T>(t);
+		}
+	protected:
+		std::string cur;
+		std::string system_dir;
+	};
+
+	std::string preprocess(const std::string& code, const std::string& path, EShLanguage elang, glslang::EShTargetClientVersion env)
+	{
+		glslang::TShader shader(elang);
+		const int code_n = code.size();
+		auto c = code.data();
+		shader.setStringsWithLengths(&c, &code_n, 1);
+		shader.setEnvInput(glslang::EShSource::EShSourceGlsl, elang, glslang::EShClient::EShClientVulkan, 100);
+		shader.setEnvClient(glslang::EShClient::EShClientVulkan, env);
+		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
+		std::string res;
+		Includer incl;
+		incl.set_sys_dir("shaders/comm/");
+		if (!shader.preprocess(&k_default_conf, 100, ENoProfile, false, false, EShMessages::EShMsgDefault, &res, incl))
+		{
+			auto info = shader.getInfoLog();
+			dbg::log << "preprocess glsl failed " << path << " " << info << dbg::endl;
+		}
+		return res;
+	}
+
 	LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::RealRetTy 
 		LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::load(FStream* stream,const std::string& path, glslang::EShTargetClientVersion env)
 	{
@@ -172,15 +241,16 @@ namespace gld::vkd {
 		glslang::TShader shader(*elang);
 		glslang::TProgram prog;
 
-		auto code = text->data();
-		int code_n = text->size();
+		auto preCode = preprocess(*text,path,*elang,env);
 
-
+		auto code = preCode.data();
+		int code_n = preCode.size();
+		
 		shader.setStringsWithLengths(&code,&code_n,1);
 		shader.setEnvInput(glslang::EShSource::EShSourceGlsl,*elang,glslang::EShClient::EShClientVulkan,100);
 		shader.setEnvClient(glslang::EShClient::EShClientVulkan,env);
 		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv,glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
-		
+
 		if (!shader.parse(&k_default_conf, 100, false, EShMessages::EShMsgDefault))
 		{
 			auto info = shader.getInfoLog();
