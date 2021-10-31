@@ -30,6 +30,7 @@ namespace gld{
     {   
         using CxtTy = std::tuple<std::filesystem::path>;
         static std::string perfect(CxtTy&,const std::string&) noexcept(true);
+		static std::optional<std::string> path_to_key(CxtTy&,const std::string&) noexcept(true);
     };
 
     struct DefStream : public FStream
@@ -66,6 +67,7 @@ namespace gld{
         requires requires{ 
             PU::CxtTy;
             PU::perfect(std::declval<TUP&>(),std::declval<const std::string&>());
+			PU::path_to_key(std::declval<TUP&>(), std::declval<const std::string&>());
             requires std::derived_from<Stream,FStream>;
         }
     class ResourceMgr{
@@ -222,6 +224,11 @@ namespace gld{
 			auto key_ex = Ty::key_from_args(std::forward<Args>(args)...);
             key += key_ex;
 			return ResCacheMgr<Plugs...>::instance()->template rm_cache<static_cast<size_t>(Rt)>(key);
+		}
+
+		std::optional<std::string> path_to_key(const std::string& path) noexcept(true)
+		{
+			return PU::path_to_key(cxt,path);
 		}
 
         void clear_all()

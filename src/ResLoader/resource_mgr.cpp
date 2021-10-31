@@ -40,6 +40,28 @@ namespace gld {
 		return res.generic_string();
 	}
 
+	std::optional<std::string> PerfectUri::path_to_key(CxtTy& cxt, const std::string& path) noexcept(true)
+	{
+		auto& [root] = cxt;
+		auto s = root.string();
+		if(path.size() < s.size())
+			return std::nullopt;
+		std::string res;
+		for(int i = 0;i < path.size();++i)
+		{
+			if (i < s.size())
+			{
+				if(s[i] != path[i])
+				{
+					return std::nullopt;
+				}
+				continue;
+			}
+			res.push_back(path[i]);
+		}
+		return res;
+	}
+
 
 gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::string& key)
 {

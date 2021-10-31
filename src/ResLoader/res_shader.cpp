@@ -176,7 +176,9 @@ namespace gld::vkd {
 		{
 			auto res = wws::append_path(dir,headerName);
 			if(!res) return nullptr;
-			auto v = gld::DefResMgr::instance()->load<ResType::text>(*res);
+			auto key = gld::DefResMgr::instance()->path_to_key(*res);
+			if(!key) return nullptr;
+			auto v = gld::DefResMgr::instance()->load<ResType::text>(*key);
 			if(!v) return nullptr;
 			IncludeResult*  r = new IncludeResult("",v->data(),v->size(),nullptr);
 			return r;
@@ -185,7 +187,7 @@ namespace gld::vkd {
 		// Signals that the parser will no longer use the contents of the
 		// specified IncludeResult.
 		virtual void releaseInclude(IncludeResult* ptr) {
-			
+			delete ptr;
 		};
 	public:
 		Includer() :cur(""),system_dir("") {}
