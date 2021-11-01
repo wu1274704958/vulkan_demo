@@ -176,9 +176,7 @@ namespace gld::vkd {
 		{
 			auto res = wws::append_path(dir,headerName);
 			if(!res) return nullptr;
-			auto key = gld::DefResMgr::instance()->path_to_key(*res);
-			if(!key) return nullptr;
-			auto v = gld::DefResMgr::instance()->load<ResType::text>(*key);
+			auto v = gld::DefResMgr::instance()->load<ResType::text>(*res);
 			if(!v) return nullptr;
 			IncludeResult*  r = new IncludeResult(headerName,v->data(),v->size(),nullptr);
 			return r;
@@ -218,9 +216,10 @@ namespace gld::vkd {
 		shader.setEnvClient(glslang::EShClient::EShClientVulkan, env);
 		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
 		std::string res;
-		std::string r = path;
-		wws::up_path(r);
-		Includer incl(std::move(r));
+		auto key = gld::DefResMgr::instance()->path_to_key(path);
+		if (!key) return code;
+		wws::up_path(*key);
+		Includer incl(std::move(*key));
 		incl.set_sys_dir("shaders/comm");
 		if (!shader.preprocess(&k_default_conf, 100, ENoProfile, false, false, EShMessages::EShMsgDefault, &res, incl))
 		{
