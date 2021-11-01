@@ -249,17 +249,17 @@ namespace wws{
 			if(str[i] == '\0') break;
 			if (str[i] == Ap)
 			{
-				if(i == b) ++i;continue;
+				if(i == b) {++i;continue;}
 				auto c = i - b;
-				if(c == 1 && str[b] == '.') b = i + 1;++i;continue;
+				if(c == 1 && str[b] == '.') {b = i + 1;++i;continue;}
 				if (c == 2 && str[b] == '.' && str[b + 1] == '.')
 				{
 					if(!up_path(res))return std::nullopt; 
-					b == i + 1;++i;continue;
+					b = i + 1;++i;continue;
 				}
 				res += Ap;
 				res.append(str + b,i - b);
-				b == i + 1;
+				b = i + 1;
 			}
 			++i;
 		}
