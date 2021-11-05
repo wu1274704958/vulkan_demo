@@ -53,7 +53,6 @@ namespace gld
 
         inline static std::shared_ptr<DataMgr<Plugs...>> instance()
         {
-
             if(!self) 
                 self = std::shared_ptr<DataMgr<Plugs...>>(new DataMgr<Plugs...>());
             return self;

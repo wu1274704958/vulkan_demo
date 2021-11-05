@@ -8,6 +8,7 @@ namespace gld{
         SquareVertices,
         SquareIndices,
         PipelineSimple,
+        VkBuffer,
     };
 
     namespace data_ck{

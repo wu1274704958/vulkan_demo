@@ -12,6 +12,7 @@ namespace gld::vkd {
 		vk::DescriptorSetLayout setLayout;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
+		vk::DescriptorPool descriptorPool;
 		std::vector<vk::ShaderModule> shaderModules;
 
 		~PipelineData() {
@@ -21,6 +22,7 @@ namespace gld::vkd {
 			{
 				if (r) device.destroyShaderModule(r);
 			}
+			if(descriptorPool) device.destroyDescriptorPool(descriptorPool);
 			if (pipelineLayout) device.destroyPipelineLayout(pipelineLayout);
 			if(setLayout) device.destroyDescriptorSetLayout(setLayout);
 
@@ -33,8 +35,8 @@ namespace gld::vkd {
 		using RealRetTy = std::tuple<bool, RetTy>;
 		static std::string key_from_args(const std::string&,const std::string&);
 		static std::string key_from_args(vk::Device,vk::RenderPass,const vk::Extent2D&,
-			const std::string&,const std::string&,const std::unordered_set<uint32_t>& ins_set = {},std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
+			const std::string&,const std::string&,const std::unordered_set<uint32_t>& ins_set = {},std::function<void(vk::GraphicsPipelineCreateInfo)> on = {},uint32_t maxPoolSize = 1);
 		static RealRetTy load(vk::Device, vk::RenderPass, const vk::Extent2D&,
-			std::string, std::string, std::unordered_set<uint32_t> ins_set = {}, std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
+			std::string, std::string, std::unordered_set<uint32_t> ins_set = {}, std::function<void(vk::GraphicsPipelineCreateInfo)> on = {}, uint32_t maxPoolSize = 1);
 	};
 }

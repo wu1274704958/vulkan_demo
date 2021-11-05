@@ -6,7 +6,7 @@
 namespace gld::vkd {
 
 	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
-		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>
+		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>,uint32_t
 		)
 	{
 		return sundry::format_tup('#',v,f);
@@ -40,6 +40,28 @@ namespace gld::vkd {
 			ranges.push_back(range);
 		}
 	}
+	template<size_t N>
+	inline void push_descriptor_pool_size(std::vector<vk::DescriptorPoolSize>& poolSizes, const std::array<std::shared_ptr<SpirvRes>, N>& shaders)
+	{
+		std::unordered_map<vk::DescriptorType,uint32_t> map;	
+		for(auto a : shaders)
+		{
+			for (auto& d : a->shaderRes.descriptors)
+			{
+				if (map.contains(d.type))
+				{
+					map[d.type] += 1;
+				}
+				else {
+					map.insert(std::make_pair(d.type,1));
+				}
+			}
+		}
+		for (auto& a : map)
+		{
+			poolSizes.push_back(vk::DescriptorPoolSize(a.first,a.second));
+		}
+	}
 	
 	inline std::tuple<std::shared_ptr<std::vector<vk::VertexInputBindingDescription>>, std::shared_ptr<std::vector<vk::VertexInputAttributeDescription>>>
 		fillPipelineInputState(ShaderResources& res, vk::PipelineVertexInputStateCreateInfo& inputState,const std::unordered_set<uint32_t>& is_instance_set)
@@ -60,10 +82,20 @@ namespace gld::vkd {
 		inputState.setVertexAttributeDescriptions(*attr);
 		return std::make_tuple(binding,attr);
 	}
+
+	template<size_t N>
+	inline vk::DescriptorPool createDescriptorPool(vk::Device dev, const std::array<std::shared_ptr<SpirvRes>, N>& shaders, uint32_t maxPoolSize)
+	{
+		std::vector<vk::DescriptorPoolSize> poolSizes;
+		push_descriptor_pool_size(poolSizes, shaders);
+		vk::DescriptorPoolCreateInfo info({},maxPoolSize,poolSizes);
+		return dev.createDescriptorPool(info);
+	}
+
 	template<size_t N>
 	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
 		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo)>& on,
-		const std::array<std::shared_ptr<SpirvRes>,N>& shaders)
+		const std::array<std::shared_ptr<SpirvRes>,N>& shaders, uint32_t maxPoolSize)
 	{
 		std::vector<vk::DescriptorSetLayoutBinding> bindings;
 		for (auto& p : shaders)
@@ -118,13 +150,15 @@ namespace gld::vkd {
 		data->pipelineLayout = pipelineLayout;
 		data->pipeline = pipeline;
 		data->shaderModules = std::move(shaderModules);
+		data->descriptorPool = createDescriptorPool<N>(dev,shaders,maxPoolSize);
 
 		return std::make_tuple(true, data);
 	}
 
 	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
 		LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::load(
-		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on
+		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on,
+		uint32_t maxPoolSize
 	)
 	{
 		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s);
@@ -136,6 +170,6 @@ namespace gld::vkd {
 			vert,frag
 		};
 
-		return realCreatePipeline(dev,r,extent,is_ins,on,shaders);
+		return realCreatePipeline(dev,r,extent,is_ins,on,shaders,maxPoolSize);
 	}
 }

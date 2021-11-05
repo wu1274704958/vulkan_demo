@@ -12,23 +12,29 @@ public:
 	{}
 private:
 	void onInit() override {
-		 pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,renderPass,surfaceExtent,"shader_23/quad.vert","shader_23/quad.frag");
-		 
+		onReCreateSwapChain();
 	}
 	void onReCreateSwapChain() override {
-
+		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag");
+		{
+			vk::DescriptorSetAllocateInfo info(pipeline->descriptorPool, 1, &pipeline->setLayout);
+			descSets = device.allocateDescriptorSets(info);
+		}
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
 		
 	}
 	void onCleanUp() override {
-		pipeline.reset();
+		
 	}
 	void onCleanUpPipeline() override {
- 
+		pipeline.reset();
+		gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
 	}
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
+	std::vector<vk::DescriptorSet> descSets;
+	
 };
 
 
