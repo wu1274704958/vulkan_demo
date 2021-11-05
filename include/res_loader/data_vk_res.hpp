@@ -14,27 +14,27 @@ namespace gld::vkd {
 		vk::BufferUsageFlags usage;
 		vk::MemoryPropertyFlags memProperty;
 
-		bool copyTo(void* data,vk::DeviceSize size);
-		bool copyToEx(vk::PhysicalDevice phy,vk::CommandPool cmdPool,vk::Queue queue,void* data, vk::DeviceSize size);
+		bool copyTo(void* data,vk::DeviceSize size,vk::DeviceSize offset = 0);
+		bool copyToEx(vk::PhysicalDevice phy,vk::CommandPool cmdPool,vk::Queue queue,void* data, vk::DeviceSize size,vk::DeviceSize offset = 0);
 		template<typename T>
-		bool copyTo(const std::vector<T>& data)
+		bool copyTo(const std::vector<T>& data, vk::DeviceSize offset = 0)
 		{
-			return copyTo((void*)data.data(), sizeof(T) * data.size());
+			return copyTo((void*)data.data(), sizeof(T) * data.size(),offset);
 		}
 		template<typename T>
-		bool copyTo( const T& data)
+		bool copyTo( const T& data, vk::DeviceSize offset = 0)
 		{
-			return copyTo((void*)&data, sizeof(T));
+			return copyTo((void*)&data, sizeof(T),offset);
 		}
 		template<typename T>
-		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const std::vector<T>& data)
+		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const std::vector<T>& data, vk::DeviceSize offset = 0)
 		{
-			return copyToEx(phy,cmdPool,queue,(void*)data.data(),sizeof(T) * data.size());
+			return copyToEx(phy,cmdPool,queue,(void*)data.data(),sizeof(T) * data.size(),offset);
 		}
 		template<typename T>
-		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const T& data)
+		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const T& data, vk::DeviceSize offset = 0)
 		{
-			return copyToEx(phy, cmdPool, queue, (void*)&data, sizeof(T));
+			return copyToEx(phy, cmdPool, queue, (void*)&data, sizeof(T),offset);
 		}
 		~VkdBuffer() {
 			if (!device) return;

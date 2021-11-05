@@ -128,7 +128,7 @@ namespace gld::vkd {
 		vk::PipelineMultisampleStateCreateInfo multsampleState({},vk::SampleCountFlagBits::e1,false,1.0f);
 		vk::PipelineRasterizationStateCreateInfo rasterizationInfo({},false,false,vk::PolygonMode::eFill,vk::CullModeFlagBits::eBack);
 		rasterizationInfo.lineWidth = 1.0f;
-		vk::PipelineDepthStencilStateCreateInfo depthStencilState({},true,true,vk::CompareOp::eLessOrEqual,false,true);
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState({},true,true,vk::CompareOp::eLessOrEqual,false,false);
 		vk::PipelineColorBlendAttachmentState colorBlendAttachment(true,vk::BlendFactor::eSrcAlpha,vk::BlendFactor::eOneMinusSrcAlpha,vk::BlendOp::eAdd,vk::BlendFactor::eOne);
 		colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eA | vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB;
 		vk::PipelineColorBlendStateCreateInfo colorBlendInfo({},false,vk::LogicOp::eNoOp,colorBlendAttachment);

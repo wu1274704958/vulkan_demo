@@ -59,18 +59,18 @@ namespace gld::vkd {
 		return std::make_tuple(false,nullptr);
 	}
 
-	bool VkdBuffer::copyTo(void* data, vk::DeviceSize size)
+	bool VkdBuffer::copyTo(void* data, vk::DeviceSize size, vk::DeviceSize offset)
 	{
 		if ((memProperty & vk::MemoryPropertyFlagBits::eHostVisible) == vk::MemoryPropertyFlagBits::eHostVisible)
 		{
-			void* dst = device.mapMemory(mem, 0, size);
+			void* dst = device.mapMemory(mem, offset, size);
 			memcpy(dst, data, size);
 			device.unmapMemory(mem);
 			return true;
 		}
 		return false;
 	}
-	bool VkdBuffer::copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, void* data, vk::DeviceSize size)
+	bool VkdBuffer::copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, void* data, vk::DeviceSize size, vk::DeviceSize offset)
 	{
 		VkdBuffer buf;
 		if (createBuffer(phy, device, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buf.buffer, buf.mem))
@@ -78,7 +78,7 @@ namespace gld::vkd {
 			buf.usage = vk::BufferUsageFlagBits::eTransferSrc;
 			buf.memProperty = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 			buf.device = device;
-			buf.copyTo(data,size);
+			buf.copyTo(data,size,offset);
 
 			auto cmd = sundry::beginSingleTimeCommands(device,cmdPool);
 			vk::BufferCopy region({},{},size);

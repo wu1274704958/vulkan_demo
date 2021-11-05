@@ -26,7 +26,7 @@ std::vector<Vertex> vertices = {
 };
 
 std::vector<uint16_t> indices = {
-	 0, 1, 2, 2, 3, 0
+	 0, 2, 1, 0, 3, 2
 };
 
 class Quad : public vkd::SampleRender {
@@ -36,10 +36,8 @@ private:
 	void onInit() override {
 
 		uniformObj.proj = glm::perspective(glm::radians(45.0f), (float)surfaceExtent.width / (float)surfaceExtent.height, 0.1f, 100.0f);
-		uniformObj.view = glm::translate(glm::mat4(1.0f),glm::vec3(0.f,0.f,2.0f));
-		uniformObj.model = glm::mat4(1.0f);
-
-		
+		uniformObj.view = glm::translate(glm::mat4(1.0f),glm::vec3(0.f,0.f,-4.0f));
+		uniformObj.model = glm::rotate(glm::mat4(1.0f),glm::radians(7.0f),glm::vec3(0.0f,1.f,0.f));
 
 		auto dataMgr = gld::DefDataMgr::instance();
 		verticesBuf = dataMgr->load<gld::DataType::VkBuffer>("vertices",physicalDevice,device,sizeof(Vertex) * vertices.size(),
@@ -91,11 +89,19 @@ private:
 		pipeline.reset();
 		gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
 	}
+	void onUpdate(float delta) override
+	{
+		uniformObj.model = glm::rotate(glm::mat4(1.0f), glm::radians(27.0f), glm::vec3(0.0f, 1.f, 0.f));
+		uniformObj.model = glm::rotate(uniformObj.model, glm::radians(m_rotate), glm::vec3(0.f, 0.f, 1.0f));
+		uniformBuf->copyTo(uniformObj);
+		m_rotate += 0.1f;
+	}
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 	std::vector<vk::DescriptorSet> descSets;
 	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf,uniformBuf;
 	UniformBufferObject uniformObj;
+	float m_rotate = 0.0f;
 };
 
 
