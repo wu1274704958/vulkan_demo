@@ -17,9 +17,24 @@ namespace gld::vkd {
 		bool copyTo(void* data,vk::DeviceSize size);
 		bool copyToEx(vk::PhysicalDevice phy,vk::CommandPool cmdPool,vk::Queue queue,void* data, vk::DeviceSize size);
 		template<typename T>
+		bool copyTo(const std::vector<T>& data)
+		{
+			return copyTo((void*)data.data(), sizeof(T) * data.size());
+		}
+		template<typename T>
+		bool copyTo( const T& data)
+		{
+			return copyTo((void*)&data, sizeof(T));
+		}
+		template<typename T>
 		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const std::vector<T>& data)
 		{
 			return copyToEx(phy,cmdPool,queue,(void*)data.data(),sizeof(T) * data.size());
+		}
+		template<typename T>
+		bool copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, const T& data)
+		{
+			return copyToEx(phy, cmdPool, queue, (void*)&data, sizeof(T));
 		}
 		~VkdBuffer() {
 			if (!device) return;

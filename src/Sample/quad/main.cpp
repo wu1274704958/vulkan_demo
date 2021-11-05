@@ -6,6 +6,7 @@
 #include <res_loader/data_pipeline.hpp>
 #include <stb_image.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct Vertex {
 	glm::vec2 pos;
@@ -30,11 +31,15 @@ std::vector<uint16_t> indices = {
 
 class Quad : public vkd::SampleRender {
 public:
-	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers,sample_name)
-	{}
+	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers,sample_name){}
 private:
 	void onInit() override {
-		onReCreateSwapChain();
+
+		uniformObj.proj = glm::perspective(glm::radians(45.0f), (float)surfaceExtent.width / (float)surfaceExtent.height, 0.1f, 100.0f);
+		uniformObj.view = glm::translate(glm::mat4(1.0f),glm::vec3(0.f,0.f,2.0f));
+		uniformObj.model = glm::mat4(1.0f);
+
+		
 
 		auto dataMgr = gld::DefDataMgr::instance();
 		verticesBuf = dataMgr->load<gld::DataType::VkBuffer>("vertices",physicalDevice,device,sizeof(Vertex) * vertices.size(),
@@ -44,6 +49,14 @@ private:
 		indicesBuf = dataMgr->load<gld::DataType::VkBuffer>("indices", physicalDevice, device, sizeof(uint16_t) * indices.size(),
 			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		indicesBuf->copyToEx(physicalDevice, commandPool, graphicsQueue, indices);
+
+		uniformBuf = dataMgr->load<gld::DataType::VkBuffer>("uniform",physicalDevice,device,sizeof(UniformBufferObject),vk::BufferUsageFlagBits::eUniformBuffer,
+			vk::MemoryPropertyFlagBits::eHostCoherent|vk::MemoryPropertyFlagBits::eHostVisible);
+		uniformBuf->copyTo(uniformObj);
+
+		onReCreateSwapChain();
+		
+
 	}
 	void onReCreateSwapChain() override {
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag");
@@ -51,13 +64,28 @@ private:
 			vk::DescriptorSetAllocateInfo info(pipeline->descriptorPool, 1, &pipeline->setLayout);
 			descSets = device.allocateDescriptorSets(info);
 		}
+
+		vk::DescriptorBufferInfo buffInfo(uniformBuf->buffer, 0, sizeof(UniformBufferObject));
+		vk::WriteDescriptorSet writeDescriptorSet(descSets[0], 0, 0, vk::DescriptorType::eUniformBuffer, {}, buffInfo);
+
+		device.updateDescriptorSets(writeDescriptorSet, {});
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
-		
+		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,pipeline->pipeline);
+		vk::Viewport viewport(0,0,(float)surfaceExtent.width,(float)surfaceExtent.height,0.0f,1.0f);
+		cmd.setViewport(0,viewport);
+		vk::Rect2D scissor({},surfaceExtent);
+		cmd.setScissor(0,scissor);
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,pipeline->pipelineLayout,0,descSets,{});
+		vk::DeviceSize offset = 0;
+		cmd.bindVertexBuffers(0,verticesBuf->buffer,offset);
+		cmd.bindIndexBuffer(indicesBuf->buffer,0,vk::IndexType::eUint16);
+		cmd.drawIndexed(indices.size(),1,0,0,0);
 	}
 	void onCleanUp() override {
 		indicesBuf.reset();
 		verticesBuf.reset();
+		uniformBuf.reset();
 	}
 	void onCleanUpPipeline() override {
 		pipeline.reset();
@@ -66,7 +94,8 @@ private:
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 	std::vector<vk::DescriptorSet> descSets;
-	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf;
+	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf,uniformBuf;
+	UniformBufferObject uniformObj;
 };
 
 
