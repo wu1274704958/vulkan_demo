@@ -5,6 +5,28 @@
 #include <res_loader/data_mgr.hpp>
 #include <res_loader/data_pipeline.hpp>
 #include <stb_image.h>
+#include <glm/glm.hpp>
+
+struct Vertex {
+	glm::vec2 pos;
+	glm::vec3 color;
+};
+struct UniformBufferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
+
+std::vector<Vertex> vertices = {
+	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+std::vector<uint16_t> indices = {
+	 0, 1, 2, 2, 3, 0
+};
 
 class Quad : public vkd::SampleRender {
 public:
@@ -13,6 +35,15 @@ public:
 private:
 	void onInit() override {
 		onReCreateSwapChain();
+
+		auto dataMgr = gld::DefDataMgr::instance();
+		verticesBuf = dataMgr->load<gld::DataType::VkBuffer>("vertices",physicalDevice,device,sizeof(Vertex) * vertices.size(),
+			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,vk::MemoryPropertyFlagBits::eDeviceLocal);
+		verticesBuf->copyToEx(physicalDevice,commandPool,graphicsQueue,vertices);
+
+		indicesBuf = dataMgr->load<gld::DataType::VkBuffer>("indices", physicalDevice, device, sizeof(uint16_t) * indices.size(),
+			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		indicesBuf->copyToEx(physicalDevice, commandPool, graphicsQueue, indices);
 	}
 	void onReCreateSwapChain() override {
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag");
@@ -25,7 +56,8 @@ private:
 		
 	}
 	void onCleanUp() override {
-		
+		indicesBuf.reset();
+		verticesBuf.reset();
 	}
 	void onCleanUpPipeline() override {
 		pipeline.reset();
@@ -34,7 +66,7 @@ private:
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 	std::vector<vk::DescriptorSet> descSets;
-	
+	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf;
 };
 
 

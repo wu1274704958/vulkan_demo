@@ -17,6 +17,8 @@
 #include <GLES3/gl32.h>
 #endif
 
+#include <vulkan/vulkan.hpp>
+
 namespace sundry
 {
     template<typename GenTy = float>
@@ -94,5 +96,8 @@ namespace sundry
         raydir = raypos - camerapos;
         raydir = glm::normalize(raydir);
     }
+
+	vk::CommandBuffer beginSingleTimeCommands(vk::Device device,vk::CommandPool cmdPool);
+	void endSingleTimeCommands(vk::Device device,vk::CommandBuffer cb, vk::CommandPool cmdPool,vk::Queue queue);
     
 } // namespace sundry
