@@ -89,5 +89,10 @@ namespace gld::vkd {
 		return false;
 	}
 
+	//////////////////////////////////////////////Image.../////////////////////////////////////////////////////////////////////
+	LoadVkImageTy::RealRetTy LoadVkImageTy::load(std::string key, vk::PhysicalDevice phyDev, vk::Device dev, vk::BufferUsageFlags, vk::MemoryPropertyFlags)
+	{
+		
+	}
 	
 }

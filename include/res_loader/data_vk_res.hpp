@@ -53,4 +53,25 @@ namespace gld::vkd {
 	};
 
 	using CreateVkBufferTy = CreateVkBuffer<std::string, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags>;
+
+	struct VkdImage
+	{
+		vk::Device device;
+		vk::Image image;
+		vk::DeviceMemory mem;
+		vk::Format format;
+		vk::ImageTiling tiling;
+	};
+
+	template<typename ...Args>
+	struct LoadVkImage {
+		using RetTy = std::shared_ptr<VkdImage>;
+		using ArgsTy = std::tuple<Args...>;
+		using RealRetTy = std::tuple<bool, RetTy>;
+		static std::string key_from_args(const std::string&, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
+		static std::string key_from_args(const std::string&, vk::PhysicalDevice, vk::Device, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
+		static RealRetTy load(Args...);
+	};
+
+	using LoadVkImageTy = LoadVkImage<std::string, vk::PhysicalDevice, vk::Device, vk::BufferUsageFlags, vk::MemoryPropertyFlags>;
 }
