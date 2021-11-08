@@ -89,7 +89,7 @@ namespace fs = std::filesystem;
 LoadImage<int>::RealRetTy LoadImage<int>::load(FStream* stream, const std::string& path, int req_comp)
 {
 	stream->close();
-	int width, height, nrComponents;
+	int width, height, nrComponents = 0;
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, req_comp);
 	if (data)
 	{

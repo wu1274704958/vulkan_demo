@@ -98,6 +98,37 @@ namespace sundry
     }
 
 	vk::CommandBuffer beginSingleTimeCommands(vk::Device device,vk::CommandPool cmdPool);
-	void endSingleTimeCommands(vk::Device device,vk::CommandBuffer cb, vk::CommandPool cmdPool,vk::Queue queue);
+	void endSingleTimeCommands(vk::Device device,vk::CommandBuffer cb, vk::CommandPool cmdPool,vk::Queue queue, std::function<void()> onWait = {});
+    uint32_t findMemoryType(vk::PhysicalDevice phyDev, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+
+    template<typename T>
+    inline vk::DeviceMemory allocVkMemory(vk::Device dev, vk::PhysicalDevice phyDev, vk::MemoryPropertyFlagBits memProp,T t,vk::DeviceSize offset = 0)
+	requires requires{
+		requires std::is_same_v<std::remove_cvref_t<T>, vk::Image> || std::is_same_v<std::remove_cvref_t<T>, vk::Buffer>;
+	}
+    {
+        vk::MemoryRequirements memReq;
+		if constexpr(std::is_same_v<std::remove_cvref_t<T>, vk::Image>)
+		{
+		    memReq = dev.getImageMemoryRequirements(t);
+        }
+        else 
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, vk::Buffer>)
+        {
+            memReq = dev.getBufferMemoryRequirements(t);
+        }
+		vk::MemoryAllocateInfo info(memReq.size, findMemoryType(phyDev, memReq.memoryTypeBits, memProp));
+        auto mem = dev.allocateMemory(info);
+		if constexpr (std::is_same_v<std::remove_cvref_t<T>, vk::Image>)
+		{
+			dev.bindImageMemory(t,mem, offset);
+		}
+		else
+		if constexpr (std::is_same_v<std::remove_cvref_t<T>, vk::Buffer>)
+		{
+            dev.bindBufferMemory(t,mem, offset);
+		}
+        return mem;
+    }
     
 } // namespace sundry

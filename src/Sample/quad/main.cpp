@@ -7,10 +7,10 @@
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 struct Vertex {
 	glm::vec2 pos;
 	glm::vec3 color;
+	glm::vec2 uv;
 };
 struct UniformBufferObject {
 	glm::mat4 model;
@@ -19,10 +19,10 @@ struct UniformBufferObject {
 };
 
 std::vector<Vertex> vertices = {
-	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
+	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f,0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f} , {1.0f,1.0f}},
+	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f} ,{0.0f,1.0f}}
 };
 
 std::vector<uint16_t> indices = {
@@ -52,6 +52,8 @@ private:
 			vk::MemoryPropertyFlagBits::eHostCoherent|vk::MemoryPropertyFlagBits::eHostVisible);
 		uniformBuf->copyTo(uniformObj);
 
+		image = dataMgr->load<gld::DataType::VkImage>("textures/texture.jpg",STBI_rgb_alpha,physicalDevice,device,commandPool,graphicsQueue);
+
 		onReCreateSwapChain();
 		
 
@@ -64,9 +66,12 @@ private:
 		}
 
 		vk::DescriptorBufferInfo buffInfo(uniformBuf->buffer, 0, sizeof(UniformBufferObject));
-		vk::WriteDescriptorSet writeDescriptorSet(descSets[0], 0, 0, vk::DescriptorType::eUniformBuffer, {}, buffInfo);
-
-		device.updateDescriptorSets(writeDescriptorSet, {});
+		vk::DescriptorImageInfo imageInfo(image->sample,image->view,vk::ImageLayout::eShaderReadOnlyOptimal);
+		std::array<vk::WriteDescriptorSet,2> writeDescriptorSets = {
+			vk::WriteDescriptorSet(descSets[0], 0, 0, vk::DescriptorType::eUniformBuffer,{}, buffInfo),
+			vk::WriteDescriptorSet(descSets[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, imageInfo, {})
+		};
+		device.updateDescriptorSets(writeDescriptorSets, {});
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,pipeline->pipeline);
@@ -84,6 +89,7 @@ private:
 		indicesBuf.reset();
 		verticesBuf.reset();
 		uniformBuf.reset();
+		image.reset();
 	}
 	void onCleanUpPipeline() override {
 		pipeline.reset();
@@ -100,6 +106,8 @@ private:
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
 	std::vector<vk::DescriptorSet> descSets;
 	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf,uniformBuf;
+	std::shared_ptr<gld::vkd::VkdImage> image;
+	
 	UniformBufferObject uniformObj;
 	float m_rotate = 0.0f;
 };

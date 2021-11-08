@@ -58,9 +58,12 @@ namespace gld::vkd {
 	{
 		vk::Device device;
 		vk::Image image;
+		vk::ImageView view;
+		vk::Sampler sample;
 		vk::DeviceMemory mem;
 		vk::Format format;
 		vk::ImageTiling tiling;
+		~VkdImage();
 	};
 
 	template<typename ...Args>
@@ -68,10 +71,10 @@ namespace gld::vkd {
 		using RetTy = std::shared_ptr<VkdImage>;
 		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool, RetTy>;
-		static std::string key_from_args(const std::string&, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
-		static std::string key_from_args(const std::string&, vk::PhysicalDevice, vk::Device, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
+		static std::string key_from_args(const std::string&,int);
+		static std::string key_from_args(const std::string&,int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue);
 		static RealRetTy load(Args...);
 	};
 
-	using LoadVkImageTy = LoadVkImage<std::string, vk::PhysicalDevice, vk::Device, vk::BufferUsageFlags, vk::MemoryPropertyFlags>;
+	using LoadVkImageTy = LoadVkImage<std::string,int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue>;
 }
