@@ -1,4 +1,5 @@
 #include <sample/render.hpp>
+#include <utils/frame_rate.h>
 
 namespace vkd{
 
@@ -79,10 +80,12 @@ void SampleRender::mainLoop()
 {
 	while (!glfwWindowShouldClose(window))
 	{
+		auto calc = gld::FrameRate::calculator();
 		glfwPollEvents();
 		onUpdate(lastFrameDelta);
 		if (!minWindowSize)
 			drawFrame();
+		lastFrameDelta = gld::FrameRate::get_ms() ;
 	}
 	device.waitIdle();
 }

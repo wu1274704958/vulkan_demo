@@ -94,7 +94,7 @@ private:
 		uniformObj.model = glm::rotate(glm::mat4(1.0f), glm::radians(27.0f), glm::vec3(0.0f, 1.f, 0.f));
 		uniformObj.model = glm::rotate(uniformObj.model, glm::radians(m_rotate), glm::vec3(0.f, 0.f, 1.0f));
 		uniformBuf->copyTo(uniformObj);
-		m_rotate += 0.1f;
+		m_rotate += 26.f * delta;
 	}
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
