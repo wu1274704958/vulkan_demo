@@ -35,8 +35,10 @@ namespace gld::vkd {
 		using RealRetTy = std::tuple<bool, RetTy>;
 		static std::string key_from_args(const std::string&,const std::string&);
 		static std::string key_from_args(vk::Device,vk::RenderPass,const vk::Extent2D&,
-			const std::string&,const std::string&,const std::unordered_set<uint32_t>& ins_set = {},std::function<void(vk::GraphicsPipelineCreateInfo)> on = {},uint32_t maxPoolSize = 1);
+			const std::string&,const std::string&, uint32_t maxPoolSize = 1,const std::unordered_set<uint32_t>& ins_set = {},std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
 		static RealRetTy load(vk::Device, vk::RenderPass, const vk::Extent2D&,
-			std::string, std::string, std::unordered_set<uint32_t> ins_set = {}, std::function<void(vk::GraphicsPipelineCreateInfo)> on = {}, uint32_t maxPoolSize = 1);
+			std::string, std::string, uint32_t maxPoolSize = 1, std::unordered_set<uint32_t> ins_set = {}, std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
 	};
+
+	using LoadPipelineSimpleTy = LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, uint32_t, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>;
 }

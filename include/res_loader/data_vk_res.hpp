@@ -72,9 +72,12 @@ namespace gld::vkd {
 		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool, RetTy>;
 		static std::string key_from_args(const std::string&,int);
-		static std::string key_from_args(const std::string&,int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue);
-		static RealRetTy load(Args...);
+		static std::string key_from_args(const std::string&,int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue,std::function<void(vk::ImageCreateInfo&)> onCreateImage = {},
+			std::function<void(vk::SamplerCreateInfo&)> onCreateSample = {});
+		static RealRetTy load(const std::string&, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)> onCreateImage = {},
+			std::function<void(vk::SamplerCreateInfo&)> onCreateSample = {});
 	};
 
-	using LoadVkImageTy = LoadVkImage<std::string,int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue>;
+	using LoadVkImageTy = LoadVkImage < std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
+		std::function<void(vk::SamplerCreateInfo&)>>;
 }

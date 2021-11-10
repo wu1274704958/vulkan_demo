@@ -5,13 +5,13 @@
 
 namespace gld::vkd {
 
-	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
-		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>,uint32_t
+	std::string LoadPipelineSimpleTy::key_from_args(
+		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f,uint32_t, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>
 		)
 	{
 		return sundry::format_tup('#',v,f);
 	}
-	std::string LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::key_from_args(
+	std::string LoadPipelineSimpleTy::key_from_args(
 		const std::string& v, const std::string& f
 	)
 	{
@@ -93,7 +93,7 @@ namespace gld::vkd {
 	}
 
 	template<size_t N>
-	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
+	LoadPipelineSimpleTy::RealRetTy 
 		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo)>& on,
 		const std::array<std::shared_ptr<SpirvRes>,N>& shaders, uint32_t maxPoolSize)
 	{
@@ -155,10 +155,9 @@ namespace gld::vkd {
 		return std::make_tuple(true, data);
 	}
 
-	LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::RealRetTy 
-		LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string, std::unordered_set<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>::load(
-		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on,
-		uint32_t maxPoolSize
+	LoadPipelineSimpleTy::RealRetTy 
+		LoadPipelineSimpleTy::load(
+		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s,uint32_t maxPoolSize, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on
 	)
 	{
 		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s);

@@ -95,7 +95,7 @@ namespace gld::vkd {
 	}
 
 	inline bool createImage(vk::PhysicalDevice phyDev, vk::Device dev,uint32_t w,uint32_t h,vk::Format format,vk::ImageTiling tiling,vk::ImageUsageFlags usage,
-		vk::MemoryPropertyFlagBits memProp,vk::Image& img,vk::DeviceMemory& mem)
+		vk::MemoryPropertyFlagBits memProp,vk::Image& img,vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage)
 	{
 		vk::ImageCreateInfo info;
 		info.extent = vk::Extent3D(w,h,1);
@@ -108,6 +108,7 @@ namespace gld::vkd {
 		info.initialLayout = vk::ImageLayout::eUndefined;
 		info.sharingMode = vk::SharingMode::eExclusive;
 		info.samples = vk::SampleCountFlagBits::e1;
+		if (onCreateImage) onCreateImage(info);
 		img = dev.createImage(info);
 		if(!img) return false;
 		mem = sundry::allocVkMemory(dev,phyDev,memProp,img);
@@ -129,7 +130,7 @@ namespace gld::vkd {
 		if (sample) device.destroySampler(sample);
 	}
 
-	LoadVkImageTy::RealRetTy LoadVkImageTy::load(std::string key,int flag,vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool,vk::Queue queue)
+	LoadVkImageTy::RealRetTy LoadVkImageTy::load(const std::string& key, int flag, vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue, std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample)
 	{
 		std::shared_ptr<StbImage> img = DefResMgr::instance()->load<ResType::image>(key,flag);
 		if(!img) return std::make_tuple(false,nullptr);
@@ -148,7 +149,7 @@ namespace gld::vkd {
 		auto res = std::make_shared<VkdImage>();
 
 		if (!createImage(phyDev, dev, img->width, img->height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
-			res->image, res->mem))
+			res->image, res->mem,onCreateImage))
 			return std::make_tuple(false, nullptr);
 
 		res->device = dev;
@@ -176,6 +177,7 @@ namespace gld::vkd {
 		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe, (vk::DependencyFlagBits)0, {}, {}, barrier);
 		{
 			vk::SamplerCreateInfo info;
+			if(onCreateSample) onCreateSample(info);
 			res->sample = dev.createSampler(info);
 		}
 		{
@@ -195,7 +197,8 @@ namespace gld::vkd {
 	{
 		return sundry::format_tup('#',str,f);
 	}
-	std::string LoadVkImageTy::key_from_args(const std::string& str, int f, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue)
+	std::string LoadVkImageTy::key_from_args(const std::string& str, int f, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
+		std::function<void(vk::SamplerCreateInfo&)>)
 	{
 		return sundry::format_tup('#', str, f);
 	}

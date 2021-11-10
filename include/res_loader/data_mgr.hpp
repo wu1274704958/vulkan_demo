@@ -92,8 +92,8 @@ private:
     typedef DataMgr<
         DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices,float,float>,
         DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>,
-        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple,vk::Device,vk::RenderPass,const vk::Extent2D&,std::string,std::string,std::unordered_set<uint32_t>,std::function<void(vk::GraphicsPipelineCreateInfo)>>,
+        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple,vk::Device,vk::RenderPass,const vk::Extent2D&,std::string,std::string,uint32_t,std::unordered_set<uint32_t>,std::function<void(vk::GraphicsPipelineCreateInfo)>>,
         DataLoadPlugTy<DataType::VkBuffer,vkd::CreateVkBuffer, std::string, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags>,
-        DataLoadPlugTy<DataType::VkImage,vkd::LoadVkImage, std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue>
+		DataLoadPlugTy<DataType::VkImage, vkd::LoadVkImage, std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,std::function<void(vk::SamplerCreateInfo&)>>
         > DefDataMgr;
 } // namespace gld

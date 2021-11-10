@@ -13,7 +13,6 @@ struct Vertex {
 	glm::vec2 uv;
 };
 struct UniformBufferObject {
-	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
 };
@@ -37,7 +36,6 @@ private:
 
 		uniformObj.proj = glm::perspective(glm::radians(45.0f), (float)surfaceExtent.width / (float)surfaceExtent.height, 0.1f, 100.0f);
 		uniformObj.view = glm::translate(glm::mat4(1.0f),glm::vec3(0.f,0.f,-4.0f));
-		uniformObj.model = glm::rotate(glm::mat4(1.0f),glm::radians(7.0f),glm::vec3(0.0f,1.f,0.f));
 
 		auto dataMgr = gld::DefDataMgr::instance();
 		verticesBuf = dataMgr->load<gld::DataType::VkBuffer>("vertices",physicalDevice,device,sizeof(Vertex) * vertices.size(),
@@ -52,16 +50,18 @@ private:
 			vk::MemoryPropertyFlagBits::eHostCoherent|vk::MemoryPropertyFlagBits::eHostVisible);
 		uniformBuf->copyTo(uniformObj);
 
-		image = dataMgr->load<gld::DataType::VkImage>("textures/texture.jpg",STBI_rgb_alpha,physicalDevice,device,commandPool,graphicsQueue);
+		image = dataMgr->load<gld::DataType::VkImage>("textures/texture.jpg", STBI_rgb_alpha, physicalDevice, device, commandPool, graphicsQueue, nullptr, [](vk::SamplerCreateInfo& info) {
+			info.minFilter = vk::Filter::eLinear;
+		});
 
 		onReCreateSwapChain();
 		
 
 	}
 	void onReCreateSwapChain() override {
-		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag");
+		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag",3);
 		{
-			vk::DescriptorSetAllocateInfo info(pipeline->descriptorPool, 1, &pipeline->setLayout);
+			vk::DescriptorSetAllocateInfo info(pipeline->descriptorPool, 1,&pipeline->setLayout);
 			descSets = device.allocateDescriptorSets(info);
 		}
 
@@ -74,16 +74,23 @@ private:
 		device.updateDescriptorSets(writeDescriptorSets, {});
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
-		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,pipeline->pipeline);
-		vk::Viewport viewport(0,0,(float)surfaceExtent.width,(float)surfaceExtent.height,0.0f,1.0f);
-		cmd.setViewport(0,viewport);
-		vk::Rect2D scissor({},surfaceExtent);
-		cmd.setScissor(0,scissor);
-		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,pipeline->pipelineLayout,0,descSets,{});
+		drawQuad(cmd, glm::vec3(0.7f, 0.0f, 1.0f));
+		drawQuad(cmd, glm::vec3(0.0f, 0.0f, 0.0f));
+	}
+	void drawQuad(vk::CommandBuffer& cmd,glm::vec3 pos)
+	{
+		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
+		vk::Viewport viewport(0, 0, (float)surfaceExtent.width, (float)surfaceExtent.height, 0.0f, 1.0f);
+		cmd.setViewport(0, viewport);
+		vk::Rect2D scissor({}, surfaceExtent);
+		cmd.setScissor(0, scissor);
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets,{});
 		vk::DeviceSize offset = 0;
-		cmd.bindVertexBuffers(0,verticesBuf->buffer,offset);
-		cmd.bindIndexBuffer(indicesBuf->buffer,0,vk::IndexType::eUint16);
-		cmd.drawIndexed(indices.size(),1,0,0,0);
+		cmd.bindVertexBuffers(0, verticesBuf->buffer, offset);
+		cmd.bindIndexBuffer(indicesBuf->buffer, 0, vk::IndexType::eUint16);
+		auto model = set_model(m_rotate, pos);
+		cmd.pushConstants(pipeline->pipelineLayout,vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4),(void*)&model);
+		cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
 	}
 	void onCleanUp() override {
 		indicesBuf.reset();
@@ -97,10 +104,15 @@ private:
 	}
 	void onUpdate(float delta) override
 	{
-		uniformObj.model = glm::rotate(glm::mat4(1.0f), glm::radians(27.0f), glm::vec3(0.0f, 1.f, 0.f));
-		uniformObj.model = glm::rotate(uniformObj.model, glm::radians(m_rotate), glm::vec3(0.f, 0.f, 1.0f));
-		uniformBuf->copyTo(uniformObj);
 		m_rotate += 26.f * delta;
+	}
+
+	glm::mat4 set_model(float rotate,glm::vec3 pos)
+	{
+		auto model = glm::translate(glm::mat4(1.0f), pos);
+		model = glm::rotate(model, glm::radians(27.0f), glm::vec3(0.0f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(m_rotate), glm::vec3(0.f, 0.f, 1.0f));
+		return model;
 	}
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
@@ -113,7 +125,7 @@ private:
 };
 
 
-void main()
+int main()
 {
 	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
 	auto quad = new Quad(true,"Quad");
@@ -122,6 +134,7 @@ void main()
 	gld::DefDataMgr::instance()->clear_all();
 	quad->cleanUp();
 	delete quad;
+	return 0;
 }
 
 
