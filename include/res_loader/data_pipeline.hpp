@@ -9,24 +9,15 @@ namespace gld::vkd {
 	struct PipelineData
 	{
 		vk::Device device;
-		vk::DescriptorSetLayout setLayout;
+		std::vector<vk::DescriptorSetLayout> setLayout;
 		vk::PipelineLayout pipelineLayout;
 		vk::Pipeline pipeline;
 		vk::DescriptorPool descriptorPool;
 		std::vector<vk::ShaderModule> shaderModules;
 
-		~PipelineData() {
-			if(!device) return;
-			if (pipeline) device.destroyPipeline(pipeline);
-			for(auto r : shaderModules)
-			{
-				if (r) device.destroyShaderModule(r);
-			}
-			if(descriptorPool) device.destroyDescriptorPool(descriptorPool);
-			if (pipelineLayout) device.destroyPipelineLayout(pipelineLayout);
-			if(setLayout) device.destroyDescriptorSetLayout(setLayout);
+		~PipelineData();
 
-		}
+		std::vector<vk::DescriptorSet> allocDescriptorSets();
 	};
 	template<typename ...Args>
 	struct LoadPipelineSimple {

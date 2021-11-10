@@ -60,10 +60,7 @@ private:
 	}
 	void onReCreateSwapChain() override {
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag",3);
-		{
-			vk::DescriptorSetAllocateInfo info(pipeline->descriptorPool, 1,&pipeline->setLayout);
-			descSets = device.allocateDescriptorSets(info);
-		}
+		descSets = pipeline->allocDescriptorSets();
 
 		vk::DescriptorBufferInfo buffInfo(uniformBuf->buffer, 0, sizeof(UniformBufferObject));
 		vk::DescriptorImageInfo imageInfo(image->sample,image->view,vk::ImageLayout::eShaderReadOnlyOptimal);

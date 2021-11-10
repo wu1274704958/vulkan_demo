@@ -17,7 +17,7 @@ namespace gld::vkd {
 	{
 		return sundry::format_tup('#', v, f);
 	}
-	inline void push_descriptor(std::vector<vk::DescriptorSetLayoutBinding>& bindings,std::vector<Descriptor>& descriptors,vk::ShaderStageFlagBits stage)
+	inline void push_descriptor(std::vector<std::vector<vk::DescriptorSetLayoutBinding>>& bindings,std::vector<Descriptor>& descriptors,vk::ShaderStageFlagBits stage)
 	{
 		for (auto& d : descriptors)
 		{
@@ -26,7 +26,9 @@ namespace gld::vkd {
 			binding.descriptorCount = 1;
 			binding.descriptorType = d.type;
 			binding.stageFlags = stage;
-			bindings.push_back(binding);
+			if(bindings.size() <= d.set)
+				bindings.resize(d.set + 1);
+			bindings[d.set].push_back(binding);
 		}
 	}
 	inline void push_constant(std::vector<vk::PushConstantRange>& ranges, std::vector<PushConstant>& v, vk::ShaderStageFlagBits stage)
@@ -97,11 +99,16 @@ namespace gld::vkd {
 		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo)>& on,
 		const std::array<std::shared_ptr<SpirvRes>,N>& shaders, uint32_t maxPoolSize)
 	{
-		std::vector<vk::DescriptorSetLayoutBinding> bindings;
+		std::vector<std::vector<vk::DescriptorSetLayoutBinding>> bindings;
 		for (auto& p : shaders)
 			push_descriptor(bindings, p->shaderRes.descriptors, p->stage);
-		vk::DescriptorSetLayoutCreateInfo info({}, bindings);
-		auto descriptorSetLayout = dev.createDescriptorSetLayout(info);
+		vk::DescriptorSetLayoutCreateInfo info;
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayout;
+		for (auto& b : bindings)
+		{
+			info.setBindings(b);
+			descriptorSetLayout.push_back(dev.createDescriptorSetLayout(info));
+		}
 
 		std::vector<vk::PushConstantRange> pushConsts;
 		for (auto& p : shaders)
@@ -170,5 +177,24 @@ namespace gld::vkd {
 		};
 
 		return realCreatePipeline(dev,r,extent,is_ins,on,shaders,maxPoolSize);
+	}
+
+	PipelineData::~PipelineData()
+	{
+		if (!device) return;
+		if (pipeline) device.destroyPipeline(pipeline);
+		for (auto r : shaderModules)
+		{
+			if (r) device.destroyShaderModule(r);
+		}
+		if (descriptorPool) device.destroyDescriptorPool(descriptorPool);
+		if (pipelineLayout) device.destroyPipelineLayout(pipelineLayout);
+		for (auto s : setLayout)
+			if (s) device.destroyDescriptorSetLayout(s);
+	}
+	std::vector<vk::DescriptorSet> PipelineData::allocDescriptorSets()
+	{
+		vk::DescriptorSetAllocateInfo info(descriptorPool, setLayout);
+		return device.allocateDescriptorSets(info);
 	}
 }
