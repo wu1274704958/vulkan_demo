@@ -134,6 +134,8 @@ void SampleRender::initWindow(uint32_t w, uint32_t h)
 	glfwSetWindowUserPointer(window, this);
 
 	glfwSetWindowSizeCallback(window, WindowReSize);
+
+	//glfwSetKeyCallback()
 }
 
 bool SampleRender::checkValidationLayerSupport()
