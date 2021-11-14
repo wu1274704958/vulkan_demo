@@ -96,7 +96,7 @@ namespace vkd::evt{
 			MapEventUnit<EventType::WindowReSize, WindowReSizeEvent>,
 			MapEventUnit<EventType::KeyDown, KeyEvent>,
 			MapEventUnit<EventType::KeyUp, KeyEvent>,
-			MapEventUnit<EventType::KeyRepect, KeyEvent>,
+			MapEventUnit<EventType::KeyRepeat, KeyEvent>,
 			MapEventUnit<EventType::Click,MouseButtonEvent>
 		>::Ty;
 
