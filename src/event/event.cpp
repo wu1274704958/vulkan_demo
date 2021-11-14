@@ -21,6 +21,7 @@ namespace vkd::evt {
 		glfwSetWindowSizeCallback(window, WindowReSize);
 		glfwSetMouseButtonCallback(window, WindowMouseButton);
 		glfwSetCursorPosCallback(window,WindowCursorPos);
+		glfwSetKeyCallback(window,WindowKey);
 		return true; 
 	}
 
@@ -78,6 +79,28 @@ namespace vkd::evt {
 			e.m_event = ptr->mouseBtnPressed.value();
 			ptr->dispatchEvent(e);
 		}
+	}
+
+	void GlfwEventConstructor::WindowKey(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		auto ptr = (GlfwEventConstructor*)glfwGetWindowUserPointer(window);
+		Event e;
+		e.m_event = KeyEvent{ key,scancode,action,mods };
+		switch (action)
+		{
+		case GLFW_PRESS:
+			e.type = EventType::KeyDown;
+			break;
+		case GLFW_RELEASE:
+			e.type = EventType::KeyUp;
+			break;
+		case GLFW_REPEAT:
+			e.type = EventType::KeyRepeat;
+			break;
+		default:
+			break;
+		}
+		ptr->dispatchEvent(e);
 	}
 
 }

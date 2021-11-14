@@ -21,7 +21,7 @@ namespace vkd::evt{
 		MouseMove,
 		KeyDown,
 		KeyUp,
-		KeyRepect, 
+		KeyRepeat, 
 		Click
 	};
 
@@ -139,6 +139,7 @@ namespace vkd::evt{
 		static void WindowReSize(GLFWwindow* window, int w, int h);
 		static void WindowMouseButton(GLFWwindow*, int, int, int);
 		static void WindowCursorPos(GLFWwindow*,double,double);
+		static void WindowKey(GLFWwindow*, int, int, int, int);
 	protected:
 		std::optional<MouseButtonEvent> mouseBtnPressed;
 		bool isMouseMoving = false;
