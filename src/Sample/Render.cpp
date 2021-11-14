@@ -3,10 +3,18 @@
 
 namespace vkd{
 
-void SampleRender::WindowReSize(GLFWwindow* window, int w, int h)
-{
-	auto ptr = (SampleRender*)glfwGetWindowUserPointer(window);
-	if(ptr)ptr->onWindowResize((uint32_t)w, (uint32_t)h);
+bool SampleRender::dispatchEvent(const evt::Event& e) {
+	printf("%d\n",e.type);
+	switch (e.type)
+	{
+		case evt::EventType::WindowReSize:
+			auto d = e.GetEvent<evt::EventType::WindowReSize>();
+			onWindowResize((uint32_t)d.w, (uint32_t)d.h);
+		break;
+	default:
+		break;
+	}
+	return false;
 }
 
 VkBool32 SampleRender::DebugReportCallbackEXT(
@@ -131,9 +139,7 @@ void SampleRender::initWindow(uint32_t w, uint32_t h)
 
 	window = glfwCreateWindow(w, h, sample_name, nullptr, nullptr);
 
-	glfwSetWindowUserPointer(window, this);
-
-	glfwSetWindowSizeCallback(window, WindowReSize);
+	eventConstructor.init(this,window);
 
 	//glfwSetKeyCallback()
 }

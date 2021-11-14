@@ -5,6 +5,7 @@
 #include <common.hpp>
 #include <optional>
 #include <json.hpp>
+#include <event/event.hpp>
 namespace vkd {
 
 	VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback);
@@ -39,7 +40,7 @@ namespace vkd {
 		}
 	};
 
-	class SampleRender {
+	class SampleRender : public evt::EventDispatcher{
 	public:
 		SampleRender() 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args){
@@ -63,6 +64,7 @@ namespace vkd {
 		void init(int w,int h);
 		virtual void mainLoop();
 		void cleanUp() ;
+		virtual bool dispatchEvent(const evt::Event&) override ;
 	protected:
 		void initWindow(uint32_t w, uint32_t h);
 		bool checkValidationLayerSupport() ;
@@ -173,12 +175,10 @@ namespace vkd {
 		VkDebugReportCallbackEXT debugReport;
 		std::array<float,4> clearColorArr{ 0.1019607f,0.10980392f,0.12941176f,1.0f };
 		vk::ClearValue clearColorValue;
-		
+		evt::GlfwEventConstructor eventConstructor;
 		QueueFamilyIndices queueFamilyIndices;
 
 		wws::VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
-
-		static void WindowReSize(GLFWwindow* window, int w, int h);
 		static VkBool32 DebugReportCallbackEXT(
 			VkDebugReportFlagsEXT                       flags,
 			VkDebugReportObjectTypeEXT                  objectType,

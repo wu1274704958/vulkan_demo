@@ -3,6 +3,12 @@
 #include <variant>
 #include <tuple>
 #include <optional>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+
+namespace vkd {
+	class SampleRender;
+}
 
 namespace vkd::evt{
 
@@ -16,6 +22,7 @@ namespace vkd::evt{
 		KeyDown,
 		KeyUp,
 		KeyRepect, 
+		Click
 	};
 
 	struct WindowReSizeEvent {
@@ -27,6 +34,7 @@ namespace vkd::evt{
 		int btn;
 		int action;//
 		int modsBit;
+		double x,y;
 	};
 
 	struct CursorPosEvent {
@@ -56,13 +64,24 @@ namespace vkd::evt{
 	template<EventType ET, typename F, typename ...S>
 	struct MapEventTy<ET,F,S...>
 	{
-		using Ty = decltype(ET == F::Et ? F::Ty : MapEventTy<ET,S...>::Ty);
+		constexpr static decltype(auto) func()
+		{
+			if constexpr (ET == F::Et)
+			{
+				return std::declval<F::Ty>();
+			}
+			else
+			{
+				return std::declval<MapEventTy<ET,S...>::Ty>();
+			}
+		}
+		using Ty = typename std::remove_reference_t<decltype(func())>;
 	};
 	
 	template<EventType ET>
 	struct MapEventTy<ET>
 	{
-		using Ty = void;
+		using Ty = std::nullopt_t;
 	};
 	
 	struct Event {
@@ -70,22 +89,61 @@ namespace vkd::evt{
 		VariantEvent m_event;
 
 		template<EventType E>
-		decltype(auto) GetEvent()
+		using EvtTy = typename MapEventTy<E,
+			MapEventUnit<EventType::MouseDown, MouseButtonEvent>,
+			MapEventUnit<EventType::MouseUp, MouseButtonEvent>,
+			MapEventUnit<EventType::MouseMove, CursorPosEvent>,
+			MapEventUnit<EventType::WindowReSize, WindowReSizeEvent>,
+			MapEventUnit<EventType::KeyDown, KeyEvent>,
+			MapEventUnit<EventType::KeyUp, KeyEvent>,
+			MapEventUnit<EventType::KeyRepect, KeyEvent>,
+			MapEventUnit<EventType::Click,MouseButtonEvent>
+		>::Ty;
+
+		template<typename T>
+		 const T& GetEvent() const
 		{
-			return std::get< MapEventTy<E,
-				MapEventUnit<EventType::MouseDown,MouseButtonEvent>,
-				MapEventUnit<EventType::MouseUp, MouseButtonEvent>,
-				MapEventUnit<EventType::MouseMove, CursorPosEvent>,
-				MapEventUnit<EventType::WindowReSize, WindowReSizeEvent>,
-				MapEventUnit<EventType::KeyDown, KeyEvent>,
-				MapEventUnit<EventType::KeyUp, KeyEvent>,
-				MapEventUnit<EventType::KeyRepect, KeyEvent>
-			>::Ty>(m_event);
+			return std::get<T>(m_event);
 		}
+		 template<EventType E>
+		 const EvtTy<E>& GetEvent() const
+		 {
+			 return std::get<EvtTy<E>>(m_event);
+		 }
 	};
 
-	struct GlfwEventConstructor
-	{
-		
+	class EventDispatcher {
+	public:
+		virtual bool dispatchEvent(const Event&) { return false; }
 	};
+
+	template<typename T,typename ...Args>
+	struct EventConstructor
+	{
+		virtual bool init(T* p, Args...args)
+		{
+			t = p;
+			return false;
+		}
+		void dispatchEvent(const Event& e)
+		{
+			t->dispatchEvent(e);
+		}
+	protected:
+		T *t;
+	};
+
+	struct GlfwEventConstructor : public EventConstructor<SampleRender,GLFWwindow*>
+	{
+		virtual bool init(SampleRender* p, GLFWwindow*) override;
+		static void WindowReSize(GLFWwindow* window, int w, int h);
+		static void WindowMouseButton(GLFWwindow*, int, int, int);
+		static void WindowCursorPos(GLFWwindow*,double,double);
+	protected:
+		std::optional<MouseButtonEvent> mouseBtnPressed;
+		bool isMouseMoving = false;
+		static constexpr double MinStartMoveDist = 9.0;
+	};
+	//template<>
+	
 }

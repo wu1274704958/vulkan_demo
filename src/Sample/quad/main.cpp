@@ -121,7 +121,7 @@ private:
 	float m_rotate = 0.0f;
 };
 
-
+#include <event/event.hpp>
 int main()
 {
 	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
