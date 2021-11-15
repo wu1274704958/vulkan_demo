@@ -7,6 +7,7 @@
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 struct Vertex {
 	glm::vec2 pos;
 	glm::vec3 color;
@@ -31,6 +32,39 @@ std::vector<uint16_t> indices = {
 class Quad : public vkd::SampleRender {
 public:
 	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers,sample_name){}
+
+	bool dispatchEvent(const vkd::evt::Event& e) override
+	{
+		if (vkd::SampleRender::dispatchEvent(e)) return true;
+
+		switch (e.type)
+		{
+		case vkd::evt::EventType::MouseDown:
+		{
+			auto& ev = e.GetEvent<vkd::evt::MouseButtonEvent>();
+			mouseLastPos.x = (float)ev.x;
+			mouseLastPos.y = (float)ev.y;
+		}
+			break;
+		case vkd::evt::EventType::MouseMove:
+			if (eventConstructor.isMouseBtnPress(vkd::evt::MouseBtnLeft))
+			{
+				auto& ev = e.GetEvent<vkd::evt::MouseButtonEvent>();
+				mouseMoveOffset.x = (float)ev.x - mouseLastPos.x;
+				mouseMoveOffset.y =  (float)ev.y - mouseLastPos.y;
+				mouseLastPos.x = (float)ev.x;
+				mouseLastPos.y = (float)ev.y;
+				return true;
+			}
+		break;
+		case vkd::evt::EventType::MouseUp:
+			mouseMoveOffset.y = mouseMoveOffset.x = 0.0f;
+			break;
+		default:
+			break;
+		}
+		return false;
+	}
 private:
 	void onInit() override {
 
@@ -102,6 +136,11 @@ private:
 	void onUpdate(float delta) override
 	{
 		m_rotate += 26.f * delta;
+		worldRotate += mouseMoveOffset * delta * 4.0f;
+		uniformObj.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.f, -4.0f));
+		uniformObj.view = glm::rotate(uniformObj.view, glm::radians(worldRotate.x), glm::vec3(0.0f, 1.0f, 0.0f));
+		uniformObj.view = glm::rotate(uniformObj.view, glm::radians(-worldRotate.y), glm::vec3(1.0f, 0.0f, 0.0f));
+		uniformBuf->copyTo(uniformObj);
 	}
 
 	glm::mat4 set_model(float rotate,glm::vec3 pos)
@@ -119,6 +158,9 @@ private:
 	
 	UniformBufferObject uniformObj;
 	float m_rotate = 0.0f;
+	glm::vec2 mouseMoveOffset = glm::vec2(0.0f, 0.0f);
+	glm::vec2 mouseLastPos;
+	glm::vec2 worldRotate = glm::vec2(0.0f,0.0f);
 };
 
 #include <event/event.hpp>

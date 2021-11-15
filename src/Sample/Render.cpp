@@ -4,12 +4,12 @@
 namespace vkd{
 
 bool SampleRender::dispatchEvent(const evt::Event& e) {
-	printf("%d\n",e.type);
 	switch (e.type)
 	{
 		case evt::EventType::WindowReSize:
 			auto d = e.GetEvent<evt::EventType::WindowReSize>();
 			onWindowResize((uint32_t)d.w, (uint32_t)d.h);
+			return true;
 		break;
 	default:
 		break;

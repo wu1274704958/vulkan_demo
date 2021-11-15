@@ -14,6 +14,15 @@ namespace vkd::evt {
 		return ::pow(ax - bx, 2.0) + ::pow(ay - by, 2.0);
 	}
 
+	bool GlfwEventConstructor::isMouseBtnPress(int btn)
+	{
+		return mouseBtnPressed && mouseBtnPressed->btn == btn;
+	}
+	int GlfwEventConstructor::getMouseBtnPress()
+	{
+		return mouseBtnPressed ? mouseBtnPressed->btn : -1;
+	}
+
 	bool GlfwEventConstructor::init(SampleRender* p, GLFWwindow* window) {
 		EventConstructor<SampleRender,GLFWwindow*>::init(p,window);
 
@@ -38,14 +47,15 @@ namespace vkd::evt {
 	{
 		auto ptr = (GlfwEventConstructor*)glfwGetWindowUserPointer(window);
 		Event e;
-		e.m_event = MouseButtonEvent{ button,action,mods };
-		glfwGetCursorPos(window, &((MouseButtonEvent&)e).x, &((MouseButtonEvent&)e).y);
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		e.m_event = MouseButtonEvent{ button,action,mods,x,y};
 		double v;
 		switch (action)
 		{
 		case GLFW_PRESS:
 			e.type = EventType::MouseDown;
-			ptr->mouseBtnPressed = (MouseButtonEvent&)e;
+			ptr->mouseBtnPressed = MouseButtonEvent{ button,action,mods,x,y };
 			break;
 		case GLFW_RELEASE:
 			e.type = EventType::MouseUp;

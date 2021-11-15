@@ -129,13 +129,25 @@ namespace vkd::evt{
 		{
 			t->dispatchEvent(e);
 		}
+		virtual bool isMouseBtnPress(int btn) = 0;
+		virtual int getMouseBtnPress() = 0;
 	protected:
 		T *t;
 	};
 
+	constexpr int ActionPress = GLFW_PRESS; 
+	constexpr int ActionRelease = GLFW_RELEASE;
+	constexpr int ActionRepeat = GLFW_REPEAT;
+
+	constexpr int MouseBtnLeft = GLFW_MOUSE_BUTTON_LEFT;
+	constexpr int MouseBtnRight = GLFW_MOUSE_BUTTON_RIGHT;
+	constexpr int MouseBtnMiddle = GLFW_MOUSE_BUTTON_MIDDLE;
+
 	struct GlfwEventConstructor : public EventConstructor<SampleRender,GLFWwindow*>
 	{
 		virtual bool init(SampleRender* p, GLFWwindow*) override;
+		virtual bool isMouseBtnPress(int btn) override;
+		virtual int getMouseBtnPress() override;
 		static void WindowReSize(GLFWwindow* window, int w, int h);
 		static void WindowMouseButton(GLFWwindow*, int, int, int);
 		static void WindowCursorPos(GLFWwindow*,double,double);
