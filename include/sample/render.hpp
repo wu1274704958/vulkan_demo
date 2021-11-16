@@ -39,8 +39,10 @@ namespace vkd {
 			presentMods = std::move(other.presentMods);
 		}
 	};
+	struct Component;
 
 	class SampleRender : public evt::EventDispatcher{
+		friend Component;
 	public:
 		SampleRender() 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args){
@@ -188,5 +190,6 @@ namespace vkd {
 			const char* pLayerPrefix,
 			const char* pMessage,
 			void* pUserData);
+		static SampleRender* self_instance;
 	};
 }

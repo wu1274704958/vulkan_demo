@@ -3,6 +3,8 @@
 
 namespace vkd{
 
+SampleRender* SampleRender::self_instance = nullptr;
+
 bool SampleRender::dispatchEvent(const evt::Event& e) {
 	switch (e.type)
 	{
@@ -81,6 +83,7 @@ void SampleRender::init(int w, int h)
 	createSemaphores();
 	createDrawFences();
 	onInit();
+	self_instance = this;
 	isInit = true;
 }
 
@@ -103,6 +106,7 @@ void SampleRender::onUpdate(float delta) {}
 void SampleRender::cleanUp()
 {
 	if (!isInit)return;
+	self_instance = nullptr;
 	device.waitIdle();
 	device.destroySemaphore(acquired_image_ready);
 	device.destroySemaphore(render_complete);
