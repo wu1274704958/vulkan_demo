@@ -1,7 +1,104 @@
 #pragma once
 
-namespace vkd {
-	struct Object {
+#include <memory>
+#include <vector>
+#include <core/component.hpp>
 
+namespace vkd {
+	struct Object : public std::enable_shared_from_this<Object> {
+
+		template<typename T>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
+		bool has_comp()
+		{
+			size_t ty_id = typeid(T).hash_code();
+			return locator.contains(ty_id);
+		}
+
+		template<typename T,typename ... Args>
+		requires requires(Args&& ...args){
+			new T(std::forward<Args>(args)...);
+			requires std::is_base_of_v<Component,T>;
+		}
+		std::weak_ptr<T> add_comp(Args&& ...args)
+		{
+			if(has_comp<T>()) return nullptr;
+			size_t ty_id = typeid(T).hash_code();
+			auto comp = std::make_shared<T>(std::forward<Args>(args)...);
+			comp->attach_object(weak_ptr());
+			comp->awake();
+			comp->set_enable(true);
+			if (components.empty() || components.back()->idx() <= comp->idx())
+			{
+				components.push_back(std::move(comp));
+				locator.insert(std::make_pair(ty_id,components.size() - 1));
+				return comp;
+			}
+			else {
+				for (int i = 0; i < components.size(); ++i)
+				{
+					if (comp->idx() <= components[i]->idx())
+					{
+						components.insert(components.begin() + i, std::move(comp));
+						locator.insert(std::make_pair(ty_id, i));
+						return comp;
+					}
+				}
+			}
+			return nullptr;
+		}
+		template<typename T>
+			requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
+		std::weak_ptr<T> get_comp()
+		{
+			size_t ty_id = typeid(T).hash_code();
+			if (locator.contains(ty_id))
+			{
+				int idx = locator[ty_id];
+				return std::dynamic_pointer_cast<T>(components[idx]);
+
+			}
+			return nullptr;
+		}
+		template<typename T>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
+		void destroy_comp()
+		{
+			size_t ty_id = typeid(T).hash_code();
+			if (locator.contains(ty_id))
+			{
+				int idx = locator[ty_id];
+				auto c = components.erase(components.begin() + idx);
+				locator.erase(ty_id);
+				(*c)->set_enable(false);
+				(*c)->on_destroy();
+			}
+		}
+		uint32_t component_count();
+	protected:
+		bool good_comp_idx(int idx)
+		{
+			return components.size() > idx;
+		}
+		std::shared_ptr<Object> ptr()
+		{
+			return std::enable_shared_from_this<Object>::shared_from_this();
+		}
+		std::weak_ptr<Object> weak_ptr()
+		{
+			return std::enable_shared_from_this<Object>::weak_from_this();
+		}
+	protected:
+		std::vector<std::shared_ptr<Component>> components;
+		std::unordered_map<size_t,uint32_t> locator;
 	};
 }

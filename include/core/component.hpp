@@ -31,10 +31,10 @@ namespace vkd {
 		static vk::RenderPass renderpass();
 
 	protected:
+		virtual void awake() = 0;
 		virtual bool init() = 0;
-		virtual bool on_enable() = 0;
-		virtual bool on_disable() = 0;
-		virtual void start() = 0;
+		virtual void on_enable() = 0;
+		virtual void on_disable() = 0;
 		virtual void recreate_swapchain() = 0;
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
 		virtual void reset_object() { object.reset(); }
@@ -43,13 +43,14 @@ namespace vkd {
 		virtual void late_update(float delta) = 0;
 		virtual void clean_up() = 0;
 		virtual void clean_up_pipeline() = 0;
-		virtual void on_destroy() = 0;
-
-		
+		virtual void on_destroy(){
+			clean_up_pipeline();
+			clean_up();
+		}
 
 		std::weak_ptr<Object> object;
-		bool enable : 1 = true;
-		bool ever_tick : 1 = true;
+		bool enable : 1 = false;
+		bool ever_tick : 1 = false;
 	};
 
 }

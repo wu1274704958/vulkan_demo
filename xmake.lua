@@ -27,6 +27,7 @@ function example(name)
 end
 
 example("quad")    
+example("test_object")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
