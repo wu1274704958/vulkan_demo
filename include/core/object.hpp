@@ -25,7 +25,7 @@ namespace vkd {
 		}
 		std::weak_ptr<T> add_comp(Args&& ...args)
 		{
-			if(has_comp<T>()) return nullptr;
+			if(has_comp<T>()) return {};
 			size_t ty_id = typeid(T).hash_code();
 			auto comp = std::make_shared<T>(std::forward<Args>(args)...);
 			comp->attach_object(weak_ptr());
@@ -42,13 +42,14 @@ namespace vkd {
 				{
 					if (comp->idx() <= components[i]->idx())
 					{
+						adjust_locat(i,1);
 						components.insert(components.begin() + i, std::move(comp));
 						locator.insert(std::make_pair(ty_id, i));
 						return comp;
 					}
 				}
 			}
-			return nullptr;
+			return {};
 		}
 		template<typename T>
 			requires requires()
@@ -85,6 +86,7 @@ namespace vkd {
 		}
 		uint32_t component_count();
 	protected:
+		void adjust_locat(size_t i,int offset);
 		bool good_comp_idx(int idx)
 		{
 			return components.size() > idx;

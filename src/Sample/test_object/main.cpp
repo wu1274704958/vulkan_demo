@@ -150,7 +150,8 @@ struct Comp4 : public Component
 		return 36l;
 	}
 };
-
+}
+using namespace vkd;
 int main()
 {
 	auto o = std::make_shared<Object>();
@@ -161,6 +162,4 @@ int main()
 	o->add_comp<Comp2>();
 
 	return 0;
-}
-
 }
