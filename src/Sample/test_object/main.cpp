@@ -99,6 +99,7 @@ struct Comp3 : public Component
 	}
 	virtual void update(float delta) override
 	{
+		printf("asdasd\n");
 	}
 	virtual void late_update(float delta) override
 	{
@@ -160,6 +161,12 @@ int main()
 	o->add_comp<Comp3>();
 	o->add_comp<Comp1>();
 	o->add_comp<Comp2>();
+
+	auto comp3 = o->get_comp<Comp3>();
+	comp3.lock()->update(1);
+
+	
+	o->destroy_comp<Comp2>();
 
 	return 0;
 }

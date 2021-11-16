@@ -65,7 +65,7 @@ namespace vkd {
 				return std::dynamic_pointer_cast<T>(components[idx]);
 
 			}
-			return nullptr;
+			return {};
 		}
 		template<typename T>
 		requires requires()
@@ -79,6 +79,8 @@ namespace vkd {
 			{
 				int idx = locator[ty_id];
 				auto c = components.erase(components.begin() + idx);
+				if (idx < components.size())
+					adjust_locat(idx,-1);
 				locator.erase(ty_id);
 				(*c)->set_enable(false);
 				(*c)->on_destroy();
