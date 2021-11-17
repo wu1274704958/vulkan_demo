@@ -85,10 +85,12 @@ void SampleRender::init(int w, int h)
 	onInit();
 	self_instance = this;
 	isInit = true;
+	engineState = EngineState::Initialized;
 }
 
 void SampleRender::mainLoop()
 {
+	engineState = EngineState::Running;
 	while (!glfwWindowShouldClose(window))
 	{
 		auto calc = gld::FrameRate::calculator();
@@ -99,34 +101,37 @@ void SampleRender::mainLoop()
 		lastFrameDelta = gld::FrameRate::get_ms() ;
 	}
 	device.waitIdle();
+	engineState = EngineState::Stoped;
 }
 
 void SampleRender::onUpdate(float delta) {}
 
 void SampleRender::cleanUp()
 {
-	if (!isInit)return;
-	self_instance = nullptr;
-	device.waitIdle();
-	device.destroySemaphore(acquired_image_ready);
-	device.destroySemaphore(render_complete);
+	if (isInit){
+		self_instance = nullptr;
+		device.waitIdle();
+		device.destroySemaphore(acquired_image_ready);
+		device.destroySemaphore(render_complete);
 
-	for (auto f : drawFences)
-	{
-		device.destroyFence(f);
+		for (auto f : drawFences)
+		{
+			device.destroyFence(f);
+		}
+
+		cleanUpSwapChain();
+
+		onCleanUp();
+
+		device.destroyCommandPool(commandPool);
+		device.destroy();
+		vkDestroySurfaceKHR(instance, surface, nullptr);
+		DestroyDebugReportCallbackEXT(instance, debugReport, nullptr);
+		instance.destroy();
+		glfwDestroyWindow(window);
+		glfwTerminate();
 	}
-
-	cleanUpSwapChain();
-
-	onCleanUp();
-
-	device.destroyCommandPool(commandPool);
-	device.destroy();
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-	DestroyDebugReportCallbackEXT(instance, debugReport, nullptr);
-	instance.destroy();
-	glfwDestroyWindow(window);
-	glfwTerminate();
+	engineState = EngineState::Destroyed;
 }
 
 void SampleRender::initWindow(uint32_t w, uint32_t h)

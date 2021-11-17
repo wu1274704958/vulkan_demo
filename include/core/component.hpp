@@ -32,7 +32,12 @@ namespace vkd {
 
 	protected:
 		virtual void awake() = 0;
-		virtual bool init() = 0;
+		bool init() {
+			auto v = on_init();
+			is_init = true;
+			return v;
+		}
+		virtual bool on_init() = 0;
 		virtual void on_enable() = 0;
 		virtual void on_disable() = 0;
 		virtual void recreate_swapchain() = 0;
@@ -41,16 +46,25 @@ namespace vkd {
 		virtual void draw(vk::CommandBuffer& cmd) = 0;
 		virtual void update(float delta) = 0;
 		virtual void late_update(float delta) = 0;
-		virtual void clean_up() = 0;
+		void clean_up() {
+			clean_up();
+			is_init = false;
+		}
+		virtual void on_clean_up()=0;
 		virtual void clean_up_pipeline() = 0;
 		virtual void on_destroy(){
-			clean_up_pipeline();
-			clean_up();
+			if(is_init)
+			{ 
+				clean_up_pipeline();
+				clean_up();
+				is_init = false;
+			}
 		}
 
 		std::weak_ptr<Object> object;
 		bool enable : 1 = false;
 		bool ever_tick : 1 = false;
+		bool is_init : 1 = false;
 	};
 
 }

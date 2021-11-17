@@ -3,9 +3,11 @@
 #include <memory>
 #include <vector>
 #include <core/component.hpp>
+#include <event/event.hpp>
+#include <common.hpp>
 
 namespace vkd {
-	struct Object : public std::enable_shared_from_this<Object> {
+	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher {
 
 		template<typename T>
 		requires requires()
@@ -31,6 +33,7 @@ namespace vkd {
 			comp->attach_object(weak_ptr());
 			comp->awake();
 			comp->set_enable(true);
+			if(is_init) comp->init();
 			if (components.empty() || components.back()->idx() <= comp->idx())
 			{
 				components.push_back(std::move(comp));
@@ -115,6 +118,8 @@ namespace vkd {
 		void clean_up();
 		void clean_up_pipeline();
 		~Object();
+		bool dispatchEvent(const evt::Event&) override;
+		static EngineState engine_state();
 	protected:
 		void adjust_locat(size_t i,int offset);
 		bool good_comp_idx(int idx);
@@ -124,5 +129,6 @@ namespace vkd {
 		std::vector<std::shared_ptr<Component>> components;
 		std::unordered_map<size_t,uint32_t> locator;
 		bool active : 1 = false;
+		bool is_init : 1 = false;
 	};
 }

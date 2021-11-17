@@ -40,9 +40,11 @@ namespace vkd {
 		}
 	};
 	struct Component;
+	struct Object;
 
 	class SampleRender : public evt::EventDispatcher{
 		friend Component;
+		friend Object;
 	public:
 		SampleRender() 
 			: memPropCache(std::function([](std::tuple<vk::PhysicalDevice&>& args){
@@ -139,9 +141,9 @@ namespace vkd {
 			const char* pLayerPrefix,
 			const char* pMessage);
 		virtual std::tuple<vk::PhysicalDevice, QueueFamilyIndices> onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices);
-
-		protected:
-
+	public:
+		EngineState engineState = EngineState::Uninitialized;
+	protected:
 		GLFWwindow* window;
 		VkSurfaceKHR surface;
 		bool enableValidationLayers = false;
@@ -179,7 +181,6 @@ namespace vkd {
 		vk::ClearValue clearColorValue;
 		evt::GlfwEventConstructor eventConstructor;
 		QueueFamilyIndices queueFamilyIndices;
-
 		wws::VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
 		static VkBool32 DebugReportCallbackEXT(
 			VkDebugReportFlagsEXT                       flags,

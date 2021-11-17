@@ -278,3 +278,13 @@ namespace wws{
 		return res;
 	}
 }
+
+namespace vkd {
+	enum class EngineState {
+		Uninitialized,
+		Initialized,
+		Running,
+		Stoped,
+		Destroyed
+	};
+}

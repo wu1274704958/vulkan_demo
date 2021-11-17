@@ -1,5 +1,5 @@
 #include "core/object.hpp"
-
+#include <sample/render.hpp>
 namespace vkd {
 
 	uint32_t Object::component_count() { return components.size(); }
@@ -33,8 +33,17 @@ namespace vkd {
 			for (auto& comp : components)
 			{
 				if(comp->is_enable())
-					v ? comp->on_enable() : comp->on_disable();
+				{
+					if(v){ 
+						if(is_init && !comp->is_init)
+							comp->init();
+						comp->on_enable(); 
+					}else
+						comp->on_disable();
+				}
 			}
+			if(v && engine_state() == EngineState::Running && !is_init)  
+				init();
 		}
 	}
 	bool Object::is_active()
@@ -47,8 +56,10 @@ namespace vkd {
 		bool res = true;
 		for (auto& comp : components)
 		{
+			if(!comp->enable) continue;
 			if(!comp->init()) res = false;
 		}
+		is_init = true;
 		return res;
 	}
 
@@ -57,6 +68,7 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
+			if (!comp->enable) continue;
 			comp->recreate_swapchain();
 		}
 	}
@@ -64,6 +76,7 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
+			if (!comp->enable) continue;
 			comp->draw(cmd);
 		}
 	}
@@ -71,28 +84,33 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
-			comp->update(delta);
+			if(comp->enable && comp->ever_tick)
+				comp->update(delta);
 		}
 	}
 	void Object::late_update(float delta)
 	{
 		for (auto& comp : components)
 		{
-			comp->late_update(delta);
+			if (comp->enable && comp->ever_tick)
+				comp->late_update(delta);
 		}
 	}
 	void Object::clean_up()
 	{
 		for (auto& comp : components)
 		{
-			comp->clean_up();
+			if(comp->is_init)
+				comp->clean_up();
 		}
+		is_init = false;
 	}
 	void Object::clean_up_pipeline()
 	{
 		for (auto& comp : components)
 		{
-			comp->clean_up_pipeline();
+			if (comp->is_init)
+				comp->clean_up_pipeline();
 		}
 	}
 	Object::~Object()
@@ -105,5 +123,20 @@ namespace vkd {
 		}
 		components.clear();
 		locator.clear();
+	}
+
+	bool Object::dispatchEvent(const evt::Event& e)
+	{
+		for (auto& comp : components)
+		{
+			if(comp->dispatchEvent(e))
+				return true;
+		}
+		return false;
+	}
+
+	EngineState Object::engine_state()
+	{
+		return SampleRender::self_instance->engineState;
 	}
 }

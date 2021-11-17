@@ -7,7 +7,7 @@ struct Comp1 : public Component
 	virtual void awake() override
 	{
 	}
-	virtual bool init() override
+	virtual bool on_init() override
 	{
 		return false;
 	}
@@ -29,7 +29,7 @@ struct Comp1 : public Component
 	virtual void late_update(float delta) override
 	{
 	}
-	virtual void clean_up() override
+	virtual void on_clean_up() override
 	{
 	}
 	virtual void clean_up_pipeline() override
@@ -44,7 +44,7 @@ struct Comp2 : public Component
 	virtual void awake() override
 	{
 	}
-	virtual bool init() override
+	virtual bool on_init() override
 	{
 		return false;
 	}
@@ -66,7 +66,7 @@ struct Comp2 : public Component
 	virtual void late_update(float delta) override
 	{
 	}
-	virtual void clean_up() override
+	virtual void on_clean_up() override
 	{
 	}
 	virtual void clean_up_pipeline() override
@@ -81,7 +81,7 @@ struct Comp3 : public Component
 	virtual void awake() override
 	{
 	}
-	virtual bool init() override
+	virtual bool on_init() override
 	{
 		return false;
 	}
@@ -104,7 +104,7 @@ struct Comp3 : public Component
 	virtual void late_update(float delta) override
 	{
 	}
-	virtual void clean_up() override
+	virtual void on_clean_up() override
 	{
 	}
 	virtual void clean_up_pipeline() override
@@ -119,7 +119,7 @@ struct Comp4 : public Component
 	virtual void awake() override
 	{
 	}
-	virtual bool init() override
+	virtual bool on_init() override
 	{
 		return false;
 	}
@@ -141,7 +141,7 @@ struct Comp4 : public Component
 	virtual void late_update(float delta) override
 	{
 	}
-	virtual void clean_up() override
+	virtual void on_clean_up() override
 	{
 	}
 	virtual void clean_up_pipeline() override
@@ -168,6 +168,8 @@ int main()
 	o->get_comp_raw<Comp3>()->update(1);
 	
 	o->destroy_comp<Comp2>();
+
+	auto d = std::move(o);
 
 	return 0;
 }
