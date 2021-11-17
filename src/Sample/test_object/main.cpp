@@ -165,6 +165,7 @@ int main()
 	auto comp3 = o->get_comp<Comp3>();
 	comp3.lock()->update(1);
 
+	o->get_comp_raw<Comp3>()->update(1);
 	
 	o->destroy_comp<Comp2>();
 

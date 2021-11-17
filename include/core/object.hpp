@@ -72,6 +72,22 @@ namespace vkd {
 		{
 			requires std::is_base_of_v<Component, T>;
 		}
+		T* get_comp_raw()
+		{
+			size_t ty_id = typeid(T).hash_code();
+			if (locator.contains(ty_id))
+			{
+				int idx = locator[ty_id];
+				return dynamic_cast<T*>(components[idx].get());
+
+			}
+			return {};
+		}
+		template<typename T>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
 		void destroy_comp()
 		{
 			size_t ty_id = typeid(T).hash_code();
@@ -84,25 +100,29 @@ namespace vkd {
 				locator.erase(ty_id);
 				(*c)->set_enable(false);
 				(*c)->on_destroy();
+				(*c)->reset_object();
 			}
 		}
 		uint32_t component_count();
+		void set_active(bool v);
+		bool is_active();
+
+		bool init();
+		void recreate_swapchain();
+		void draw(vk::CommandBuffer& cmd);
+		void update(float delta);
+		void late_update(float delta);
+		void clean_up();
+		void clean_up_pipeline();
+		~Object();
 	protected:
 		void adjust_locat(size_t i,int offset);
-		bool good_comp_idx(int idx)
-		{
-			return components.size() > idx;
-		}
-		std::shared_ptr<Object> ptr()
-		{
-			return std::enable_shared_from_this<Object>::shared_from_this();
-		}
-		std::weak_ptr<Object> weak_ptr()
-		{
-			return std::enable_shared_from_this<Object>::weak_from_this();
-		}
-	protected:
+		bool good_comp_idx(int idx);
+		std::shared_ptr<Object> ptr();
+		std::weak_ptr<Object> weak_ptr();
+
 		std::vector<std::shared_ptr<Component>> components;
 		std::unordered_map<size_t,uint32_t> locator;
+		bool active : 1 = false;
 	};
 }
