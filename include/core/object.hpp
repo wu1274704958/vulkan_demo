@@ -8,7 +8,8 @@
 
 namespace vkd {
 	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher {
-
+		Object(){}
+		Object(std::string name) : name(name){}
 		template<typename T>
 		requires requires()
 		{
@@ -128,6 +129,7 @@ namespace vkd {
 
 		std::vector<std::shared_ptr<Component>> components;
 		std::unordered_map<size_t,uint32_t> locator;
+		std::string name;
 		bool active : 1 = false;
 		bool is_init : 1 = false;
 	};

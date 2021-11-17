@@ -111,11 +111,11 @@ private:
 	void drawQuad(vk::CommandBuffer& cmd,glm::vec3 pos)
 	{
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets, {});
 		vk::Viewport viewport(0, 0, (float)surfaceExtent.width, (float)surfaceExtent.height, 0.0f, 1.0f);
 		cmd.setViewport(0, viewport);
 		vk::Rect2D scissor({}, surfaceExtent);
 		cmd.setScissor(0, scissor);
-		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets,{});
 		vk::DeviceSize offset = 0;
 		cmd.bindVertexBuffers(0, verticesBuf->buffer, offset);
 		cmd.bindIndexBuffer(indicesBuf->buffer, 0, vk::IndexType::eUint16);
