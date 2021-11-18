@@ -105,11 +105,6 @@ private:
 		device.updateDescriptorSets(writeDescriptorSets, {});
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
-		drawQuad(cmd, glm::vec3(0.7f, 0.0f, 1.0f));
-		drawQuad(cmd, glm::vec3(0.0f, 0.0f, 0.0f));
-	}
-	void drawQuad(vk::CommandBuffer& cmd,glm::vec3 pos)
-	{
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
 		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets, {});
 		vk::Viewport viewport(0, 0, (float)surfaceExtent.width, (float)surfaceExtent.height, 0.0f, 1.0f);
@@ -119,6 +114,11 @@ private:
 		vk::DeviceSize offset = 0;
 		cmd.bindVertexBuffers(0, verticesBuf->buffer, offset);
 		cmd.bindIndexBuffer(indicesBuf->buffer, 0, vk::IndexType::eUint16);
+		drawQuad(cmd, glm::vec3(0.7f, 0.0f, 1.0f));
+		drawQuad(cmd, glm::vec3(0.0f, 0.0f, 0.0f));
+	}
+	void drawQuad(vk::CommandBuffer& cmd,glm::vec3 pos)
+	{
 		auto model = set_model(m_rotate, pos);
 		cmd.pushConstants(pipeline->pipelineLayout,vk::ShaderStageFlagBits::eVertex,0,sizeof(glm::mat4),(void*)&model);
 		cmd.drawIndexed(indices.size(), 1, 0, 0, 0);
