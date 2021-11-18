@@ -37,4 +37,15 @@ namespace vkd {
 	void PipelineComp::clean_up_pipeline() {
 		pipeline.reset();
 	}
+	const gld::vkd::PipelineData const* PipelineComp::get_pipeline() const
+	{
+		if (pipeline)
+			return pipeline.get();
+		else 
+			return nullptr;
+	}
+	const std::vector<vk::DescriptorSet>& PipelineComp::get_descriptorsets() const
+	{
+		return descSets;
+	}
 }

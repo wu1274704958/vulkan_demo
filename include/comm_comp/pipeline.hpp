@@ -59,12 +59,14 @@ namespace vkd {
 		virtual int64_t idx() override {
 			return -999999999;
 		}
+		const gld::vkd::PipelineData const* get_pipeline() const;
+		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
 		std::string vertexPath, fragPath;
 		uint32_t maxPoolSize = 99999;
 		std::unordered_set<uint32_t> instance_set;
-		std::vector<vk::DescriptorSet> descSets;
 		std::function<void(vk::GraphicsPipelineCreateInfo)> on_create_pipeline;
 	protected:
 		std::shared_ptr<gld::vkd::PipelineData> pipeline;
+		std::vector<vk::DescriptorSet> descSets;
 	};
 }

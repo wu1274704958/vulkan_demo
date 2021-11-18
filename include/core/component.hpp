@@ -38,20 +38,20 @@ namespace vkd {
 			return v;
 		}
 		virtual bool on_init() = 0;
-		virtual void on_enable() = 0;
-		virtual void on_disable() = 0;
-		virtual void recreate_swapchain() = 0;
+		virtual void on_enable(){}
+		virtual void on_disable() {}
+		virtual void recreate_swapchain(){}
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
 		virtual void reset_object() { object.reset(); }
 		virtual void draw(vk::CommandBuffer& cmd) = 0;
-		virtual void update(float delta) = 0;
-		virtual void late_update(float delta) = 0;
+		virtual void update(float delta){}
+		virtual void late_update(float delta) {}
 		void clean_up() {
 			clean_up();
 			is_init = false;
 		}
 		virtual void on_clean_up()=0;
-		virtual void clean_up_pipeline() = 0;
+		virtual void clean_up_pipeline(){}
 		virtual void on_destroy(){
 			if(is_init)
 			{ 
