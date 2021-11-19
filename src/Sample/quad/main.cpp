@@ -93,7 +93,7 @@ private:
 
 	}
 	void onReCreateSwapChain() override {
-		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag",1);
+		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/quad.vert", "shader_23/quad.frag", 1);
 		descSets = pipeline->allocDescriptorSets();
 
 		vk::DescriptorBufferInfo buffInfo(uniformBuf->buffer, 0, sizeof(UniformBufferObject));
@@ -130,6 +130,7 @@ private:
 		image.reset();
 	}
 	void onCleanUpPipeline() override {
+		device.freeDescriptorSets(pipeline->descriptorPool,descSets);
 		pipeline.reset();
 		gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
 	}

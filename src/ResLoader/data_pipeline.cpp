@@ -90,7 +90,7 @@ namespace gld::vkd {
 	{
 		std::vector<vk::DescriptorPoolSize> poolSizes;
 		push_descriptor_pool_size(poolSizes, shaders);
-		vk::DescriptorPoolCreateInfo info({},maxPoolSize,poolSizes);
+		vk::DescriptorPoolCreateInfo info(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,maxPoolSize,poolSizes);
 		return dev.createDescriptorPool(info);
 	}
 

@@ -34,7 +34,7 @@ namespace vkd {
 		virtual void on_clean_up() override{}
 		virtual void clean_up_pipeline() override{}
 		virtual int64_t idx() override {
-			return -99999999;
+			return std::numeric_limits<int64_t>::min() + 1;
 		}
 		vk::Viewport viewport;
 		vk::Rect2D scissor;
@@ -57,12 +57,12 @@ namespace vkd {
 		virtual void on_clean_up() override;
 		virtual void clean_up_pipeline() override;
 		virtual int64_t idx() override {
-			return -999999999;
+			return std::numeric_limits<int64_t>::min();
 		}
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
 		std::string vertexPath, fragPath;
-		uint32_t maxPoolSize = 99999;
+		uint32_t maxPoolSize = 10;
 		std::unordered_set<uint32_t> instance_set;
 		std::function<void(vk::GraphicsPipelineCreateInfo)> on_create_pipeline;
 	protected:

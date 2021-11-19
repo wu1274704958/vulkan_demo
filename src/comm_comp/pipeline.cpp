@@ -35,6 +35,7 @@ namespace vkd {
 		
 	}
 	void PipelineComp::clean_up_pipeline() {
+		device().freeDescriptorSets(pipeline->descriptorPool,descSets);
 		pipeline.reset();
 	}
 	const gld::vkd::PipelineData const* PipelineComp::get_pipeline() const
