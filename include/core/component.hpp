@@ -7,7 +7,7 @@ namespace vkd {
 
 	struct Object;
 
-	struct Component : public evt::EventDispatcher
+	struct Component : public std::enable_shared_from_this<Component>, public evt::EventDispatcher
 	{
 		friend Object;
 		virtual bool is_enable(){return enable;}

@@ -7,7 +7,11 @@
 #include <common.hpp>
 
 namespace vkd {
+	struct Transform;
+
 	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher {
+		friend Component;
+		friend Transform;
 		Object(){}
 		Object(std::string name) : name(name){}
 		template<typename T>
@@ -120,6 +124,7 @@ namespace vkd {
 		void clean_up_pipeline();
 		~Object();
 		bool dispatchEvent(const evt::Event&) override;
+		
 		static EngineState engine_state();
 	protected:
 		void adjust_locat(size_t i,int offset);

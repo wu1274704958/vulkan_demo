@@ -9,6 +9,7 @@
 namespace vkd {
 
 	struct Transform : public Component{
+		friend Object;
 		Transform();
 		void awake() override{}
 		bool on_init() override;
@@ -30,9 +31,24 @@ namespace vkd {
 		void set_rotation(glm::vec3 rot);
 		void set_scale(glm::vec3 scale);
 
+		const glm::mat4& get_local_matrix();
+		const glm::mat4& get_matrix();
+
+		bool good_child_idx(int i) const;
+		bool add_child(std::shared_ptr<Transform> ch);
+		std::shared_ptr<Transform> rm_child(int i);
+		bool rm_child(Transform* ptr);
+		bool rm_child(std::weak_ptr<Transform> ptr);
+		bool has_parent() const ;
+		std::weak_ptr<Transform> get_parent() const;
+		std::weak_ptr<Transform> get_child(int i) const;
+		std::weak_ptr<Transform> find_child(std::string_view name) const;
+	protected:
+		void update_matrix();
 	protected:
 		glm::vec3 position,rotation,scale;
-		glm::vec4 mat;
+		glm::mat4 mat;
+		std::shared_ptr<Transform> parent;
 		std::vector<std::shared_ptr<Transform>> childlren;
 		bool dirty:1 = true;
 	};
