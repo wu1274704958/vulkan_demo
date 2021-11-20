@@ -33,5 +33,9 @@ namespace vkd{
 	vk::RenderPass Component::renderpass() {
 		if (SampleRender::self_instance) return SampleRender::self_instance->renderPass;
 	}
+	evt::GlfwEventConstructor Component::event_constructor()
+	{
+		if (SampleRender::self_instance) return SampleRender::self_instance->eventConstructor;
+	}
 
 }

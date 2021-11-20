@@ -71,7 +71,6 @@ namespace vkd {
 			{
 				int idx = locator[ty_id];
 				return std::dynamic_pointer_cast<T>(components[idx]);
-
 			}
 			return {};
 		}

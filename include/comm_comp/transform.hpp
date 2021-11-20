@@ -43,11 +43,12 @@ namespace vkd {
 		std::weak_ptr<Transform> get_parent() const;
 		std::weak_ptr<Transform> get_child(int i) const;
 		std::weak_ptr<Transform> find_child(std::string_view name) const;
+		bool matrix_dirty() const;
 	protected:
 		void update_matrix();
 	protected:
 		glm::vec3 position,rotation,scale;
-		glm::mat4 mat;
+		glm::mat4 local_mat,mat;
 		std::shared_ptr<Transform> parent;
 		std::vector<std::shared_ptr<Transform>> childlren;
 		bool dirty:1 = true;

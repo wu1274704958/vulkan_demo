@@ -122,26 +122,40 @@ namespace vkd {
 	const glm::mat4& Transform::get_local_matrix()
 	{
 		if(dirty) update_matrix();
-		return mat;
+		return local_mat;
+	}
+
+	bool Transform::matrix_dirty() const
+	{
+		return dirty || (parent ? parent->dirty : false);
 	}
 
 	const glm::mat4& Transform::get_matrix()
 	{
-		if (dirty) update_matrix();
-		if (has_parent()) return get_parent().lock()->get_matrix() * mat;
-		return mat;
+		if(matrix_dirty())
+		{
+			if (dirty) update_matrix();
+			if (parent) 
+				mat = get_parent().lock()->get_matrix() * local_mat;
+			else
+				mat = local_mat;
+			return mat;
+		}else
+			return mat;
 	}
 
 	void Transform::update_matrix()
 	{
-		mat = glm::mat4(1.0f);
-		mat = glm::translate(mat, position);
+		local_mat = glm::mat4(1.0f);
+		local_mat = glm::translate(local_mat, position);
 
-		mat = glm::scale(mat, scale);
+		local_mat = glm::scale(local_mat, scale);
 
-		mat = glm::rotate(mat, rotation.x, glm::vec3(1.f, 0.f, 0.f));
-		mat = glm::rotate(mat, rotation.y, glm::vec3(0.f, 1.f, 0.f));
-		mat = glm::rotate(mat, rotation.z, glm::vec3(0.f, 0.f, 1.f));
+		local_mat = glm::rotate(local_mat, glm::radians(rotation.x), glm::vec3(1.f, 0.f, 0.f));
+		local_mat = glm::rotate(local_mat, glm::radians(rotation.y), glm::vec3(0.f, 1.f, 0.f));
+		local_mat = glm::rotate(local_mat, glm::radians(rotation.z), glm::vec3(0.f, 0.f, 1.f));
+
+		dirty = false;
 	}
 
 	bool Transform::good_child_idx(int i) const
