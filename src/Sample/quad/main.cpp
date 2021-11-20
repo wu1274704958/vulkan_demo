@@ -50,8 +50,8 @@ public:
 			if (eventConstructor.isMouseBtnPress(vkd::evt::MouseBtnLeft))
 			{
 				auto& ev = e.GetEvent<vkd::evt::MouseButtonEvent>();
-				mouseMoveOffset.x = (float)ev.x - mouseLastPos.x;
-				mouseMoveOffset.y =  (float)ev.y - mouseLastPos.y;
+				mouseMoveOffset.x = ((float)ev.x - mouseLastPos.x) / surfaceExtent.width;
+				mouseMoveOffset.y =  ((float)ev.y - mouseLastPos.y) / surfaceExtent.height;
 				mouseLastPos.x = (float)ev.x;
 				mouseLastPos.y = (float)ev.y;
 				return true;
@@ -103,6 +103,8 @@ private:
 			vk::WriteDescriptorSet(descSets[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, imageInfo, {})
 		};
 		device.updateDescriptorSets(writeDescriptorSets, {});
+
+		uniformObj.proj = glm::perspective(glm::radians(45.0f), (float)surfaceExtent.width / (float)surfaceExtent.height, 0.1f, 100.0f);
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
@@ -137,7 +139,8 @@ private:
 	void onUpdate(float delta) override
 	{
 		m_rotate += 26.f * delta;
-		worldRotate += mouseMoveOffset * delta * 4.0f;
+		worldRotate += mouseMoveOffset * delta * 42000.0f;
+		mouseMoveOffset = glm::vec2(0.0f);
 		uniformObj.view = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.f, -4.0f));
 		uniformObj.view = glm::rotate(uniformObj.view, glm::radians(worldRotate.x), glm::vec3(0.0f, 1.0f, 0.0f));
 		uniformObj.view = glm::rotate(uniformObj.view, glm::radians(-worldRotate.y), glm::vec3(1.0f, 0.0f, 0.0f));
