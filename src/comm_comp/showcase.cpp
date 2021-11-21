@@ -74,22 +74,28 @@ namespace vkd
 		}
 	}
 
-	void Showcase::attach_scene()
+	void Camera::attach_scene(const std::weak_ptr<Scene>& scene)
 	{
-		auto trans = object.lock()->get_comp_raw<Transform>();
-		auto scene = trans->get_scene().lock();
-		std::shared_ptr<Component> self = shared_from_this();
-		scene->add_camera(std::dynamic_pointer_cast<Camera>(self));
+		auto sc = scene.lock();
+		sc->add_camera(std::dynamic_pointer_cast<Camera>(shared_from_this()));
 	}
 
-	void Showcase::detach_scene()
+	void Camera::detach_scene()
 	{
 		auto trans = object.lock()->get_comp_raw<Transform>();
-		auto scene = trans->get_scene().lock();
-		std::shared_ptr<Component> self = shared_from_this();
-		scene->rm_camera(std::dynamic_pointer_cast<Camera>(self));
+		if(trans)
+		{
+			if (auto scene = trans->get_scene().lock();scene)
+				scene->rm_camera(std::dynamic_pointer_cast<Camera>(shared_from_this()));
+		}
 	}
 
+	void Camera::on_destroy(bool with_obj)
+	{
+		if(!with_obj)
+			detach_scene();
+		Component::on_destroy(with_obj);
+	}
 
 
 }

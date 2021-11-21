@@ -6,7 +6,7 @@
 namespace vkd {
 
 	struct Object;
-
+	struct Scene;
 	struct Component : public std::enable_shared_from_this<Component>, public evt::EventDispatcher
 	{
 		friend Object;
@@ -47,7 +47,7 @@ namespace vkd {
 		virtual void draw(vk::CommandBuffer& cmd) = 0;
 		virtual void update(float delta){}
 		virtual void late_update(float delta) {}
-		virtual void attach_scene() {}
+		virtual void attach_scene(const std::weak_ptr<Scene>& scene) {}
 		virtual void detach_scene() {}
 		void clean_up() {
 			clean_up();
@@ -55,7 +55,7 @@ namespace vkd {
 		}
 		virtual void on_clean_up()=0;
 		virtual void clean_up_pipeline(){}
-		virtual void on_destroy(){
+		virtual void on_destroy(bool with_obj){
 			if(is_init)
 			{ 
 				clean_up_pipeline();

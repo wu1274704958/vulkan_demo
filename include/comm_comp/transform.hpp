@@ -21,7 +21,7 @@ namespace vkd {
 		void on_clean_up() override;
 		void clean_up_pipeline() override;
 		bool dispatchEvent(const evt::Event&) override;
-		void attach_scene() override;
+		void attach_scene(const std::weak_ptr<Scene>& scene) override;
 		void detach_scene() override;
 		int64_t idx() override { return std::numeric_limits<int64_t>::max(); }
 		

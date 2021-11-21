@@ -44,7 +44,10 @@ namespace vkd
 			}
 		}
 		if(k >= 0)
-			return cameras.erase(cameras.begin() + k) != cameras.end();
+		{
+			 cameras.erase(cameras.begin() + k);
+			 return true;
+		}
 		return false;
 	}
 

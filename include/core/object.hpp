@@ -8,6 +8,7 @@
 
 namespace vkd {
 	struct Transform;
+	struct Scene;
 
 	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher {
 		friend Component;
@@ -41,7 +42,7 @@ namespace vkd {
 			if(is_init) comp->init();
 			if (components.empty() || components.back()->idx() <= comp->idx())
 			{
-				components.push_back(std::move(comp));
+				components.push_back(comp);
 				locator.insert(std::make_pair(ty_id,components.size() - 1));
 				return comp;
 			}
@@ -51,7 +52,7 @@ namespace vkd {
 					if (comp->idx() <= components[i]->idx())
 					{
 						adjust_locat(i,1);
-						components.insert(components.begin() + i, std::move(comp));
+						components.insert(components.begin() + i, comp);
 						locator.insert(std::make_pair(ty_id, i));
 						return comp;
 					}
@@ -101,13 +102,14 @@ namespace vkd {
 			if (locator.contains(ty_id))
 			{
 				int idx = locator[ty_id];
-				auto c = components.erase(components.begin() + idx);
+				auto c = components[idx];
+				components.erase(components.begin() + idx);
 				if (idx < components.size())
 					adjust_locat(idx,-1);
 				locator.erase(ty_id);
-				(*c)->set_enable(false);
-				(*c)->on_destroy();
-				(*c)->detach_object();
+				c->set_enable(false);
+				c->on_destroy(false);
+				c->detach_object();
 			}
 		}
 		uint32_t component_count();
@@ -123,7 +125,7 @@ namespace vkd {
 		void clean_up_pipeline();
 		~Object();
 		bool dispatchEvent(const evt::Event&) override;
-		void attach_scene();
+		void attach_scene(const std::weak_ptr<Scene>&);
 		void detach_scene();
 		
 		static EngineState engine_state();

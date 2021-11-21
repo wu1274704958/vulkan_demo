@@ -112,13 +112,14 @@ namespace vkd {
 		return false;
 	}
 
-	void Transform::attach_scene()
+	void Transform::attach_scene(const std::weak_ptr<Scene>& scene)
 	{
+		this->scene = scene;
 		for (const auto& ch : childlren)
 		{
 			if (const auto obj = ch->object.lock();obj)
 			{
-				obj->attach_scene();
+				obj->attach_scene(scene);
 			}
 		}
 	}
@@ -200,7 +201,7 @@ namespace vkd {
 		if (const auto obj = ch->object.lock(); obj)
 		{
 			if(!(ch->scene.expired()))
-				obj->attach_scene();
+				obj->attach_scene(ch->scene);
 			if(is_init && !obj->is_init && obj->active)
 				obj->init();
 		}
@@ -219,15 +220,15 @@ namespace vkd {
 		}
 		if(k >= 0 && k < childlren.size())
 		{
-			if(const auto it = childlren.erase(childlren.begin() + k);it != childlren.end())
+			auto it = childlren[k];
 			{
-				if(!(it->get()->scene.expired()))
+				if(!(it->scene.expired()))
 				{
-					if(const auto obj = (*it)->object.lock();obj)
+					if(const auto obj = it->object.lock();obj)
 						obj->detach_scene();
 				}
-				it->get()->parent.reset();
-				it->get()->scene.reset();
+				it->parent.reset();
+				it->scene.reset();
 				return true;
 			}
 		}
@@ -245,17 +246,16 @@ namespace vkd {
 	{
 		if(good_child_idx(i))
 		{
-			if (const auto it = childlren.erase(childlren.begin() + i); it != childlren.end())
+			auto it = childlren[i];
+			childlren.erase(childlren.begin() + i);
+			if (!(it->scene.expired()))
 			{
-				if (!(it->get()->scene.expired()))
-				{
-					if (const auto obj = (*it)->object.lock(); obj)
-						obj->detach_scene();
-				}
-				it->get()->parent.reset();
-				it->get()->scene.reset();
-				return *it;
+				if (const auto obj = it->object.lock(); obj)
+					obj->detach_scene();
 			}
+			it->parent.reset();
+			it->scene.reset();
+			return it;
 		}
 		return nullptr;
 	}

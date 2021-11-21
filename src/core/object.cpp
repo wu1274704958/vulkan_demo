@@ -118,7 +118,7 @@ namespace vkd {
 		for (auto& comp : components)
 		{
 			comp->set_enable(false);
-			comp->on_destroy();
+			comp->on_destroy(true);
 			comp->detach_object();
 		}
 		components.clear();
@@ -136,11 +136,11 @@ namespace vkd {
 		return false;
 	}
 
-	void Object::attach_scene()
+	void Object::attach_scene(const std::weak_ptr<Scene>& scene)
 	{
 		for (auto& comp : components)
 		{
-			comp->attach_scene();
+			comp->attach_scene(scene);
 		}
 	}
 
@@ -148,7 +148,7 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
-			comp->attach_scene();
+			comp->detach_scene();
 		}
 	}
 

@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <comm_comp/showcase.hpp>
 #include <comm_comp/scene.hpp>
+#include <generator/Generator.hpp>
 
 struct Vertex {
 	glm::vec2 pos;
@@ -172,21 +173,30 @@ private:
 #include <event/event.hpp>
 int main()
 {
-	//gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
-	//auto quad = new Quad(true, "Quad");
-	//quad->init(800, 600);
+	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
+	auto quad = new Quad(true, "Quad");
+	quad->init(800, 600);
 	////quad->mainLoop();
-	//auto o = std::make_shared<vkd::Object>();
-	//o->add_comp<vkd::Transform>();
-	//o->add_comp<vkd::ViewportScissor>();
-	//o->add_comp<vkd::PipelineComp>("aaa", "aaa");
-	//
-	//gld::DefDataMgr::instance()->clear_all();
-	//quad->cleanUp();
-	//delete quad;
-	auto trans = new vkd::Transform();
-	auto comp = new vkd::Scene();
-	printf("%d \n", typeid(*trans) == typeid(*comp));
+
+	auto scene = std::make_shared<vkd::Object>();
+	auto scene_t = scene->add_comp<vkd::Scene>();
+
+	auto node = std::make_shared<vkd::Object>();
+	auto node_t = node->add_comp<vkd::Transform>();
+
+	auto camera = std::make_shared<vkd::Object>();
+	auto camera_t = camera->add_comp<vkd::Transform>();
+	camera->add_comp<vkd::Showcase>();
+
+	node_t.lock()->add_child(camera_t.lock());
+	scene_t.lock()->add_child(node_t.lock());
+
+	//node_t.lock()->rm_child(0);
+	camera->destroy_comp<vkd::Showcase>();
+
+	gld::DefDataMgr::instance()->clear_all();
+	quad->cleanUp();
+	delete quad;
 	return 0;
 }
 
