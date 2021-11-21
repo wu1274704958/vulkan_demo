@@ -119,7 +119,7 @@ namespace vkd {
 		{
 			comp->set_enable(false);
 			comp->on_destroy();
-			comp->reset_object();
+			comp->detach_object();
 		}
 		components.clear();
 		locator.clear();
@@ -129,10 +129,27 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
+			if(!comp->enable) continue;
 			if(comp->dispatchEvent(e))
 				return true;
 		}
 		return false;
+	}
+
+	void Object::attach_scene()
+	{
+		for (auto& comp : components)
+		{
+			comp->attach_scene();
+		}
+	}
+
+	void Object::detach_scene()
+	{
+		for (auto& comp : components)
+		{
+			comp->attach_scene();
+		}
 	}
 
 	EngineState Object::engine_state()

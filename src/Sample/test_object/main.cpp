@@ -10,6 +10,8 @@
 #include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <comm_comp/showcase.hpp>
+#include <comm_comp/scene.hpp>
 
 struct Vertex {
 	glm::vec2 pos;
@@ -170,17 +172,21 @@ private:
 #include <event/event.hpp>
 int main()
 {
-	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
-	auto quad = new Quad(true, "Quad");
-	quad->init(800, 600);
-	//quad->mainLoop();
-	auto o = std::make_shared<vkd::Object>();
-	o->add_comp<vkd::Transform>();
-	o->add_comp<vkd::ViewportScissor>();
-	o->add_comp<vkd::PipelineComp>("aaa", "aaa");
-	gld::DefDataMgr::instance()->clear_all();
-	quad->cleanUp();
-	delete quad;
+	//gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
+	//auto quad = new Quad(true, "Quad");
+	//quad->init(800, 600);
+	////quad->mainLoop();
+	//auto o = std::make_shared<vkd::Object>();
+	//o->add_comp<vkd::Transform>();
+	//o->add_comp<vkd::ViewportScissor>();
+	//o->add_comp<vkd::PipelineComp>("aaa", "aaa");
+	//
+	//gld::DefDataMgr::instance()->clear_all();
+	//quad->cleanUp();
+	//delete quad;
+	auto trans = new vkd::Transform();
+	auto comp = new vkd::Scene();
+	printf("%d \n", typeid(*trans) == typeid(*comp));
 	return 0;
 }
 

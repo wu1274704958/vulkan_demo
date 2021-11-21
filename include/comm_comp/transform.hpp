@@ -7,7 +7,7 @@
 
 
 namespace vkd {
-
+	struct Scene;
 	struct Transform : public Component{
 		friend Object;
 		Transform();
@@ -21,6 +21,8 @@ namespace vkd {
 		void on_clean_up() override;
 		void clean_up_pipeline() override;
 		bool dispatchEvent(const evt::Event&) override;
+		void attach_scene() override;
+		void detach_scene() override;
 		int64_t idx() override { return std::numeric_limits<int64_t>::max(); }
 		
 		const glm::vec3& get_position()const;
@@ -35,7 +37,7 @@ namespace vkd {
 		const glm::mat4& get_matrix();
 
 		bool good_child_idx(int i) const;
-		bool add_child(std::shared_ptr<Transform> ch);
+		virtual bool add_child(std::shared_ptr<Transform> ch);
 		std::shared_ptr<Transform> rm_child(int i);
 		bool rm_child(Transform* ptr);
 		bool rm_child(std::weak_ptr<Transform> ptr);
@@ -44,12 +46,14 @@ namespace vkd {
 		std::weak_ptr<Transform> get_child(int i) const;
 		std::weak_ptr<Transform> find_child(std::string_view name) const;
 		bool matrix_dirty() const;
+		virtual std::weak_ptr<Scene> get_scene();
 	protected:
 		void update_matrix();
 	protected:
 		glm::vec3 position,rotation,scale;
 		glm::mat4 local_mat,mat;
 		std::shared_ptr<Transform> parent;
+		std::weak_ptr<Scene> scene;
 		std::vector<std::shared_ptr<Transform>> childlren;
 		bool dirty:1 = true;
 	};

@@ -1,3 +1,4 @@
+#include <comm_comp/scene.hpp>
 #include <comm_comp/showcase.hpp>
 #include <core/object.hpp>
 #include <comm_comp/transform.hpp>
@@ -72,5 +73,23 @@ namespace vkd
 			}
 		}
 	}
+
+	void Showcase::attach_scene()
+	{
+		auto trans = object.lock()->get_comp_raw<Transform>();
+		auto scene = trans->get_scene().lock();
+		std::shared_ptr<Component> self = shared_from_this();
+		scene->add_camera(std::dynamic_pointer_cast<Camera>(self));
+	}
+
+	void Showcase::detach_scene()
+	{
+		auto trans = object.lock()->get_comp_raw<Transform>();
+		auto scene = trans->get_scene().lock();
+		std::shared_ptr<Component> self = shared_from_this();
+		scene->rm_camera(std::dynamic_pointer_cast<Camera>(self));
+	}
+
+
 
 }

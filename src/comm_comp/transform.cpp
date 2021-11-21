@@ -26,7 +26,7 @@ namespace vkd {
 		bool res = true;
 		for(const auto& ch : childlren)
 		{
-			if(const auto obj = ch->object.lock();obj && obj->is_active())
+			if(const auto obj = ch->object.lock();obj && obj->active)
 			{
 				if(!obj->init())  res = false;
 			}
@@ -38,7 +38,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->active)
 			{
 				obj->recreate_swapchain();
 			}
@@ -49,7 +49,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->active)
 			{
 				obj->draw(cmd);
 			}
@@ -60,7 +60,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->active)
 			{
 				obj->update(delta);
 			}
@@ -71,7 +71,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->active)
 			{
 				obj->late_update(delta);
 			}
@@ -82,7 +82,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->is_init)
 			{
 				obj->clean_up();
 			}
@@ -93,7 +93,7 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->is_init)
 			{
 				obj->clean_up_pipeline();
 			}
@@ -104,12 +104,34 @@ namespace vkd {
 	{
 		for (const auto& ch : childlren)
 		{
-			if (const auto obj = ch->object.lock(); obj)
+			if (const auto obj = ch->object.lock(); obj && obj->active)
 			{
 				if(obj->dispatchEvent(e)) return true;
 			}
 		}
 		return false;
+	}
+
+	void Transform::attach_scene()
+	{
+		for (const auto& ch : childlren)
+		{
+			if (const auto obj = ch->object.lock();obj)
+			{
+				obj->attach_scene();
+			}
+		}
+	}
+
+	void Transform::detach_scene()
+	{
+		for (const auto& ch : childlren)
+		{
+			if (const auto obj = ch->object.lock(); obj)
+			{
+				obj->detach_scene();
+			}
+		}
 	}
 
 	const glm::vec3& Transform::get_position()const { return position; }
@@ -173,10 +195,15 @@ namespace vkd {
 		if(ch->parent)
 			ch->parent->rm_child(ch.get());
 		ch->parent = std::dynamic_pointer_cast<Transform>(shared_from_this());
+		ch->scene = get_scene();
 		childlren.push_back(ch);
-		if (const auto obj = ch->object.lock(); obj && is_init && 
-			!obj->is_init && obj->active)
-			obj->init();
+		if (const auto obj = ch->object.lock(); obj)
+		{
+			if(!(ch->scene.expired()))
+				obj->attach_scene();
+			if(is_init && !obj->is_init && obj->active)
+				obj->init();
+		}
 		return true;
 	}
 
@@ -194,7 +221,13 @@ namespace vkd {
 		{
 			if(const auto it = childlren.erase(childlren.begin() + k);it != childlren.end())
 			{
-				it->get()->parent = nullptr;
+				if(!(it->get()->scene.expired()))
+				{
+					if(const auto obj = (*it)->object.lock();obj)
+						obj->detach_scene();
+				}
+				it->get()->parent.reset();
+				it->get()->scene.reset();
 				return true;
 			}
 		}
@@ -214,7 +247,13 @@ namespace vkd {
 		{
 			if (const auto it = childlren.erase(childlren.begin() + i); it != childlren.end())
 			{
-				it->get()->parent = nullptr;
+				if (!(it->get()->scene.expired()))
+				{
+					if (const auto obj = (*it)->object.lock(); obj)
+						obj->detach_scene();
+				}
+				it->get()->parent.reset();
+				it->get()->scene.reset();
 				return *it;
 			}
 		}
@@ -262,4 +301,10 @@ namespace vkd {
 		}
 		return {};
 	}
+
+	std::weak_ptr<Scene> Transform::get_scene()
+	{
+		return scene;
+	}
+
 }

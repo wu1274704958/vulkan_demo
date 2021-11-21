@@ -43,10 +43,12 @@ namespace vkd {
 		virtual void on_disable() {}
 		virtual void recreate_swapchain(){}
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
-		virtual void reset_object() { object.reset(); }
+		virtual void detach_object() { object.reset(); }
 		virtual void draw(vk::CommandBuffer& cmd) = 0;
 		virtual void update(float delta){}
 		virtual void late_update(float delta) {}
+		virtual void attach_scene() {}
+		virtual void detach_scene() {}
 		void clean_up() {
 			clean_up();
 			is_init = false;

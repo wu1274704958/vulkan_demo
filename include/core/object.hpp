@@ -107,7 +107,7 @@ namespace vkd {
 				locator.erase(ty_id);
 				(*c)->set_enable(false);
 				(*c)->on_destroy();
-				(*c)->reset_object();
+				(*c)->detach_object();
 			}
 		}
 		uint32_t component_count();
@@ -123,6 +123,8 @@ namespace vkd {
 		void clean_up_pipeline();
 		~Object();
 		bool dispatchEvent(const evt::Event&) override;
+		void attach_scene();
+		void detach_scene();
 		
 		static EngineState engine_state();
 	protected:
