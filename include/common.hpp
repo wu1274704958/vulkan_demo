@@ -5,7 +5,7 @@
 
 namespace wws{
 
-	inline bool eq(const char* a,const char* b)
+	inline bool IsContainEq__(const char* a,const char* b)
 	{
 		return strcmp(a,b) == 0;
 	}
@@ -19,7 +19,7 @@ namespace wws{
 			bool has = false;
 			for (auto& v : vec)
 			{
-				if (eq(i, v))
+				if (IsContainEq__(i, v))
 				{
 					has = true;
 					++same_count;
@@ -41,7 +41,7 @@ namespace wws{
 			bool has = false;
 			for (auto& v : vec)
 			{
-				if (eq(i, v.*f))
+				if (IsContainEq__(i, v.*f))
 				{
 					has = true;
 					++same_count;
@@ -63,7 +63,7 @@ namespace wws{
 			bool has = false;
 			for (auto& v : vec)
 			{
-				if (eq(i, f(v)))
+				if (IsContainEq__(i, f(v)))
 				{
 					has = true;
 					++same_count;
@@ -156,6 +156,11 @@ namespace wws{
 		{
 			return get_<0, T, Ts...>(i);
 		}
+		template<T K>
+		static constexpr size_t find()
+		{
+			return find_<0,K,Ts...>();
+		}
 		static int find(T t)
 		{
 			return find_<0,T,Ts...>(t);
@@ -207,6 +212,24 @@ namespace wws{
 				}
 				else {
 					return find_<I + 1, TT, S...>(t);
+				}
+			}
+		}
+		template<size_t I,T K,T F,T ...S>
+		static constexpr size_t find_()
+		{
+			if constexpr (F == K)
+			{
+				return I;
+			}
+			else
+			{
+				if constexpr (sizeof...(S) == 0)
+				{
+					return -1;
+				}
+				else {
+					return find_<I + 1, K, S...>();
 				}
 			}
 		}

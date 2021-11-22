@@ -138,7 +138,7 @@ namespace vkd {
 		std::vector<std::shared_ptr<Component>> components;
 		std::unordered_map<size_t,uint32_t> locator;
 		std::string name;
-		bool active : 1 = false;
+		bool active : 1 = true;
 		bool is_init : 1 = false;
 	};
 }

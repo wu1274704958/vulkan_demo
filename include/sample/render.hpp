@@ -6,6 +6,9 @@
 #include <optional>
 #include <json.hpp>
 #include <event/event.hpp>
+#include <core/object.hpp>
+#include <comm_comp/scene.hpp>
+
 namespace vkd {
 
 	VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback);
@@ -71,6 +74,7 @@ namespace vkd {
 		virtual bool dispatchEvent(const evt::Event&) override ;
 	protected:
 		void initWindow(uint32_t w, uint32_t h);
+		virtual void initScene();
 		bool checkValidationLayerSupport() ;
 		std::vector<const char*> getRequiredExtensions();
 		void createInstance();
@@ -119,17 +123,17 @@ namespace vkd {
 		void createDrawFences();
 		virtual void drawFrame();
 		virtual void onDraw(vk::CommandBuffer& cmd,vk::Framebuffer frameBuf);
-		virtual void onRealDraw(vk::CommandBuffer& cmd)=0;
+		virtual void onRealDraw(vk::CommandBuffer& cmd);
 		void recreateSwapChain();
-		virtual void onCleanUpPipeline() = 0;
+		virtual void onCleanUpPipeline();
 		void cleanUpSwapChain();
-		virtual void onCleanUp() = 0;
+		virtual void onCleanUp();
 		virtual void onInit() = 0;
 		virtual void onCreate();
 		virtual void onCreateWindow();
 		virtual void onUpdate(float delta);
 		virtual void onWindowResize(uint32_t w, uint32_t h);
-		virtual void onReCreateSwapChain() = 0;
+		virtual void onReCreateSwapChain();
 		virtual void onFillValidationLayers(std::vector<const char*>& vec);
 		virtual void onFillDeviceNeedExtensions(std::vector<const char*>& vec);
 		virtual void onSetPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures features);
@@ -143,6 +147,8 @@ namespace vkd {
 		virtual std::tuple<vk::PhysicalDevice, QueueFamilyIndices> onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices);
 	public:
 		EngineState engineState = EngineState::Uninitialized;
+		std::shared_ptr<Object> scene_obj;
+		std::weak_ptr<Scene> scene;
 	protected:
 		GLFWwindow* window;
 		VkSurfaceKHR surface;

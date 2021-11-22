@@ -50,7 +50,7 @@ namespace vkd {
 		virtual void attach_scene(const std::weak_ptr<Scene>& scene) {}
 		virtual void detach_scene() {}
 		void clean_up() {
-			clean_up();
+			on_clean_up();
 			is_init = false;
 		}
 		virtual void on_clean_up()=0;

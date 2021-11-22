@@ -3,17 +3,9 @@
 #include <core/component.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <comm_comp/camera.hpp>
 
 namespace vkd {
-	struct Camera : public  Component
-	{
-		virtual const glm::mat4& get_matrix_p() const = 0;
-		virtual const glm::mat4& get_matrix_v() const = 0;
-		void attach_scene(const std::weak_ptr<Scene>& scene) override;
-		void detach_scene() override;
-		void on_destroy(bool with_obj) override;
-	protected:
-	};
 
 	struct Showcase : public Camera
 	{

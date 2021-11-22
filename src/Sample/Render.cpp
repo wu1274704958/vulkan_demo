@@ -13,10 +13,8 @@ bool SampleRender::dispatchEvent(const evt::Event& e) {
 			onWindowResize((uint32_t)d.w, (uint32_t)d.h);
 			return true;
 		break;
-	default:
-		break;
 	}
-	return false;
+	return scene_obj->dispatchEvent(e);
 }
 
 VkBool32 SampleRender::DebugReportCallbackEXT(
@@ -84,9 +82,18 @@ void SampleRender::init(int w, int h)
 	createDrawFences();
 	onInit();
 	self_instance = this;
+	initScene();
+	scene_obj->init();
 	isInit = true;
 	engineState = EngineState::Initialized;
 }
+
+void SampleRender::initScene()
+{
+	scene_obj = std::make_shared<Object>("DefScene");
+	scene = scene_obj->add_comp<Scene>();
+}
+
 
 void SampleRender::mainLoop()
 {
@@ -95,21 +102,24 @@ void SampleRender::mainLoop()
 	{
 		auto calc = gld::FrameRate::calculator();
 		glfwPollEvents();
-		onUpdate(lastFrameDelta);
 		if (!minWindowSize)
 			drawFrame();
+		onUpdate(lastFrameDelta);
 		lastFrameDelta = gld::FrameRate::get_ms() ;
 	}
 	device.waitIdle();
 	engineState = EngineState::Stoped;
 }
 
-void SampleRender::onUpdate(float delta) {}
+void SampleRender::onUpdate(float delta)
+{
+	scene_obj->update(lastFrameDelta);
+	scene_obj->late_update(lastFrameDelta);
+}
 
 void SampleRender::cleanUp()
 {
 	if (isInit){
-		self_instance = nullptr;
 		device.waitIdle();
 		device.destroySemaphore(acquired_image_ready);
 		device.destroySemaphore(render_complete);
@@ -132,6 +142,14 @@ void SampleRender::cleanUp()
 		glfwTerminate();
 	}
 	engineState = EngineState::Destroyed;
+}
+
+void SampleRender::onCleanUp()
+{
+	scene_obj->clean_up();
+	scene.reset();
+	scene_obj.reset();
+	self_instance = nullptr;
 }
 
 void SampleRender::initWindow(uint32_t w, uint32_t h)
@@ -574,6 +592,11 @@ void SampleRender::createSwapchainImageViews()
 	 cmd.end();
  }
 
+void SampleRender::onRealDraw(vk::CommandBuffer& cmd)
+{
+	scene_obj->draw(cmd);	
+}
+
  void SampleRender::recreateSwapChain()
  {
 	 device.waitIdle();
@@ -588,30 +611,41 @@ void SampleRender::createSwapchainImageViews()
 	 createCommandBuffers();
 	 onReCreateSwapChain();
  }
+
+void SampleRender::onReCreateSwapChain()
+{
+	scene_obj->recreate_swapchain();
+}
+
+
 void SampleRender::cleanUpSwapChain()
- {
-	 device.freeCommandBuffers(commandPool, commandbuffers);
-	 for (auto fb : framebuffers)
-	 {
-		 device.destroyFramebuffer(fb);
-	 }
+{
+	device.freeCommandBuffers(commandPool, commandbuffers);
+	for (auto fb : framebuffers)
+	{
+	 device.destroyFramebuffer(fb);
+	}
 
-	 onCleanUpPipeline();
+	onCleanUpPipeline();
 
-	 device.destroyRenderPass(renderPass);
+	device.destroyRenderPass(renderPass);
 
-	 device.freeMemory(depthAttachment.mem);
-	 device.destroyImage(depthAttachment.image);
-	 device.destroyImageView(depthAttachment.view);
+	device.freeMemory(depthAttachment.mem);
+	device.destroyImage(depthAttachment.image);
+	device.destroyImageView(depthAttachment.view);
 
-	 for (int i = 0; i < swapChainImageViews.size(); ++i)
-	 {
-		 device.destroyImageView(swapChainImageViews[i]);
-	 }
-	 device.destroySwapchainKHR(swapchain);
+	for (int i = 0; i < swapChainImageViews.size(); ++i)
+	{
+	 device.destroyImageView(swapChainImageViews[i]);
+	}
+	device.destroySwapchainKHR(swapchain);
+}
 
+void SampleRender::onCleanUpPipeline()
+{
+	scene_obj->clean_up_pipeline();
+}
 
- }
 void SampleRender::onCreate() {};
 void SampleRender::onCreateWindow() {};
 void SampleRender::onWindowResize(uint32_t w, uint32_t h)
