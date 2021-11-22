@@ -37,6 +37,21 @@ namespace gld
                 ResCacheMgr<Plugs...>::instance()->template cache<static_cast<size_t>(Rt)>(key,res);
             return res;
         }
+
+        template<DataType Rt, typename ... Args>
+        auto load_not_cache(Args&& ... args)
+            ->typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::RetTy
+            requires requires (Args&& ... args)
+        {
+            MapResPlug<static_cast<size_t>(Rt), Plugs...>::type::load(std::forward<Args>(args)...);
+        }
+        {
+            using Ty = typename MapResPlug<static_cast<size_t>(Rt), Plugs...>::type;
+            using ARGS_T = typename Ty::ArgsTy;
+            using RET_T = typename Ty::RetTy;
+            auto [success, res] = Ty::load(std::forward<Args>(args)...);
+            return res;
+        }
 		
         template<DataType Rt, typename ... Args>
         decltype(auto) rm_cache(Args&& ... args)

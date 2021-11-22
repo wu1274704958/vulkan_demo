@@ -50,6 +50,7 @@ namespace gld::vkd {
 		static std::string key_from_args(const std::string&, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
 		static std::string key_from_args(const std::string&,vk::PhysicalDevice,vk::Device,vk::DeviceSize,vk::BufferUsageFlags ,vk::MemoryPropertyFlags);
 		static RealRetTy load(const std::string&, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
+		static RealRetTy load(vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags);
 	};
 
 	using CreateVkBufferTy = CreateVkBuffer<std::string, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags>;
