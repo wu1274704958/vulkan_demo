@@ -41,7 +41,7 @@ namespace gld::vkd {
 		return sundry::format_tup('#', name, (uint32_t)usage, (uint32_t)prop);
 	}
 
-	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(const std::string&, vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
+	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		auto buff = std::make_shared<VkdBuffer>();
 		if (createBuffer(phy, dev, size, usage, prop, buff->buffer, buff->mem))
@@ -49,9 +49,14 @@ namespace gld::vkd {
 			buff->device = dev;
 			buff->usage = usage;
 			buff->memProperty = prop;
-			return std::make_tuple(true,buff);
+			return std::make_tuple(true, buff);
 		}
-		return std::make_tuple(false,nullptr);
+		return std::make_tuple(false, nullptr);
+	}
+
+	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(const std::string&, vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
+	{
+		return load(phy,dev,size,usage,prop);
 	}
 
 	bool VkdBuffer::copyTo(void* data, vk::DeviceSize size, vk::DeviceSize offset)
