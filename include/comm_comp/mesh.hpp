@@ -22,15 +22,23 @@ namespace vkd
 		{
 			vk::DeviceSize offset = 0;
 			cmd.bindVertexBuffers(0, vertexBuf->buffer, offset);
-			cmd.bindIndexBuffer(indexBuf->buffer, 0, vk::IndexType::eUint16);
+			cmd.bindIndexBuffer(indexBuf->buffer, 0, *IndexType);
 		}
-		void on_clean_up() override;
+		void on_clean_up()
+		{
+			indexBuf.reset();
+			vertexBuf.reset();
+		}
 
-		//static constexpr vk::IndexType = 
+		static constexpr std::optional<vk::IndexType> IndexType = wws::map_enum<IT, wws::ValList<vk::IndexType,
+			vk::IndexType::eUint16,
+			vk::IndexType::eUint32,
+			vk::IndexType::eUint8EXT,
+			std::tuple<int16_t,int32_t,int8_t>>();
 	protected:
 		std::vector<VT> vertices;
 		std::vector<IT> indices;
-		gld::vkd::VkdBuffer vertexBuf;
-		gld::vkd::VkdBuffer indexBuf;
+		std::shared_ptr<gld::vkd::VkdBuffer> vertexBuf;
+		std::shared_ptr<gld::vkd::VkdBuffer> indexBuf;
 	};
 }

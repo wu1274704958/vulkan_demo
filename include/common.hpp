@@ -235,6 +235,43 @@ namespace wws{
 		}
 	};
 
+	template<typename T,typename Tup,size_t N = 0>
+	struct find_tuple
+	{
+		static constexpr int64_t func()
+		{
+			if constexpr (std::is_same_v<T, std::tuple_element_t<N,Tup>>)
+			{
+				return N;
+			}
+			else
+			{
+				if constexpr (N + 1 >= std::tuple_size<Tup>::value)
+				{
+					return -1;
+				}
+				else
+				{
+					return find_tuple<T, Tup, N + 1>::func();
+				}
+			}
+		}
+		static constexpr int64_t val = func();
+	};
+
+	template<typename T,typename E,typename Tup>
+	constexpr std::optional<typename E::Type> map_enum()
+	{
+		constexpr int64_t idx = find_tuple<T,Tup>::val;
+		if constexpr (idx >= 0)
+		{
+			return E::template get<idx>();
+		}else
+		{
+			return std::nullopt;
+		}
+	}
+
 	template<typename T, typename T2>
 	std::optional<typename T2::Type> map_enum(typename T::Type t)
 	{
