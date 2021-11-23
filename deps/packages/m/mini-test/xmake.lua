@@ -6,7 +6,7 @@ package("mini-test")
     set_license("MIT")
 
     set_urls("https://github.com/wu1274704958/mini-test.git")
-    add_versions("0.2", "0d535bc469fd2a26a5e6a5d0167fc0620f428692")
+    add_versions("0.21", "21a1d5ca2e15b29a62e0d0337f1da00883084a70")
 
     on_install(function (package)
         os.cp("include", package:installdir(""))

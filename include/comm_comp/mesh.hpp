@@ -34,7 +34,7 @@ namespace vkd
 			vk::IndexType::eUint16,
 			vk::IndexType::eUint32,
 			vk::IndexType::eUint8EXT,
-			std::tuple<int16_t,int32_t,int8_t>>();
+			std::tuple<int16_t,int32_t,int8_t>>>();
 	protected:
 		std::vector<VT> vertices;
 		std::vector<IT> indices;
