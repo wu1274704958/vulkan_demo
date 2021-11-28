@@ -65,6 +65,8 @@ namespace vkd
 	void Showcase::update(float delta)
 	{
 		glm::vec2 off = mouseMoveOffset * delta * 42000.0f;
+		if(glm::abs(off.x) < glm::epsilon<float>() &&
+			glm::abs(off.y) < glm::epsilon<float>()) return;
 		if(auto obj = object.lock();obj)
 		{
 			if(auto trans = obj->get_comp_raw<Transform>();trans)
