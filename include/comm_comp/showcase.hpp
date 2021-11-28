@@ -18,6 +18,7 @@ namespace vkd {
 		void recreate_swapchain() override;
 		void update(float delta) override;
 		void draw(vk::CommandBuffer& cmd) override{}
+		bool is_dirty() const override;
 	protected:
 		glm::mat4 mat_p;
 		glm::vec2 mouseLastPos, mouseMoveOffset;

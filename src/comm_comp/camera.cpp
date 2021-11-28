@@ -27,4 +27,10 @@ namespace vkd
 		Component::on_destroy(with_obj);
 	}
 
+	bool Camera::is_dirty() const
+	{
+		return dirty;
+	}
+
+
 }

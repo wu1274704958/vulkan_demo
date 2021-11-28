@@ -13,6 +13,7 @@
 #include <comm_comp/showcase.hpp>
 #include <comm_comp/scene.hpp>
 #include <generator/Generator.hpp>
+#include <comm_comp/render.hpp>
 
 struct Vertex {
 	glm::vec2 pos;
@@ -47,13 +48,21 @@ private:
 	void initScene() override
 	{
 		SampleRender::initScene();
-		auto cam_obj = std::make_shared<vkd::Object>("Camera");
+		cam_obj = std::make_shared<vkd::Object>("Camera");
 		auto trans = cam_obj->add_comp<vkd::Transform>();
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -4.0f));
 
 		scene.lock()->add_child(trans.lock());
+
+		quad = std::make_shared<vkd::Object>("Quad");
+		auto quad_t = quad->add_comp<vkd::Transform>();
+		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
+		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
+		quad->add_comp<vkd::DefRender>();
+		scene.lock()->add_child(quad_t.lock());
 	}
+	std::shared_ptr<vkd::Object> cam_obj,quad;
 };
 
 #include <event/event.hpp>

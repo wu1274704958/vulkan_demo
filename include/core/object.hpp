@@ -112,6 +112,21 @@ namespace vkd {
 				c->detach_object();
 			}
 		}
+
+		template<typename T>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
+		std::weak_ptr<T> get_comp_dyn()
+		{
+			for(auto& a : components)
+			{
+				std::shared_ptr<T> ptr = std::dynamic_pointer_cast<T>(a);
+				if(ptr) return ptr;
+			}
+			return {};
+		}
 		uint32_t component_count();
 		void set_active(bool v);
 		bool is_active();

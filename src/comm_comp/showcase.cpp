@@ -12,6 +12,7 @@ namespace vkd
 		auto surface = surface_extent();
 		mat_p = glm::perspective(glm::radians(fovy), static_cast<float>(surface.width) / static_cast<float>(surface.height), 
 				zNera, zFar);
+		dirty = true;
 	}
 
 	bool Showcase::dispatchEvent(const evt::Event& e)
@@ -73,5 +74,18 @@ namespace vkd
 			}
 		}
 	}
+
+	bool Showcase::is_dirty() const
+	{
+		if (auto obj = object.lock(); obj)
+		{
+			if (auto trans = obj->get_comp_raw<Transform>(); trans)
+			{
+				return Camera::is_dirty() || trans->matrix_dirty();
+			}
+		}
+		return Camera::is_dirty();
+	}
+
 
 }
