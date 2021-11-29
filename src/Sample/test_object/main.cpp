@@ -98,10 +98,19 @@ private:
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
-		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
+		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag",2);
 		quad->add_comp<vkd::DefRender>();
 		quad->add_comp<Texture>("textures/texture.jpg");
 		scene.lock()->add_child(quad_t.lock());
+
+		auto quad2 = std::make_shared<vkd::Object>("Quad2");
+		auto quad2_t = quad2->add_comp<vkd::Transform>();
+		quad2_t.lock()->set_position(glm::vec3(0.0f,0.0f,0.5f));
+		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
+		quad2->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
+		quad2->add_comp<vkd::DefRender>();
+		quad2->add_comp<Texture>("textures/texture.jpg");
+		scene.lock()->add_child(quad2_t.lock());
 	}
 };
 
