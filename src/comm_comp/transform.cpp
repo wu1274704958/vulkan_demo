@@ -189,6 +189,8 @@ namespace vkd {
 	bool Transform::add_child(std::shared_ptr<Transform> ch)
 	{
 		if (!ch || ch.get() == this || ch == parent) return false;
+		const auto obj = ch->object.lock();
+		if (!obj) return false;
 		for(const auto& c : childlren)
 		{
 			if(c == ch) return false;
@@ -198,13 +200,12 @@ namespace vkd {
 		ch->parent = std::dynamic_pointer_cast<Transform>(shared_from_this());
 		ch->scene = get_scene();
 		childlren.push_back(ch);
-		if (const auto obj = ch->object.lock(); obj)
-		{
-			if(!(ch->scene.expired()))
-				obj->attach_scene(ch->scene);
-			if(is_init && !obj->is_init && obj->active)
-				obj->init();
-		}
+		objects.push_back(obj);
+		if(!(ch->scene.expired()))
+			obj->attach_scene(ch->scene);
+		if(is_init && !obj->is_init && obj->active)
+			obj->init();
+		
 		return true;
 	}
 
@@ -248,6 +249,7 @@ namespace vkd {
 		{
 			auto it = childlren[i];
 			childlren.erase(childlren.begin() + i);
+			objects.erase(objects.begin() + i);
 			if (!(it->scene.expired()))
 			{
 				if (const auto obj = it->object.lock(); obj)

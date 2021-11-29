@@ -9,6 +9,7 @@ namespace vkd
 {
 	void Showcase::awake()
 	{
+		Camera::awake();
 		auto surface = surface_extent();
 		mat_p = glm::perspective(glm::radians(fovy), static_cast<float>(surface.width) / static_cast<float>(surface.height), 
 				zNera, zFar);
@@ -32,8 +33,8 @@ namespace vkd
 			{
 				auto& ev = e.GetEvent<vkd::evt::MouseButtonEvent>();
 				auto surface = surface_extent();
-				mouseMoveOffset.x = ((float)ev.x - mouseLastPos.x) / surface.width;
-				mouseMoveOffset.y = ((float)ev.y - mouseLastPos.y) / surface.height;
+				mouseMoveOffset.x = (float)ev.x - mouseLastPos.x;
+				mouseMoveOffset.y = (float)ev.y - mouseLastPos.y;
 				mouseLastPos.x = (float)ev.x;
 				mouseLastPos.y = (float)ev.y;
 				return true;
@@ -65,7 +66,7 @@ namespace vkd
 
 	void Showcase::update(float delta)
 	{
-		glm::vec2 off = mouseMoveOffset * delta * 42000.0f;
+		glm::vec2 off = mouseMoveOffset * delta * 720.0f;
 		if(glm::abs(off.x) < glm::epsilon<float>() &&
 			glm::abs(off.y) < glm::epsilon<float>()) return;
 		if(auto obj = object.lock();obj)
@@ -76,6 +77,7 @@ namespace vkd
 				trans->set_rotation(glm::vec3(old.x - off.y,old.y + off.x,old.z));
 			}
 		}
+		mouseMoveOffset.x = mouseMoveOffset.y = 0.0f;
 	}
 
 	bool Showcase::is_dirty() const

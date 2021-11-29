@@ -32,5 +32,11 @@ namespace vkd
 		return dirty;
 	}
 
+	void Camera::awake()
+	{
+		not_draw = true;
+	}
+
+
 
 }

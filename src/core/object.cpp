@@ -76,7 +76,7 @@ namespace vkd {
 	{
 		for (auto& comp : components)
 		{
-			if (!comp->enable) continue;
+			if (!comp->enable || comp->not_draw) continue;
 			comp->draw(cmd);
 		}
 	}

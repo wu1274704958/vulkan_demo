@@ -67,6 +67,7 @@ namespace vkd {
 		std::weak_ptr<Object> object;
 		bool enable : 1 = false;
 		bool ever_tick : 1 = false;
+		bool not_draw : 1 = false;
 		bool is_init : 1 = false;
 	};
 

@@ -88,14 +88,14 @@ private:
 	void initScene() override
 	{
 		SampleRender::initScene();
-		cam_obj = std::make_shared<vkd::Object>("Camera");
+		auto cam_obj = std::make_shared<vkd::Object>("Camera");
 		auto trans = cam_obj->add_comp<vkd::Transform>();
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -4.0f));
 
 		scene.lock()->add_child(trans.lock());
 
-		quad = std::make_shared<vkd::Object>("Quad");
+		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
 		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
@@ -103,7 +103,6 @@ private:
 		quad->add_comp<Texture>("textures/texture.jpg");
 		scene.lock()->add_child(quad_t.lock());
 	}
-	std::shared_ptr<vkd::Object> cam_obj,quad;
 };
 
 #include <event/event.hpp>

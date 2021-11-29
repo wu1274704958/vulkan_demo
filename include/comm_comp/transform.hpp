@@ -55,6 +55,7 @@ namespace vkd {
 		std::shared_ptr<Transform> parent;
 		std::weak_ptr<Scene> scene;
 		std::vector<std::shared_ptr<Transform>> childlren;
+		std::vector<std::shared_ptr<Object>> objects;
 		bool dirty:1 = true;
 	};
 
