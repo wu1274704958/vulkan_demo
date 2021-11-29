@@ -9,6 +9,8 @@ namespace vkd
 	{
 		vp_buf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(Vp), vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
+
+		ever_tick = true;
 	}
 
 	void DefRender::update_vp()
@@ -35,18 +37,33 @@ namespace vkd
 	bool DefRender::on_init()
 	{
 		auto obj = object.lock();
+		auto f1 = update_descriptor();
+		if(f1)update_vp();
+		mesh = obj->get_comp_dyn<MeshComp>();
+		return f1 && mesh.expired();
+	}
+
+	void DefRender::recreate_swapchain()
+	{
+		if(update_descriptor())
+			update_vp();
+	}
+
+	bool DefRender::update_descriptor() const
+	{
+		auto obj = object.lock();
 		auto pipeline = obj->get_comp_raw<PipelineComp>();
 		if (pipeline)
 		{
 			const auto& descStes = pipeline->get_descriptorsets();
 			vk::DescriptorBufferInfo buffInfo(vp_buf->buffer, 0, sizeof(Vp));
-			vk::WriteDescriptorSet writeDescriptorSets = vk::WriteDescriptorSet(descStes[0], 0, 0, vk::DescriptorType::eUniformBuffer,{}, buffInfo);
+			vk::WriteDescriptorSet writeDescriptorSets = vk::WriteDescriptorSet(descStes[0], 0, 0, vk::DescriptorType::eUniformBuffer, {}, buffInfo);
 			device().updateDescriptorSets(writeDescriptorSets, {});
-		}else return false;
-		update_vp();
-		mesh = obj->get_comp_dyn<MeshComp>();
-		return mesh.expired();
+			return true;
+		}
+		return false;
 	}
+
 
 	void DefRender::late_update(float delta)
 	{

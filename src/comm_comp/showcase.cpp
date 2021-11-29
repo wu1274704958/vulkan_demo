@@ -13,6 +13,7 @@ namespace vkd
 		mat_p = glm::perspective(glm::radians(fovy), static_cast<float>(surface.width) / static_cast<float>(surface.height), 
 				zNera, zFar);
 		dirty = true;
+		ever_tick = true;
 	}
 
 	bool Showcase::dispatchEvent(const evt::Event& e)
@@ -71,8 +72,8 @@ namespace vkd
 		{
 			if(auto trans = obj->get_comp_raw<Transform>();trans)
 			{
-				auto z = trans->get_rotation().z;
-				trans->set_rotation(glm::vec3(off.x,off.y,z));
+				auto old = trans->get_rotation();
+				trans->set_rotation(glm::vec3(old.x - off.y,old.y + off.x,old.z));
 			}
 		}
 	}

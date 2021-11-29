@@ -22,6 +22,9 @@ namespace vkd
 				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
 			indexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(IT) * indices.size(),
 				vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+			vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), vertices);
+			indexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), indices);
 		}
 		bool on_init() override{return true;}
 		void draw(vk::CommandBuffer& cmd) override
