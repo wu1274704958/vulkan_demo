@@ -13,18 +13,18 @@ namespace vkd
 	template<typename VT,typename IT>
 	struct Mesh : public MeshComp
 	{
-		Mesh(std::vector<VT> vertices, std::vector<IT> indices) : vertices(vertices),indices(indices)
+		Mesh(std::shared_ptr<std::vector<VT>> vertices, std::shared_ptr <std::vector<IT>> indices) : vertices(vertices),indices(indices)
 		{}
 		void awake() override
 		{
-			if(vertices.empty() || indices.empty()) return;
-			vertexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(VT) * vertices.size(),
+			if(vertices->empty() || indices->empty()) return;
+			vertexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(VT) * vertices->size(),
 				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
-			indexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(IT) * indices.size(),
+			indexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(IT) * indices->size(),
 				vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-			vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), vertices);
-			indexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), indices);
+			vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *vertices);
+			indexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *indices);
 		}
 		bool on_init() override{return true;}
 		void draw(vk::CommandBuffer& cmd) override
@@ -37,10 +37,12 @@ namespace vkd
 		{
 			indexBuf.reset();
 			vertexBuf.reset();
+			vertices.reset();
+			indices.reset();
 		}
 		size_t index_count() const override
 		{
-			return indices.size();
+			return indices->size();
 		}
 
 		static constexpr std::optional<vk::IndexType> IndexType = wws::map_enum<IT, wws::ValList<vk::IndexType,
@@ -49,8 +51,8 @@ namespace vkd
 			vk::IndexType::eUint8EXT>,
 			std::tuple<uint16_t,uint32_t,uint8_t>>();
 	protected:
-		std::vector<VT> vertices;
-		std::vector<IT> indices;
+		std::shared_ptr<std::vector<VT>> vertices;
+		std::shared_ptr<std::vector<IT>> indices;
 		std::shared_ptr<gld::vkd::VkdBuffer> vertexBuf;
 		std::shared_ptr<gld::vkd::VkdBuffer> indexBuf;
 	};

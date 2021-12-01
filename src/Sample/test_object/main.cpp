@@ -14,6 +14,7 @@
 #include <comm_comp/scene.hpp>
 #include <generator/Generator.hpp>
 #include <comm_comp/render.hpp>
+#include <misc_comp/MiscComp.hpp>
 
 struct Vertex {
 	glm::vec2 pos;
@@ -25,57 +26,18 @@ struct UniformBufferObject {
 	glm::mat4 proj;
 };
 
-std::vector<Vertex> vertices = {
+std::vector<Vertex> Vertices = {
 	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
 	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f,0.0f}},
 	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f} , {1.0f,1.0f}},
 	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f} ,{0.0f,1.0f}}
 };
 
-std::vector<uint16_t> indices = {
+std::vector<uint16_t> Indices = {
 	 0, 2, 1, 0, 3, 2
 };
 
-struct Texture : public vkd::Component
-{
-	Texture(std::string path) : path(path)
-	{
 
-	}
-	void update_descriptor()
-	{
-		auto obj = object.lock();
-		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
-		if (pipeline)
-		{
-			const auto& descStes = pipeline->get_descriptorsets();
-			vk::DescriptorImageInfo image_info(img->sample, img->view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			vk::WriteDescriptorSet write_descriptor_set(descStes[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
-			device().updateDescriptorSets(write_descriptor_set, {});
-		}
-	}
-	bool on_init() override
-	{
-		update_descriptor();
-		return true;
-	}
-	void recreate_swapchain() override
-	{
-		update_descriptor();
-	}
-	void on_clean_up() override
-	{
-		img.reset();
-	}
-	void awake() override
-	{
-		img = gld::DefDataMgr::instance()->load<gld::DataType::VkImage>(path, STBI_rgb_alpha, physical_dev(), device(),
-			command_pool(), graphics_queue());
-	}
-	void draw(vk::CommandBuffer& cmd) override{}
-	std::shared_ptr<gld::vkd::VkdImage> img;
-	std::string path;
-};
 class Quad : public vkd::SampleRender {
 public:
 	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers, sample_name) {}
@@ -83,7 +45,8 @@ public:
 private:
 	void onInit() override
 	{
-		
+		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
+		indices = std::make_shared<std::vector<uint16_t>>(Indices);
 	}
 	void initScene() override
 	{
@@ -100,7 +63,7 @@ private:
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
 		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag",2);
 		quad->add_comp<vkd::DefRender>();
-		quad->add_comp<Texture>("textures/texture.jpg");
+		quad->add_comp<vkd::Texture>("textures/texture.jpg");
 		scene.lock()->add_child(quad_t.lock());
 
 		auto quad2 = std::make_shared<vkd::Object>("Quad2");
@@ -109,9 +72,11 @@ private:
 		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
 		quad2->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
 		quad2->add_comp<vkd::DefRender>();
-		quad2->add_comp<Texture>("textures/texture.jpg");
+		quad2->add_comp<vkd::Texture>("textures/texture.jpg");
 		scene.lock()->add_child(quad2_t.lock());
 	}
+	std::shared_ptr<std::vector<Vertex>> vertices;
+	std::shared_ptr<std::vector<uint16_t>> indices;
 };
 
 #include <event/event.hpp>

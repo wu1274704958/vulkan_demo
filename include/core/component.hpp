@@ -32,7 +32,7 @@ namespace vkd {
 		static evt::GlfwEventConstructor event_constructor();
 
 	protected:
-		virtual void awake() = 0;
+		virtual void awake(){}
 		bool init() {
 			auto v = on_init();
 			is_init = true;
@@ -44,7 +44,7 @@ namespace vkd {
 		virtual void recreate_swapchain(){}
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
 		virtual void detach_object() { object.reset(); }
-		virtual void draw(vk::CommandBuffer& cmd) = 0;
+		virtual void draw(vk::CommandBuffer& cmd) {}
 		virtual void update(float delta){}
 		virtual void late_update(float delta) {}
 		virtual void attach_scene(const std::weak_ptr<Scene>& scene) {}

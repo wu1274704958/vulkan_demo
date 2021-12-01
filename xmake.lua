@@ -24,7 +24,7 @@ function example(name)
     target(name)
         set_kind("binary")
         add_files("src/*.cpp|main.cpp","src/Sample/*.cpp","src/Sample/"..name.."/*.cpp","src/ResLoader/*.cpp","src/utils/*.cpp",
-        "src/event/*.cpp","src/core/*.cpp","src/comm_comp/*.cpp")
+        "src/event/*.cpp","src/core/*.cpp","src/comm_comp/*.cpp","src/misc_comp/*.cpp")
 end
 
 example("quad")    
