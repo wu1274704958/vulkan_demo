@@ -50,7 +50,9 @@ namespace gld::vkd {
 		using RetTy = std::shared_ptr<SpirvRes>;
 		using ArgsTy = std::tuple<Args...>;
 		using RealRetTy = std::tuple<bool, RetTy>;
-		static std::string key_from_args(glslang::EShTargetClientVersion v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2);
-		static RealRetTy load(FStream*,const std::string&, glslang::EShTargetClientVersion  v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2);
+		static std::string key_from_args(glslang::EShTargetClientVersion v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2,const std::vector<uint32_t>& binding = {});
+		static RealRetTy load(FStream*,const std::string&, glslang::EShTargetClientVersion v = glslang::EShTargetClientVersion::EShTargetVulkan_1_2,std::vector<uint32_t> binding = {});
 	};
+
+	using LoadSpirvWithMetaDataTy = LoadSpirvWithMetaData<glslang::EShTargetClientVersion, std::vector<uint32_t>>;
 }

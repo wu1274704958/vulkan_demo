@@ -13,8 +13,10 @@ namespace gld::vkd {
 
 	extern const TBuiltInResource k_default_conf;
 
-	std::string LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::key_from_args(glslang::EShTargetClientVersion v) {
-		return wws::to_string((int)v);
+	template <>
+	std::string LoadSpirvWithMetaDataTy::key_from_args(glslang::EShTargetClientVersion v, const std::vector<uint32_t>& binding)
+	{
+		return sundry::format_tup('#',(int)v, binding);
 	}
 
 	const char* spv_message_level_to_str(spv_message_level_t l)
@@ -108,14 +110,21 @@ namespace gld::vkd {
 
 	void push_stageIO(spirv_cross::ShaderResources& sr, spirv_cross::SmallVector<spirv_cross::Resource> spirv_cross::ShaderResources::* f, ShaderResources& res,
 		std::vector<BindingStride> ShaderResources::* bindingStride,std::vector<StageIO> ShaderResources::* ios,
-		spirv_cross::CompilerGLSL& glsl)
+		spirv_cross::CompilerGLSL& glsl,const std::vector<uint32_t>& binding_split)
 	{
 		int32_t curr_binding = -1;
 		uint32_t last_size = 0;
+		uint32_t binding_ck = 0;
 		for (auto& r : sr.*f)
 		{
-			StageIO input;
+			auto start_locat = glsl.get_decoration(r.id, spv::Decoration::DecorationLocation);
 			auto binding = glsl.get_decoration(r.id, spv::Decoration::DecorationBinding);
+			if(binding_ck < binding_split.size() && start_locat >= binding_split[binding_ck])
+				++binding_ck;
+			if(binding < binding_ck)
+				binding = binding_ck;
+
+			
 			if (binding != curr_binding)
 			{
 				if (curr_binding > -1)
@@ -125,30 +134,25 @@ namespace gld::vkd {
 				last_size = 0;
 				curr_binding = binding;
 			}
-			input.binding = binding;
-			input.location = glsl.get_decoration(r.id, spv::Decoration::DecorationLocation);
 			auto type = glsl.get_type(r.type_id);
-			input.offset = last_size;
-
-			last_size += type.width / 8 * type.vecsize;
-			input.format = get_format_by_type(type);
-			(res.*ios).push_back(input);
-
+			
+			auto num = type.columns;
 			if (!type.array.empty())
 			{
-				auto local = input.location + 1;
-				uint32_t l = 1;
 				for (uint32_t a : type.array)
-					l *= a;
-				for (int i = 0; i < l-1; ++i)
-				{
-					StageIO in(input);
-					in.location = local;
-					in.offset = last_size;
-					last_size += type.width / 8 * type.vecsize;
-					(res.*ios).push_back(in);
-					local += 1;
-				}
+					num *= a;
+			}
+			auto format = get_format_by_type(type);
+			for (int i = 0; i < num; ++i)
+			{
+				StageIO in;
+				in.binding = binding;
+				in.location = start_locat;
+				in.offset = last_size;
+				in.format = format;
+				last_size += type.width / 8 * type.vecsize;
+				(res.*ios).push_back(in);
+				start_locat += 1;
 			}
 		}
 		(res.*bindingStride).push_back({ (uint32_t)curr_binding,last_size });
@@ -229,14 +233,15 @@ namespace gld::vkd {
 		return res;
 	}
 
-	LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::RealRetTy 
-		LoadSpirvWithMetaData<glslang::EShTargetClientVersion>::load(FStream* stream,const std::string& path, glslang::EShTargetClientVersion env)
+	template <>
+	LoadSpirvWithMetaDataTy::RealRetTy
+		LoadSpirvWithMetaDataTy::load(FStream* stream, const std::string& path, glslang::EShTargetClientVersion env, std::vector<uint32_t> binding)
 	{
 		auto tar_env = get_spv_target_env(env);
-		if(!tar_env)
-			return std::make_tuple(false,nullptr);
-		auto text = DefResMgr::instance()->load<ResType::text>(stream,path);
-		if(!text) return std::make_tuple(false,nullptr);
+		if (!tar_env)
+			return std::make_tuple(false, nullptr);
+		auto text = DefResMgr::instance()->load<ResType::text>(stream, path);
+		if (!text) return std::make_tuple(false, nullptr);
 		auto elang = get_lang_by_suffix(path);
 		if (!elang)
 		{
@@ -247,22 +252,22 @@ namespace gld::vkd {
 		glslang::TShader shader(*elang);
 		glslang::TProgram prog;
 
-		auto preCode = preprocess(*text,path,*elang,env);
+		auto preCode = preprocess(*text, path, *elang, env);
 
 		auto code = preCode.data();
 		int code_n = preCode.size();
-		
-		shader.setStringsWithLengths(&code,&code_n,1);
-		shader.setEnvInput(glslang::EShSource::EShSourceGlsl,*elang,glslang::EShClient::EShClientVulkan,100);
-		shader.setEnvClient(glslang::EShClient::EShClientVulkan,env);
-		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv,glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
+
+		shader.setStringsWithLengths(&code, &code_n, 1);
+		shader.setEnvInput(glslang::EShSource::EShSourceGlsl, *elang, glslang::EShClient::EShClientVulkan, 100);
+		shader.setEnvClient(glslang::EShClient::EShClientVulkan, env);
+		shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
 
 		if (!shader.parse(&k_default_conf, 100, false, EShMessages::EShMsgDefault))
 		{
 			auto info = shader.getInfoLog();
 			dbg::log << "parse glsl failed " << path << " " << info << dbg::endl;
 			glslang::FinalizeProcess();
-			return std::make_tuple(false,nullptr);
+			return std::make_tuple(false, nullptr);
 		}
 
 		prog.addShader(&shader);
@@ -277,29 +282,30 @@ namespace gld::vkd {
 
 		SpirvRes res;
 		res.entryPoint = shader.getIntermediate()->getEntryPointName();
-		glslang::GlslangToSpv(*prog.getIntermediate(*elang),res.binary);
-		
+		glslang::GlslangToSpv(*prog.getIntermediate(*elang), res.binary);
+
 		glslang::FinalizeProcess();
 
 		spvtools::SpirvTools spv_tools(*tar_env);
 
-		spv_tools.SetMessageConsumer([&path](spv_message_level_t  level , const char* source,
-			const spv_position_t&  position , const char*  message ) {
-				dbg::log << spv_message_level_to_str(level) << " [" << position.line <<':'<< position.column << "] " << path << " " << source << " " << message << dbg::endl;
-			});
+		spv_tools.SetMessageConsumer([&path](spv_message_level_t  level, const char* source,
+			const spv_position_t& position, const char* message) {
+			dbg::log << spv_message_level_to_str(level) << " [" << position.line << ':' << position.column << "] " << path << " " << source << " " << message << dbg::endl;
+		});
 
 		auto v = spv_tools.Validate(res.binary);
 
-		spirv_cross::CompilerGLSL glsl(res.binary.data(),res.binary.size());
+		spirv_cross::CompilerGLSL glsl(res.binary.data(), res.binary.size());
 
 		auto shaderRes = glsl.get_shader_resources();
 
-		push_descriptor(shaderRes, &spirv_cross::ShaderResources::uniform_buffers, res.shaderRes,vk::DescriptorType::eUniformBuffer,glsl);
+		push_descriptor(shaderRes, &spirv_cross::ShaderResources::uniform_buffers, res.shaderRes, vk::DescriptorType::eUniformBuffer, glsl);
 		push_descriptor(shaderRes, &spirv_cross::ShaderResources::sampled_images, res.shaderRes, vk::DescriptorType::eCombinedImageSampler, glsl);
 		push_descriptor(shaderRes, &spirv_cross::ShaderResources::separate_images, res.shaderRes, vk::DescriptorType::eSampledImage, glsl);
 		push_descriptor(shaderRes, &spirv_cross::ShaderResources::separate_samplers, res.shaderRes, vk::DescriptorType::eSampler, glsl);
 
-		push_stageIO(shaderRes,&spirv_cross::ShaderResources::stage_inputs,res.shaderRes,&ShaderResources::inBindingStride,&ShaderResources::stageInput,glsl);
+		push_stageIO(shaderRes, &spirv_cross::ShaderResources::stage_inputs, res.shaderRes, 
+			&ShaderResources::inBindingStride, &ShaderResources::stageInput, glsl, binding);
 
 		uint32_t offset = 0;
 		for (auto& r : shaderRes.push_constant_buffers)
@@ -313,7 +319,7 @@ namespace gld::vkd {
 
 		res.stage = getStage(*elang).value();
 
-		return std::make_tuple(true,std::make_shared<SpirvRes>(res));
+		return std::make_tuple(true, std::make_shared<SpirvRes>(res));
 	}
 
 #define DefGetFormatCase(T,SZ,T2)					\

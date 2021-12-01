@@ -20,7 +20,7 @@ namespace vkd {
 	{
 		if (vertexPath.empty() || fragPath.empty()) return false;
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), renderpass(), surface_extent(),
-			vertexPath, fragPath, maxPoolSize, instance_set, on_create_pipeline);
+			vertexPath, fragPath);
 		if (!pipeline) return false;
 		descSets = pipeline->allocDescriptorSets();
 		return true;

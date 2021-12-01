@@ -302,7 +302,7 @@ namespace gld{
 	typedef ResourceMgr<ResMgrCxtTy,DefStream,PerfectUri,ResLoadPlugTy<ResType::text,LoadText>,
 	ResLoadPlugTy<ResType::image,LoadImage,int>,
 	ResLoadPlugTy<ResType::model,LoadScene,uint32_t>,
-	ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion>> DefResMgr;
+	ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion,std::vector<uint32_t>>> DefResMgr;
 }
 
 #ifdef PF_ANDROID

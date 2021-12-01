@@ -5,12 +5,13 @@
 
 namespace gld::vkd {
 
-	std::string LoadPipelineSimpleTy::key_from_args(
-		vk::Device, vk::RenderPass, const vk::Extent2D&,const std::string& v,const std::string& f,uint32_t, const std::unordered_set<uint32_t>& ins_set, std::function<void(vk::GraphicsPipelineCreateInfo)>
-		)
+	template <>
+	std::string LoadPipelineSimpleTy::key_from_args(vk::Device, vk::RenderPass, const vk::Extent2D&, const std::string& v, const std::string& f, uint32_t maxPoolSize, const std::unordered_set<uint32_t>& ins_set, const std::vector<uint32_t>& vertextInputBindingSplit, std::function<void(vk::GraphicsPipelineCreateInfo)> on)
 	{
-		return sundry::format_tup('#',v,f);
+		return sundry::format_tup('#', v, f);
 	}
+
+	template <>
 	std::string LoadPipelineSimpleTy::key_from_args(
 		const std::string& v, const std::string& f
 	)
@@ -162,21 +163,22 @@ namespace gld::vkd {
 		return std::make_tuple(true, data);
 	}
 
-	LoadPipelineSimpleTy::RealRetTy 
-		LoadPipelineSimpleTy::load(
-		vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s,uint32_t maxPoolSize, std::unordered_set<uint32_t> is_ins, std::function<void(vk::GraphicsPipelineCreateInfo)> on
-	)
+	template <>
+	LoadPipelineSimpleTy::RealRetTy
+	LoadPipelineSimpleTy::load(vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, 
+		uint32_t maxPoolSize, std::unordered_set<uint32_t> ins_set, std::vector<uint32_t> vertextInputBindingSplit, 
+		std::function<void(vk::GraphicsPipelineCreateInfo)> on)
 	{
-		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s);
+		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s, glslang::EShTargetClientVersion::EShTargetVulkan_1_2,vertextInputBindingSplit);
 		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(frag_s);
 		if (!vert || !frag || !dev)
-			return std::make_tuple(false,nullptr);
+			return std::make_tuple(false, nullptr);
 
 		std::array<std::shared_ptr<SpirvRes>, 2> shaders = {
 			vert,frag
 		};
 
-		return realCreatePipeline(dev,r,extent,is_ins,on,shaders,maxPoolSize);
+		return realCreatePipeline(dev, r, extent, ins_set, on, shaders, maxPoolSize);
 	}
 
 	PipelineData::~PipelineData()

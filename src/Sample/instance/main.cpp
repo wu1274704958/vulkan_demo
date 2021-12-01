@@ -48,7 +48,7 @@ private:
 		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
 		indices = std::make_shared<std::vector<uint16_t>>(Indices);
 		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent,
-			"shader_23/quad.vert", "shader_23/quad.frag",2);
+			"shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1},std::vector<uint32_t>{3});
 	}
 	void initScene() override
 	{
@@ -63,19 +63,10 @@ private:
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
-		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
-		quad->add_comp<vkd::DefRender>();
-		quad->add_comp<vkd::Texture>("textures/texture.jpg");
+		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag");
+		/*quad->add_comp<vkd::DefRender>();
+		quad->add_comp<vkd::Texture>("textures/texture.jpg");*/
 		scene.lock()->add_child(quad_t.lock());
-
-		auto quad2 = std::make_shared<vkd::Object>("Quad2");
-		auto quad2_t = quad2->add_comp<vkd::Transform>();
-		quad2_t.lock()->set_position(glm::vec3(0.0f,0.0f,0.5f));
-		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
-		quad2->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
-		quad2->add_comp<vkd::DefRender>();
-		quad2->add_comp<vkd::Texture>("textures/texture.jpg");
-		scene.lock()->add_child(quad2_t.lock());
 	}
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;

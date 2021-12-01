@@ -43,8 +43,8 @@ namespace vkd {
 
 	struct PipelineComp : public Component
 	{
-		PipelineComp(std::string vert,std::string frag, uint32_t maxPoolSize = 1) : 
-			vertexPath(vert),fragPath(frag),maxPoolSize(maxPoolSize)
+		PipelineComp(std::string vert,std::string frag) : 
+			vertexPath(vert),fragPath(frag)
 			{}
 		virtual void awake() override{}
 		virtual bool on_init() override;
@@ -62,9 +62,6 @@ namespace vkd {
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
 		std::string vertexPath, fragPath;
-		uint32_t maxPoolSize = 10;
-		std::unordered_set<uint32_t> instance_set;
-		std::function<void(vk::GraphicsPipelineCreateInfo)> on_create_pipeline;
 	protected:
 		std::shared_ptr<gld::vkd::PipelineData> pipeline;
 		std::vector<vk::DescriptorSet> descSets;
