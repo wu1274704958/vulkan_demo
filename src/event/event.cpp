@@ -31,6 +31,7 @@ namespace vkd::evt {
 		glfwSetMouseButtonCallback(window, WindowMouseButton);
 		glfwSetCursorPosCallback(window,WindowCursorPos);
 		glfwSetKeyCallback(window,WindowKey);
+		glfwSetScrollCallback(window,WindowScroll);
 		return true; 
 	}
 
@@ -112,5 +113,15 @@ namespace vkd::evt {
 		}
 		ptr->dispatchEvent(e);
 	}
+
+	void GlfwEventConstructor::WindowScroll(GLFWwindow* window, double x, double y)
+	{
+		auto ptr = (GlfwEventConstructor*)glfwGetWindowUserPointer(window);
+		Event e;
+		e.m_event = ScrollEvent{ x,y };
+		e.type = EventType::Scroll;
+		ptr->dispatchEvent(e);
+	}
+
 
 }

@@ -22,7 +22,8 @@ namespace vkd::evt{
 		KeyDown,
 		KeyUp,
 		KeyRepeat, 
-		Click
+		Click,
+		Scroll
 	};
 
 	struct WindowReSizeEvent {
@@ -49,7 +50,12 @@ namespace vkd::evt{
 		int modsBit;
 	};
 
-	using VariantEvent = std::variant<WindowReSizeEvent, MouseButtonEvent, CursorPosEvent, KeyEvent>;
+	struct ScrollEvent {
+		double x;
+		double y;
+	};
+
+	using VariantEvent = std::variant<WindowReSizeEvent, MouseButtonEvent, CursorPosEvent, KeyEvent,ScrollEvent>;
 
 	template<EventType ET,typename T>
 	struct MapEventUnit
@@ -97,7 +103,8 @@ namespace vkd::evt{
 			MapEventUnit<EventType::KeyDown, KeyEvent>,
 			MapEventUnit<EventType::KeyUp, KeyEvent>,
 			MapEventUnit<EventType::KeyRepeat, KeyEvent>,
-			MapEventUnit<EventType::Click,MouseButtonEvent>
+			MapEventUnit<EventType::Click,MouseButtonEvent>,
+			MapEventUnit<EventType::Scroll,ScrollEvent>
 		>::Ty;
 
 		template<typename T>
@@ -152,6 +159,7 @@ namespace vkd::evt{
 		static void WindowMouseButton(GLFWwindow*, int, int, int);
 		static void WindowCursorPos(GLFWwindow*,double,double);
 		static void WindowKey(GLFWwindow*, int, int, int, int);
+		static void WindowScroll(GLFWwindow*,double,double);
 	protected:
 		std::optional<MouseButtonEvent> mouseBtnPressed;
 		bool isMouseMoving = false;

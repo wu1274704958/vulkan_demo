@@ -4,6 +4,7 @@
 #include <comm_comp/transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <utils/frame_rate.h>
 
 namespace vkd
 {
@@ -42,6 +43,20 @@ namespace vkd
 			break;
 		case vkd::evt::EventType::MouseUp:
 			mouseMoveOffset.y = mouseMoveOffset.x = 0.0f;
+			break;
+		case evt::EventType::Scroll:
+			{
+				auto& ev = e.GetEvent<vkd::evt::ScrollEvent>();
+				if (auto obj = object.lock(); obj)
+				{
+					if (auto trans = obj->get_comp_raw<Transform>(); trans)
+					{
+						auto old = trans->get_position();
+						old.z += gld::FrameRate::get_ms() * static_cast<float>(ev.y) * 50.0f;
+						trans->set_position(old);
+					}
+				}
+			}
 			break;
 		default:
 			break;
