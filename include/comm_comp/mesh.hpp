@@ -5,13 +5,18 @@
 namespace vkd
 {
 
-	struct MeshComp : public Component
+	struct MeshInterface : public Component
 	{
 		virtual size_t index_count() const = 0;
 	};
 
+	struct MeshInstanceInterface : public Component
+	{
+		virtual size_t instance_count() const = 0;
+	};
+
 	template<typename VT,typename IT>
-	struct Mesh : public MeshComp
+	struct Mesh : public MeshInterface
 	{
 		Mesh(std::shared_ptr<std::vector<VT>> vertices, std::shared_ptr <std::vector<IT>> indices) : vertices(vertices),indices(indices)
 		{}
@@ -55,5 +60,40 @@ namespace vkd
 		std::shared_ptr<std::vector<IT>> indices;
 		std::shared_ptr<gld::vkd::VkdBuffer> vertexBuf;
 		std::shared_ptr<gld::vkd::VkdBuffer> indexBuf;
+	};
+
+	template<typename I>
+	struct MeshInstance : public MeshInstanceInterface
+	{
+		MeshInstance(std::shared_ptr<std::vector<I>> instanceData,uint32_t binding = 1) : instanceData(instanceData), binding(binding)
+		{}
+		void awake() override
+		{
+			if (instanceData->empty()) return;
+			instanceBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(I) * instanceData->size(),
+				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
+			
+			instanceBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *instanceData);
+		}
+		bool on_init() override { return true; }
+		void draw(vk::CommandBuffer& cmd) override
+		{
+			vk::DeviceSize offset = 0;
+			cmd.bindVertexBuffers(binding, instanceBuf->buffer, offset);
+		}
+		void on_clean_up()
+		{
+			instanceData.reset();
+			instanceBuf.reset();
+		}
+		size_t instance_count() const override
+		{
+			return instanceData->size();
+		}
+		
+	protected:
+		uint32_t binding;
+		std::shared_ptr<std::vector<I>> instanceData;
+		std::shared_ptr<gld::vkd::VkdBuffer> instanceBuf;
 	};
 }

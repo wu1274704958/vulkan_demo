@@ -39,8 +39,8 @@ namespace vkd
 		auto obj = object.lock();
 		auto f1 = update_descriptor();
 		if(f1)update_vp();
-		mesh = obj->get_comp_dyn<MeshComp>();
-		return f1 && mesh.expired();
+		mesh = obj->get_comp_dyn<MeshInterface>();
+		return f1 && !mesh.expired();
 	}
 
 	void DefRender::recreate_swapchain()
@@ -90,6 +90,33 @@ namespace vkd
 	{
 		vp_buf.reset();
 	}
+
+	bool DefRenderInstance::on_init()
+	{
+		if(!DefRender::on_init())
+			return false;
+		auto obj = object.lock();
+		meshInstance = obj->get_comp_dyn<MeshInstanceInterface>();
+		return !meshInstance.expired();
+	}
+
+	void DefRenderInstance::draw(vk::CommandBuffer& cmd)
+	{
+		auto obj = object.lock();
+		auto pipeline = obj->get_comp_raw<PipelineComp>();
+		auto trans = obj->get_comp_raw<Transform>();
+		auto mesh_ptr = mesh.lock();
+		auto mesh_ins = meshInstance.lock();
+
+		if (trans && pipeline && mesh_ptr && mesh_ins)
+		{
+			const auto& mat = trans->get_matrix();
+			cmd.pushConstants(pipeline->get_pipeline()->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), (void*)&mat);
+			cmd.drawIndexed(mesh_ptr->index_count(), mesh_ins->instance_count(), 0, 0, 0);
+		}
+	}
+
+
 
 
 }

@@ -26,6 +26,15 @@ namespace vkd
 			glm::mat4 proj;
 		} vp;
 		std::shared_ptr<gld::vkd::VkdBuffer> vp_buf;
-		std::weak_ptr<MeshComp> mesh;
+		std::weak_ptr<MeshInterface> mesh;
+	};
+
+	struct DefRenderInstance : public DefRender
+	{
+		bool on_init() override;
+		void draw(vk::CommandBuffer& cmd) override;
+
+	protected:
+		std::weak_ptr<MeshInstanceInterface> meshInstance;
 	};
 }

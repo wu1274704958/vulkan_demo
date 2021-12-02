@@ -108,6 +108,18 @@ namespace gld::vkd {
 
 	vk::Format get_format_by_type(spirv_cross::SPIRType& type);
 
+	struct LocationCmp
+	{
+		LocationCmp(spirv_cross::CompilerGLSL& glsl) : glsl(glsl){}
+		bool cmp(const spirv_cross::Resource& a, const spirv_cross::Resource& b) const 
+		{
+			auto al = glsl.get_decoration(a.id, spv::Decoration::DecorationLocation);
+			auto bl = glsl.get_decoration(b.id, spv::Decoration::DecorationLocation);
+			return al < bl;
+		}
+		spirv_cross::CompilerGLSL& glsl;
+	};
+
 	void push_stageIO(spirv_cross::ShaderResources& sr, spirv_cross::SmallVector<spirv_cross::Resource> spirv_cross::ShaderResources::* f, ShaderResources& res,
 		std::vector<BindingStride> ShaderResources::* bindingStride,std::vector<StageIO> ShaderResources::* ios,
 		spirv_cross::CompilerGLSL& glsl,const std::vector<uint32_t>& binding_split)
@@ -115,6 +127,12 @@ namespace gld::vkd {
 		int32_t curr_binding = -1;
 		uint32_t last_size = 0;
 		uint32_t binding_ck = 0;
+
+		LocationCmp cmp(glsl);
+		auto& res_vec = sr.*f;
+
+		wws::sort_heap<spirv_cross::Resource>(res_vec,cmp);
+
 		for (auto& r : sr.*f)
 		{
 			auto start_locat = glsl.get_decoration(r.id, spv::Decoration::DecorationLocation);
@@ -123,7 +141,6 @@ namespace gld::vkd {
 				++binding_ck;
 			if(binding < binding_ck)
 				binding = binding_ck;
-
 			
 			if (binding != curr_binding)
 			{
