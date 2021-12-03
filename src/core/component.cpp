@@ -38,4 +38,10 @@ namespace vkd{
 		if (SampleRender::self_instance) return SampleRender::self_instance->eventConstructor;
 	}
 
+	vk::ImageView Component::depthstencil_image_view()
+	{
+		if (SampleRender::self_instance) return SampleRender::self_instance->depthAttachment.view;
+	}
+
+
 }

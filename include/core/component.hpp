@@ -30,6 +30,7 @@ namespace vkd {
 		static const vk::Extent2D& surface_extent();
 		static vk::RenderPass renderpass();
 		static evt::GlfwEventConstructor event_constructor();
+		static vk::ImageView depthstencil_image_view();
 
 	protected:
 		virtual void awake(){}
