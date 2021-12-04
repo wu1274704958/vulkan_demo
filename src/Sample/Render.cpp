@@ -595,7 +595,8 @@ void SampleRender::createSwapchainImageViews()
 
 void SampleRender::onRealDraw(vk::CommandBuffer& cmd)
 {
-	scene_obj->draw(cmd);	
+	scene_obj->draw(cmd);
+	scene_obj->after_draw(cmd);
 }
 
  void SampleRender::recreateSwapChain()

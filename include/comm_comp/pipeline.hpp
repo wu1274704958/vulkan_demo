@@ -14,10 +14,14 @@ namespace vkd {
 			viewport(0.0f, 0.0f, (float)surface_extent().width, (float)surface_extent().height, 0.0f, 1.0f),
 			scissor({}, surface_extent()){}
 		ViewportScissor(glm::vec4 vp,glm::vec4 sc,float minDepth = 0.0f,float maxDepth = 1.0f){
+			reset(vp,sc,minDepth,maxDepth);
+		}
+		void reset(glm::vec4 vp, glm::vec4 sc, float minDepth = 0.0f, float maxDepth = 1.0f)
+		{
 			auto w = surface_extent().width;
 			auto h = surface_extent().height;
-			viewport = vk::Viewport(vp.x * w, vp.y * h, vp.z * w, vp.w * h, minDepth,maxDepth);
-			scissor = vk::Rect2D({static_cast<int32_t>(sc.x * w),static_cast<int32_t>(sc.y * h)},{static_cast<uint32_t>(sc.z * w),static_cast<uint32_t>(sc.w * h)});
+			viewport = vk::Viewport(vp.x * w, vp.y * h, vp.z * w, vp.w * h, minDepth, maxDepth);
+			scissor = vk::Rect2D({ static_cast<int32_t>(sc.x * w),static_cast<int32_t>(sc.y * h) }, { static_cast<uint32_t>(sc.z * w),static_cast<uint32_t>(sc.w * h) });
 		}
 		virtual bool on_init() override {return true;}
 		virtual void awake() override {}
@@ -34,7 +38,7 @@ namespace vkd {
 		virtual void on_clean_up() override{}
 		virtual void clean_up_pipeline() override{}
 		virtual int64_t idx() override {
-			return std::numeric_limits<int64_t>::min() + 1;
+			return std::numeric_limits<int64_t>::min() + 2;
 		}
 		vk::Viewport viewport;
 		vk::Rect2D scissor;
@@ -57,7 +61,7 @@ namespace vkd {
 		virtual void on_clean_up() override;
 		virtual void clean_up_pipeline() override;
 		virtual int64_t idx() override {
-			return std::numeric_limits<int64_t>::min();
+			return std::numeric_limits<int64_t>::min() + 1;
 		}
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;

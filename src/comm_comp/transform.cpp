@@ -56,6 +56,18 @@ namespace vkd {
 		}
 	}
 
+	void Transform::after_draw(vk::CommandBuffer& cmd)
+	{
+		for (const auto& ch : childlren)
+		{
+			if (const auto obj = ch->object.lock(); obj && obj->active)
+			{
+				obj->after_draw(cmd);
+			}
+		}
+	}
+
+
 	void Transform::update(float delta)
 	{
 		for (const auto& ch : childlren)

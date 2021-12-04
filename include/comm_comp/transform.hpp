@@ -16,6 +16,7 @@ namespace vkd {
 		void set_enable(bool v) override;
 		void recreate_swapchain() override;
 		void draw(vk::CommandBuffer& cmd) override;
+		void after_draw(vk::CommandBuffer& cmd) override;
 		void update(float delta) override;
 		void late_update(float delta) override;
 		void on_clean_up() override;

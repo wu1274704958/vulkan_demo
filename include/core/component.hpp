@@ -46,6 +46,7 @@ namespace vkd {
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
 		virtual void detach_object() { object.reset(); }
 		virtual void draw(vk::CommandBuffer& cmd) {}
+		virtual void after_draw(vk::CommandBuffer& cmd) {}
 		virtual void update(float delta){}
 		virtual void late_update(float delta) {}
 		virtual void attach_scene(const std::weak_ptr<Scene>& scene) {}

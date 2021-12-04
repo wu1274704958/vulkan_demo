@@ -80,6 +80,15 @@ namespace vkd {
 			comp->draw(cmd);
 		}
 	}
+	void Object::after_draw(vk::CommandBuffer& cmd)
+	{
+		for (const auto& comp : components)
+		{
+			if (!comp->enable || comp->not_draw) continue;
+			comp->after_draw(cmd);
+		}
+	}
+
 	void Object::update(float delta)
 	{
 		for (auto& comp : components)

@@ -251,10 +251,8 @@ private:
 	void onReCreateSwapChain() override
 	{
 		vkd::SampleRender::onReCreateSwapChain();
-		quad->destroy_comp<vkd::ViewportScissor >();
-		quad2->destroy_comp<vkd::ViewportScissor >();
-		quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
-		quad2->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+		quad->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
+		quad2->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
 	}
 private:
 	std::shared_ptr<vkd::Object> quad,quad2;

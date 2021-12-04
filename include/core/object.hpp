@@ -134,6 +134,7 @@ namespace vkd {
 		bool init();
 		void recreate_swapchain();
 		void draw(vk::CommandBuffer& cmd);
+		void after_draw(vk::CommandBuffer& cmd);
 		void update(float delta);
 		void late_update(float delta);
 		void clean_up();
