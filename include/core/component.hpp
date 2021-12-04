@@ -4,7 +4,7 @@
 #include <event/event.hpp>
 
 namespace vkd {
-
+	struct DepthAttachment;
 	struct Object;
 	struct Scene;
 	struct Component : public std::enable_shared_from_this<Component>, public evt::EventDispatcher
@@ -30,7 +30,7 @@ namespace vkd {
 		static const vk::Extent2D& surface_extent();
 		static vk::RenderPass renderpass();
 		static evt::GlfwEventConstructor event_constructor();
-		static vk::ImageView depthstencil_image_view();
+		static const DepthAttachment& depth_attachment();
 
 	protected:
 		virtual void awake(){}

@@ -130,5 +130,8 @@ namespace sundry
 		}
         return mem;
     }
-    
+
+	bool createBuffer(vk::PhysicalDevice phyDev, vk::Device device, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memProperty, vk::Buffer& buffer, vk::DeviceMemory& mem);
+	bool createImage(vk::PhysicalDevice phyDev, vk::Device dev, uint32_t w, uint32_t h, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
+        vk::MemoryPropertyFlagBits memProp, vk::Image& img, vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage);
 } // namespace sundry

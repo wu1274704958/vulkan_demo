@@ -28,6 +28,14 @@ namespace vkd {
 		}
 	};
 
+	struct DepthAttachment
+	{
+		vk::Image image;
+		vk::ImageView view;
+		vk::DeviceMemory mem;
+		vk::ImageAspectFlags aspect;
+	};
+
 	struct SwapChainSupportDetails
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
@@ -168,12 +176,7 @@ namespace vkd {
 		vk::RenderPass renderPass;
 		vk::Semaphore render_complete, acquired_image_ready;
 		std::vector<vk::Fence> drawFences;
-		struct 
-		{
-			vk::Image image;
-			vk::ImageView view;
-			vk::DeviceMemory mem;
-		} depthAttachment;
+		DepthAttachment depthAttachment;
 		std::vector<vk::Image> swapchainImages;
 		std::vector<vk::ImageView> swapChainImageViews;
 		std::vector<vk::Framebuffer> framebuffers;

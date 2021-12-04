@@ -450,11 +450,11 @@ void SampleRender::createSwapchainImageViews()
  {
 	 depthFormat = onChooseDepthStencilFormat();
 	 vk::ImageCreateInfo imgInfo({}, vk::ImageType::e2D, depthFormat, vk::Extent3D(surfaceExtent.width, surfaceExtent.height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
-		 vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, {});
+		 vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc, vk::SharingMode::eExclusive, {});
 	 depthAttachment.image = device.createImage(imgInfo);
-	 auto imgAspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+	 depthAttachment.aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 	 if (wws::eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
-		 imgAspect = vk::ImageAspectFlagBits::eDepth;
+		 depthAttachment.aspect = vk::ImageAspectFlagBits::eDepth;
 	 auto req = device.getImageMemoryRequirements(depthAttachment.image);
 
 	 vk::MemoryAllocateInfo allocInfo(req.size, findMemoryType(req.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
@@ -462,7 +462,8 @@ void SampleRender::createSwapchainImageViews()
 
 	 device.bindImageMemory(depthAttachment.image, depthAttachment.mem, 0);
 
-	 vk::ImageViewCreateInfo viewInfo({}, depthAttachment.image, vk::ImageViewType::e2D, depthFormat, {}, vk::ImageSubresourceRange(imgAspect, 0, 1, 0, 1));
+	 vk::ImageViewCreateInfo viewInfo({}, depthAttachment.image, vk::ImageViewType::e2D, depthFormat, {},
+		vk::ImageSubresourceRange(depthAttachment.aspect, 0, 1, 0, 1));
 	 depthAttachment.view = device.createImageView(viewInfo);
  }
 

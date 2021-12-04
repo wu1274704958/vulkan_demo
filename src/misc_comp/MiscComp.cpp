@@ -10,7 +10,7 @@ namespace vkd
 		{
 			const auto& descStes = pipeline->get_descriptorsets();
 			vk::DescriptorImageInfo image_info(img->sample, img->view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			vk::WriteDescriptorSet write_descriptor_set(descStes[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
+			vk::WriteDescriptorSet write_descriptor_set(descStes[set], binding, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
 			device().updateDescriptorSets(write_descriptor_set, {});
 		}
 	}

@@ -7,30 +7,6 @@
 
 namespace gld::vkd {
 
-	
-
-	bool createBuffer(vk::PhysicalDevice phyDev, vk::Device device, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memProperty, vk::Buffer& buffer, vk::DeviceMemory& mem)
-	{
-		vk::BufferCreateInfo buffer_info = {};
-		buffer_info.size = size;
-		buffer_info.usage = usage;
-		buffer_info.sharingMode = vk::SharingMode::eExclusive;
-
-		buffer = device.createBuffer(buffer_info);
-		if (!buffer) return false;
-		auto memRequirments = device.getBufferMemoryRequirements(buffer);
-
-		vk::MemoryAllocateInfo alloc_info = {};
-		alloc_info.allocationSize = memRequirments.size;
-		alloc_info.memoryTypeIndex = sundry::findMemoryType(phyDev, memRequirments.memoryTypeBits, memProperty);
-
-		mem = device.allocateMemory(alloc_info);
-		if (!buffer) return false;
-		device.bindBufferMemory(buffer, mem, 0);
-			
-		return true;
-	}
-
 	std::string CreateVkBufferTy::key_from_args(const std::string& name, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		return sundry::format_tup('#',name,(uint32_t)usage,(uint32_t)prop);
@@ -44,7 +20,7 @@ namespace gld::vkd {
 	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		auto buff = std::make_shared<VkdBuffer>();
-		if (createBuffer(phy, dev, size, usage, prop, buff->buffer, buff->mem))
+		if (sundry::createBuffer(phy, dev, size, usage, prop, buff->buffer, buff->mem))
 		{
 			buff->device = dev;
 			buff->usage = usage;
@@ -73,7 +49,7 @@ namespace gld::vkd {
 	bool VkdBuffer::copyToEx(vk::PhysicalDevice phy, vk::CommandPool cmdPool, vk::Queue queue, void* data, vk::DeviceSize size, vk::DeviceSize offset)
 	{
 		VkdBuffer buf;
-		if (createBuffer(phy, device, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buf.buffer, buf.mem))
+		if (sundry::createBuffer(phy, device, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buf.buffer, buf.mem))
 		{
 			buf.usage = vk::BufferUsageFlagBits::eTransferSrc;
 			buf.memProperty = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
@@ -91,36 +67,11 @@ namespace gld::vkd {
 
 	inline bool createTempBuf(vk::PhysicalDevice phyDev, vk::Device dev, vk::DeviceSize size,void *data, vk::Buffer& buf, vk::DeviceMemory& mem,vk::DeviceSize offset = 0)
 	{
-		if (!createBuffer(phyDev, dev, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buf, mem))
+		if (!sundry::createBuffer(phyDev, dev, size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buf, mem))
 			return false;
 		void* dst = dev.mapMemory(mem, offset, size);
 		memcpy(dst,data, size);
 		dev.unmapMemory(mem);
-		return true;
-	}
-
-	inline bool createImage(vk::PhysicalDevice phyDev, vk::Device dev,uint32_t w,uint32_t h,vk::Format format,vk::ImageTiling tiling,vk::ImageUsageFlags usage,
-		vk::MemoryPropertyFlagBits memProp,vk::Image& img,vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage)
-	{
-		vk::ImageCreateInfo info;
-		info.extent = vk::Extent3D(w,h,1);
-		info.format = format;
-		info.tiling = tiling;
-		info.imageType = vk::ImageType::e2D;
-		info.usage = usage;
-		info.arrayLayers = 1;
-		info.mipLevels = 1;
-		info.initialLayout = vk::ImageLayout::eUndefined;
-		info.sharingMode = vk::SharingMode::eExclusive;
-		info.samples = vk::SampleCountFlagBits::e1;
-		if (onCreateImage) onCreateImage(info);
-		img = dev.createImage(info);
-		if(!img) return false;
-		mem = sundry::allocVkMemory(dev,phyDev,memProp,img);
-		if (!mem) {
-			dev.destroyImage(img);
-			return false;
-		}
 		return true;
 	}
 
@@ -153,8 +104,8 @@ namespace gld::vkd {
 
 		auto res = std::make_shared<VkdImage>();
 
-		if (!createImage(phyDev, dev, img->width, img->height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
-			res->image, res->mem,onCreateImage))
+		if (!sundry::createImage(phyDev, dev, img->width, img->height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
+		                         res->image, res->mem,onCreateImage))
 			return std::make_tuple(false, nullptr);
 
 		res->device = dev;

@@ -43,4 +43,50 @@ namespace sundry
 		}
 		return std::numeric_limits<uint32_t>::max();
 	}
+	bool createBuffer(vk::PhysicalDevice phyDev, vk::Device device, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memProperty, vk::Buffer& buffer, vk::DeviceMemory& mem)
+	{
+		vk::BufferCreateInfo buffer_info = {};
+		buffer_info.size = size;
+		buffer_info.usage = usage;
+		buffer_info.sharingMode = vk::SharingMode::eExclusive;
+
+		buffer = device.createBuffer(buffer_info);
+		if (!buffer) return false;
+		auto memRequirments = device.getBufferMemoryRequirements(buffer);
+
+		vk::MemoryAllocateInfo alloc_info = {};
+		alloc_info.allocationSize = memRequirments.size;
+		alloc_info.memoryTypeIndex = sundry::findMemoryType(phyDev, memRequirments.memoryTypeBits, memProperty);
+
+		mem = device.allocateMemory(alloc_info);
+		if (!buffer) return false;
+		device.bindBufferMemory(buffer, mem, 0);
+
+		return true;
+	}
+
+	bool createImage(vk::PhysicalDevice phyDev, vk::Device dev, uint32_t w, uint32_t h, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
+		vk::MemoryPropertyFlagBits memProp, vk::Image& img, vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage)
+	{
+		vk::ImageCreateInfo info;
+		info.extent = vk::Extent3D(w, h, 1);
+		info.format = format;
+		info.tiling = tiling;
+		info.imageType = vk::ImageType::e2D;
+		info.usage = usage;
+		info.arrayLayers = 1;
+		info.mipLevels = 1;
+		info.initialLayout = vk::ImageLayout::eUndefined;
+		info.sharingMode = vk::SharingMode::eExclusive;
+		info.samples = vk::SampleCountFlagBits::e1;
+		if (onCreateImage) onCreateImage(info);
+		img = dev.createImage(info);
+		if (!img) return false;
+		mem = sundry::allocVkMemory(dev, phyDev, memProp, img);
+		if (!mem) {
+			dev.destroyImage(img);
+			return false;
+		}
+		return true;
+	}
 }

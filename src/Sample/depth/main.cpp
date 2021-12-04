@@ -15,6 +15,7 @@
 #include <generator/Generator.hpp>
 #include <comm_comp/render.hpp>
 #include <misc_comp/MiscComp.hpp>
+#include <sundry.hpp>
 
 
 struct Vertex {
@@ -66,15 +67,24 @@ struct ScreenDraw : public vkd::Component
 	void on_clean_up() override{}
 protected:
 	std::weak_ptr<vkd::MeshInterface> mesh;
+	
 };
 
 struct DepthSampler : public vkd::Component
 {
+	DepthSampler(uint16_t set = 0, uint32_t binding = 1)
+		: set(set),
+		  binding(binding)
+	{
+	}
+
 	void awake() override
 	{
 		not_draw = true;
 		vk::SamplerCreateInfo info({});
 		sampler = device().createSampler(info);
+		createDepthImage();
+		copyToDepthImage();
 	}
 	void update_descriptor() const
 	{
@@ -83,8 +93,8 @@ struct DepthSampler : public vkd::Component
 		if (pipeline)
 		{
 			const auto& descStes = pipeline->get_descriptorsets();
-			vk::DescriptorImageInfo image_info(sampler, depthstencil_image_view(), vk::ImageLayout::eDepthAttachmentStencilReadOnlyOptimal);
-			vk::WriteDescriptorSet write_descriptor_set(descStes[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
+			vk::DescriptorImageInfo image_info(sampler, depthView, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+			vk::WriteDescriptorSet write_descriptor_set(descStes[set], binding, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
 			device().updateDescriptorSets(write_descriptor_set, {});
 		}
 	}
@@ -95,13 +105,70 @@ struct DepthSampler : public vkd::Component
 	}
 	void recreate_swapchain() override
 	{
+		createDepthImage();
 		update_descriptor();
 	}
 	void on_clean_up() override
 	{
 		device().destroySampler(sampler);
 	}
+
+	void clean_up_pipeline() override
+	{
+		auto d = device();
+		d.freeMemory(depthMem);
+		d.destroyImageView(depthView);
+		d.destroyImage(depthImg);
+	}
+public:
+	void createDepthImage()
+	{
+		auto sur_extent = surface_extent();
+		sundry::createImage(physical_dev(), device(), sur_extent.width, sur_extent.height, depthstencil_format(), vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst |
+			vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImg, depthMem, nullptr);
+		
+		vk::ImageViewCreateInfo infoView({}, depthImg, vk::ImageViewType::e2D, depthstencil_format(), vk::ComponentMapping(),
+			vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, 0, 1, 0, 1));
+		depthView = device().createImageView(infoView);
+	}
+	void copyToDepthImage(bool copy = false)
+	{
+		auto sur_extent = surface_extent();
+		vk::CommandBuffer cmd = sundry::beginSingleTimeCommands(device(), command_pool());
+		vk::ImageMemoryBarrier barrier;
+		barrier.image = depthImg;
+		barrier.oldLayout = vk::ImageLayout::eUndefined;
+		barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+		barrier.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, 0, 1, 0, 1);
+		barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
+		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eTransfer, (vk::DependencyFlagBits)0, {}, {}, barrier);
+		if(copy)
+		{
+			vk::ImageCopy regions;
+			regions.srcOffset = vk::Offset3D(0,0,0);
+			regions.dstOffset = regions.srcOffset;
+			regions.extent = vk::Extent3D(sur_extent, 1);
+			regions.srcSubresource = vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, 1, 0, 1);
+			regions.dstSubresource = regions.srcSubresource;
+			cmd.copyImage(depth_attachment().image, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+				depthImg, vk::ImageLayout::eDepthStencilReadOnlyOptimal, regions);
+		}
+		barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+		barrier.newLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+		barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+		barrier.dstAccessMask = vk::AccessFlagBits::eNoneKHR;
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe, (vk::DependencyFlagBits)0, {}, {}, barrier);
+		sundry::endSingleTimeCommands(device(), cmd, command_pool(), graphics_queue());
+	}
+protected:
 	vk::Sampler sampler;
+	vk::Image depthImg;
+	vk::ImageView depthView;
+	vk::DeviceMemory depthMem;
+	uint16_t set;
+	uint32_t binding;
 };
 
 
@@ -131,7 +198,7 @@ private:
 
 		scene.lock()->add_child(trans.lock());
 
-		auto quad = std::make_shared<vkd::Object>("Quad");
+		quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
 		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag");
@@ -141,7 +208,7 @@ private:
 		quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f,0.f,1.f,1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
 		scene.lock()->add_child(quad_t.lock());
 
-		auto quad2 = std::make_shared<vkd::Object>("Quad2");
+		quad2 = std::make_shared<vkd::Object>("Quad2");
 		auto quad2_t = quad2->add_comp<vkd::Transform>();
 		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices);
 		quad2->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
@@ -181,6 +248,16 @@ private:
 		}
 	}
 
+	void onReCreateSwapChain() override
+	{
+		vkd::SampleRender::onReCreateSwapChain();
+		quad->destroy_comp<vkd::ViewportScissor >();
+		quad2->destroy_comp<vkd::ViewportScissor >();
+		quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
+		quad2->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+	}
+private:
+	std::shared_ptr<vkd::Object> quad,quad2;
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;
 	std::shared_ptr<std::vector<glm::mat4>> instanceData;
