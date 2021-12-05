@@ -31,6 +31,8 @@ namespace vkd {
 		static vk::RenderPass renderpass();
 		static evt::GlfwEventConstructor event_constructor();
 		static const DepthAttachment& depth_attachment();
+		static vk::RenderPassBeginInfo render_pass_begin_info();
+		static vk::Framebuffer curr_frame_buffer();
 
 	protected:
 		virtual void awake(){}
@@ -45,6 +47,7 @@ namespace vkd {
 		virtual void recreate_swapchain(){}
 		virtual void attach_object(std::weak_ptr<Object> n) { object = n; }
 		virtual void detach_object() { object.reset(); }
+		virtual void pre_draw(vk::CommandBuffer& cmd) {}
 		virtual void draw(vk::CommandBuffer& cmd) {}
 		virtual void after_draw(vk::CommandBuffer& cmd) {}
 		virtual void update(float delta){}

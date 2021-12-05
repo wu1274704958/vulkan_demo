@@ -51,6 +51,15 @@ namespace vkd
 		return false;
 	}
 
+	void Scene::set_renderpass(vk::RenderPass render_pass)
+	{
+		this->render_pass = render_pass;
+	}
+
+	vk::RenderPass Scene::get_renderpass() const
+	{
+		return render_pass;
+	}
 
 
 

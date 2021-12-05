@@ -55,6 +55,20 @@ namespace vkd{
 		return {};
 	}
 
+	vk::RenderPassBeginInfo Component::render_pass_begin_info()
+	{
+		if (SampleRender::self_instance) return SampleRender::self_instance->renderPassBeginInfo;
+		return {};
+	}
+
+	vk::Framebuffer Component::curr_frame_buffer()
+	{
+		if (SampleRender::self_instance) return SampleRender::self_instance->currFrameBuffer;
+		return {};
+	}
+
+
+
 
 
 }

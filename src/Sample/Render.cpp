@@ -1,5 +1,6 @@
 #include <sample/render.hpp>
 #include <utils/frame_rate.h>
+#include <comm_comp/renderpass.hpp>
 
 namespace vkd{
 
@@ -92,6 +93,7 @@ void SampleRender::initScene()
 {
 	scene_obj = std::make_shared<Object>("DefScene");
 	scene = scene_obj->add_comp<Scene>();
+	scene_obj->add_comp<DefRenderPass>();
 }
 
 
@@ -584,17 +586,18 @@ void SampleRender::createSwapchainImageViews()
 
 	 cmd.begin(beginInfo);
 	 std::array<vk::ClearValue, 2> clearVals = { clearColorValue,vk::ClearValue(vk::ClearDepthStencilValue(1.0f,0)) };
-	 vk::RenderPassBeginInfo renderPassBeginInfo(renderPass, frameBuf, vk::Rect2D({ 0,0 }, surfaceExtent), clearVals);
-	 cmd.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+	 renderPassBeginInfo = vk::RenderPassBeginInfo(renderPass, currFrameBuffer = frameBuf, vk::Rect2D({ 0,0 }, surfaceExtent), clearVals);
+	 //cmd.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
 	 onRealDraw(cmd);
 
-	 cmd.endRenderPass();
+	 //cmd.endRenderPass();
 	 cmd.end();
  }
 
 void SampleRender::onRealDraw(vk::CommandBuffer& cmd)
 {
+	scene_obj->pre_draw(cmd);
 	scene_obj->draw(cmd);
 	scene_obj->after_draw(cmd);
 }

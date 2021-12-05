@@ -15,7 +15,11 @@ namespace vkd
 		void add_camera(std::weak_ptr<Camera> cam);
 		bool has_camera(std::weak_ptr<Camera> cam) const;
 		bool rm_camera(std::shared_ptr<Camera> cam);
+
+		void set_renderpass(vk::RenderPass render_pass);
+		vk::RenderPass get_renderpass() const;
 	protected:
 		std::vector<std::weak_ptr<Camera>> cameras;
+		vk::RenderPass render_pass;
 	};	
 }

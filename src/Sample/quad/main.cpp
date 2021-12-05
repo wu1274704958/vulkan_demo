@@ -107,6 +107,7 @@ private:
 		uniformObj.proj = glm::perspective(glm::radians(45.0f), (float)surfaceExtent.width / (float)surfaceExtent.height, 0.1f, 100.0f);
 	}
 	void onRealDraw(vk::CommandBuffer& cmd) override {
+		cmd.beginRenderPass(renderPassBeginInfo,vk::SubpassContents::eInline);
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
 		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets, {});
 		vk::Viewport viewport(0, 0, (float)surfaceExtent.width, (float)surfaceExtent.height, 0.0f, 1.0f);
@@ -118,6 +119,7 @@ private:
 		cmd.bindIndexBuffer(indicesBuf->buffer, 0, vk::IndexType::eUint16);
 		drawQuad(cmd, glm::vec3(0.7f, 0.0f, 1.0f));
 		drawQuad(cmd, glm::vec3(0.0f, 0.0f, 0.0f));
+		cmd.endRenderPass();
 	}
 	void drawQuad(vk::CommandBuffer& cmd,glm::vec3 pos)
 	{

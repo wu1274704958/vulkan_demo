@@ -72,6 +72,17 @@ namespace vkd {
 			comp->recreate_swapchain();
 		}
 	}
+
+	void Object::pre_draw(vk::CommandBuffer& cmd)
+	{
+		for (const auto& comp : components)
+		{
+			if (!comp->enable || comp->not_draw) continue;
+			comp->pre_draw(cmd);
+		}
+	}
+
+
 	void Object::draw(vk::CommandBuffer& cmd)
 	{
 		for (auto& comp : components)

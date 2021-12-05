@@ -190,6 +190,8 @@ namespace vkd {
 		vk::ClearValue clearColorValue;
 		evt::GlfwEventConstructor eventConstructor;
 		QueueFamilyIndices queueFamilyIndices;
+		vk::RenderPassBeginInfo renderPassBeginInfo;
+		vk::Framebuffer currFrameBuffer;
 		wws::VarCache<vk::PhysicalDeviceMemoryProperties,vk::PhysicalDevice> memPropCache;
 		static VkBool32 DebugReportCallbackEXT(
 			VkDebugReportFlagsEXT                       flags,

@@ -1,5 +1,7 @@
 #include <comm_comp/pipeline.hpp>
+#include <comm_comp/scene.hpp>
 #include <core/object.hpp>
+#include <comm_comp/transform.hpp>
 
 namespace vkd {
 	void PipelineComp::draw(vk::CommandBuffer& cmd)
@@ -19,7 +21,9 @@ namespace vkd {
 	bool PipelineComp::on_init()
 	{
 		if (vertexPath.empty() || fragPath.empty()) return false;
-		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), renderpass(), surface_extent(),
+		const auto obj = object.lock();
+		vk::RenderPass render_pass = obj->get_comp_raw<Transform>()->get_scene().lock()->get_renderpass();
+		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), render_pass, surface_extent(),
 			vertexPath, fragPath);
 		if (!pipeline) return false;
 		descSets = pipeline->allocDescriptorSets();

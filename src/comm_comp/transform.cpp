@@ -45,6 +45,18 @@ namespace vkd {
 		}
 	}
 
+	void Transform::pre_draw(vk::CommandBuffer& cmd)
+	{
+		for (const auto& ch : childlren)
+		{
+			if (const auto obj = ch->object.lock(); obj && obj->active)
+			{
+				obj->pre_draw(cmd);
+			}
+		}
+	}
+
+
 	void Transform::draw(vk::CommandBuffer& cmd)
 	{
 		for (const auto& ch : childlren)
