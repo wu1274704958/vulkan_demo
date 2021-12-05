@@ -15,7 +15,7 @@ namespace vkd
 		void draw(vk::CommandBuffer& cmd) override;
 		void late_update(float delta) override;
 		void recreate_swapchain() override;
-		int64_t idx() override{ return std::numeric_limits<int64_t>::max() - 1; }
+		int64_t idx() override{ return 100000; }
 	protected:
 		void update_vp();
 		bool update_descriptor() const;

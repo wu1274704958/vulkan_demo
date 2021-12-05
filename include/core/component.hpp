@@ -14,7 +14,7 @@ namespace vkd {
 		virtual void set_enable(bool v) { enable = v; v ? on_enable() : on_disable();}
 		virtual bool is_ever_tick() { return ever_tick; }
 		virtual void set_ever_tick(bool v) { ever_tick = v; }
-		virtual int64_t idx() { return 0; }
+		virtual int64_t idx() { return 10000; }
 
 		virtual ~Component() {}
 		std::shared_ptr<Object> get_object() { return object.lock(); }

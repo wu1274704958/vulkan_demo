@@ -9,7 +9,7 @@ namespace vkd
 		bool on_init() override;
 		void on_clean_up() override{};
 		void awake() override;
-		int64_t idx() override { return std::numeric_limits<int64_t>::min(); }
+		int64_t idx() override { return 0; }
 		void pre_draw(vk::CommandBuffer& cmd) override;
 		void after_draw(vk::CommandBuffer& cmd) override;
 		vk::RenderPass getRenderPass() const;

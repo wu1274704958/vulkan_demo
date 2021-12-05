@@ -38,7 +38,7 @@ namespace vkd {
 		virtual void on_clean_up() override{}
 		virtual void clean_up_pipeline() override{}
 		virtual int64_t idx() override {
-			return std::numeric_limits<int64_t>::min() + 2;
+			return 40;
 		}
 		vk::Viewport viewport;
 		vk::Rect2D scissor;
@@ -61,7 +61,7 @@ namespace vkd {
 		virtual void on_clean_up() override;
 		virtual void clean_up_pipeline() override;
 		virtual int64_t idx() override {
-			return std::numeric_limits<int64_t>::min() + 1;
+			return 20;
 		}
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
