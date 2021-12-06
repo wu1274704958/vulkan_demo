@@ -15,7 +15,12 @@ bool SampleRender::dispatchEvent(const evt::Event& e) {
 			return true;
 		break;
 	}
-	return scene_obj->dispatchEvent(e);
+	for(const auto& sc : scenes)
+	{
+		if(sc->dispatchEvent(e))
+			break;
+	}
+	return false;
 }
 
 VkBool32 SampleRender::DebugReportCallbackEXT(
@@ -84,16 +89,19 @@ void SampleRender::init(int w, int h)
 	onInit();
 	self_instance = this;
 	initScene();
-	scene_obj->init();
+	for (const auto& sc : scenes)
+		sc->init();
 	isInit = true;
 	engineState = EngineState::Initialized;
 }
 
 void SampleRender::initScene()
 {
-	scene_obj = std::make_shared<Object>("DefScene");
-	scene = scene_obj->add_comp<Scene>();
+	auto scene_obj = std::make_shared<Object>("DefScene");
+	main_scene_obj = scene_obj;
+	main_scene = scene_obj->add_comp<Scene>();
 	scene_obj->add_comp<DefRenderPass>();
+	scenes.push_back(scene_obj);
 }
 
 
@@ -115,8 +123,11 @@ void SampleRender::mainLoop()
 
 void SampleRender::onUpdate(float delta)
 {
-	scene_obj->update(lastFrameDelta);
-	scene_obj->late_update(lastFrameDelta);
+	for (const auto& sc : scenes)
+	{
+		sc->update(delta);
+		sc->late_update(delta);
+	}
 }
 
 void SampleRender::cleanUp()
@@ -135,6 +146,10 @@ void SampleRender::cleanUp()
 
 		onCleanUp();
 
+		for (const auto& sc : scenes)
+			sc->on_destroy();
+		scenes.clear();
+
 		device.destroyCommandPool(commandPool);
 		device.destroy();
 		vkDestroySurfaceKHR(instance, surface, nullptr);
@@ -144,14 +159,13 @@ void SampleRender::cleanUp()
 		glfwTerminate();
 	}
 	engineState = EngineState::Destroyed;
+	self_instance = nullptr;
 }
 
 void SampleRender::onCleanUp()
 {
-	scene_obj->clean_up();
-	scene.reset();
-	scene_obj.reset();
-	self_instance = nullptr;
+	for (const auto& sc : scenes)
+		sc->clean_up();
 }
 
 void SampleRender::initWindow(uint32_t w, uint32_t h)
@@ -452,7 +466,7 @@ void SampleRender::createSwapchainImageViews()
  {
 	 depthFormat = onChooseDepthStencilFormat();
 	 vk::ImageCreateInfo imgInfo({}, vk::ImageType::e2D, depthFormat, vk::Extent3D(surfaceExtent.width, surfaceExtent.height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
-		 vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc, vk::SharingMode::eExclusive, {});
+		 vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, {});
 	 depthAttachment.image = device.createImage(imgInfo);
 	 depthAttachment.aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 	 if (wws::eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
@@ -471,18 +485,18 @@ void SampleRender::createSwapchainImageViews()
 
  void SampleRender::createRenderPass()
  {
-	 auto depthImageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	 depthAttachment.imgLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	 if (wws::eq_enum<vk::Format, vk::Format::eD16Unorm, vk::Format::eD32Sfloat>(depthFormat))
-		 depthImageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+		 depthAttachment.imgLayout = vk::ImageLayout::eDepthAttachmentOptimal;
 	 std::vector<vk::AttachmentDescription> attachment = {
 		 vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),surfaceFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 		 vk::AttachmentLoadOp::eDontCare,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,vk::ImageLayout::ePresentSrcKHR),
 		 vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),depthFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,
-		 vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthImageLayout)
+		 vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthAttachment.imgLayout)
 	 };
 
 	 vk::AttachmentReference attachmentRef(0, vk::ImageLayout::eColorAttachmentOptimal);
-	 vk::AttachmentReference depthAttachmentRef(1, depthImageLayout);
+	 vk::AttachmentReference depthAttachmentRef(1, depthAttachment.imgLayout);
 
 
 	 std::array<vk::SubpassDescription, 1> subpassDesc = {};
@@ -597,9 +611,12 @@ void SampleRender::createSwapchainImageViews()
 
 void SampleRender::onRealDraw(vk::CommandBuffer& cmd)
 {
-	scene_obj->pre_draw(cmd);
-	scene_obj->draw(cmd);
-	scene_obj->after_draw(cmd);
+	for (const auto& sc : scenes)
+	{
+		sc->pre_draw(cmd);
+		sc->draw(cmd);
+		sc->after_draw(cmd);
+	}
 }
 
  void SampleRender::recreateSwapChain()
@@ -619,7 +636,8 @@ void SampleRender::onRealDraw(vk::CommandBuffer& cmd)
 
 void SampleRender::onReCreateSwapChain()
 {
-	scene_obj->recreate_swapchain();
+	for (const auto& sc : scenes)
+		sc->recreate_swapchain();
 }
 
 
@@ -648,7 +666,8 @@ void SampleRender::cleanUpSwapChain()
 
 void SampleRender::onCleanUpPipeline()
 {
-	scene_obj->clean_up_pipeline();
+	for (const auto& sc : scenes)
+		sc->clean_up_pipeline();
 }
 
 void SampleRender::onCreate() {};

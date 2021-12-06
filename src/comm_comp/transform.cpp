@@ -159,6 +159,17 @@ namespace vkd {
 		}
 	}
 
+	void Transform::on_destroy()
+	{
+		for (const auto& ch : childlren)
+		{
+			if (const auto obj = ch->object.lock(); obj)
+			{
+				obj->on_destroy();
+			}
+		}
+	}
+
 	const glm::vec3& Transform::get_position()const { return position; }
 	const glm::vec3& Transform::get_rotation()const { return rotation; }
 	const glm::vec3& Transform::get_scale()   const { return scale; }
@@ -332,5 +343,4 @@ namespace vkd {
 	{
 		return scene;
 	}
-
 }

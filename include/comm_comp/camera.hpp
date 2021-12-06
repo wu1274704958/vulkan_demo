@@ -10,9 +10,10 @@ namespace vkd {
 		virtual bool is_dirty() const;
 		void attach_scene(const std::weak_ptr<Scene>& scene) override;
 		void detach_scene() override;
-		void on_destroy(bool with_obj) override;
+		void on_destroy() override;
 		void awake() override;
 	protected:
 		bool dirty:1 = true;
+		bool attached:1 = false;
 	};
 }

@@ -133,17 +133,8 @@ namespace vkd {
 				comp->clean_up_pipeline();
 		}
 	}
-	Object::~Object()
-	{
-		for (auto& comp : components)
-		{
-			comp->set_enable(false);
-			comp->on_destroy(true);
-			comp->detach_object();
-		}
-		components.clear();
-		locator.clear();
-	}
+
+	Object::~Object(){}
 
 	bool Object::dispatchEvent(const evt::Event& e)
 	{
@@ -176,4 +167,23 @@ namespace vkd {
 	{
 		return SampleRender::self_instance->engineState;
 	}
+
+	void Object::on_destroy()
+	{
+		auto running = engine_state() == EngineState::Running;
+		for (const auto& comp : components)
+		{
+			if(running)
+			{
+				comp->clean_up_pipeline();
+				comp->clean_up();
+			}
+			comp->set_enable(false);
+			comp->on_destroy();
+			comp->detach_object();
+		}
+		components.clear();
+		locator.clear();
+	}
+
 }

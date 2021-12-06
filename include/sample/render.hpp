@@ -34,6 +34,7 @@ namespace vkd {
 		vk::ImageView view;
 		vk::DeviceMemory mem;
 		vk::ImageAspectFlags aspect;
+		vk::ImageLayout imgLayout;
 	};
 
 	struct SwapChainSupportDetails
@@ -155,8 +156,8 @@ namespace vkd {
 		virtual std::tuple<vk::PhysicalDevice, QueueFamilyIndices> onPickPhysicalDevice(const std::vector<std::tuple<vk::PhysicalDevice,QueueFamilyIndices>>& devices);
 	public:
 		EngineState engineState = EngineState::Uninitialized;
-		std::shared_ptr<Object> scene_obj;
-		std::weak_ptr<Scene> scene;
+		std::weak_ptr<Object> main_scene_obj;
+		std::weak_ptr<Scene> main_scene;
 	protected:
 		GLFWwindow* window;
 		VkSurfaceKHR surface;
@@ -203,5 +204,7 @@ namespace vkd {
 			const char* pMessage,
 			void* pUserData);
 		static SampleRender* self_instance;
+	private:
+		std::vector<std::shared_ptr<Object>> scenes;
 	};
 }

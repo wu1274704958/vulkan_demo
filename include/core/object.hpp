@@ -5,6 +5,7 @@
 #include <core/component.hpp>
 #include <event/event.hpp>
 #include <common.hpp>
+#include <comm_comp/transform.hpp>
 
 namespace vkd {
 	struct Transform;
@@ -107,8 +108,15 @@ namespace vkd {
 				if (idx < components.size())
 					adjust_locat(idx,-1);
 				locator.erase(ty_id);
+				if(auto transform = get_comp_raw<Transform>();transform && !transform->get_scene().expired())
+					c->detach_scene();
+				if(engine_state() == EngineState::Running && c->is_init)
+				{
+					c->clean_up_pipeline();
+					c->clean_up();
+				}
 				c->set_enable(false);
-				c->on_destroy(false);
+				c->on_destroy();
 				c->detach_object();
 			}
 		}
@@ -144,6 +152,7 @@ namespace vkd {
 		bool dispatchEvent(const evt::Event&) override;
 		void attach_scene(const std::weak_ptr<Scene>&);
 		void detach_scene();
+		void on_destroy();
 		
 		static EngineState engine_state();
 	protected:

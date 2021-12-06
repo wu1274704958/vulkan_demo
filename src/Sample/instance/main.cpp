@@ -61,7 +61,7 @@ private:
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
 
-		scene.lock()->add_child(trans.lock());
+		main_scene.lock()->add_child(trans.lock());
 
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
@@ -70,7 +70,7 @@ private:
 		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
 		quad->add_comp<vkd::DefRenderInstance>();
 		quad->add_comp<vkd::Texture>("textures/texture.jpg");
-		scene.lock()->add_child(quad_t.lock());
+		main_scene.lock()->add_child(quad_t.lock());
 	}
 
 	void prepare_instance()

@@ -14,8 +14,27 @@ namespace vkd
 		void after_draw(vk::CommandBuffer& cmd) override;
 		vk::RenderPass getRenderPass() const;
 	protected:
+		virtual vk::RenderPass create_renderpass();
+		virtual vk::RenderPassBeginInfo renderpass_begin();
 		vk::RenderPass m_render_pass;
 		vk::SubpassContents cnt;
+	};
+
+	struct OnlyDepthRenderPass : public DefRenderPass
+	{
+		void awake() override;
+		void clean_up_pipeline() override;
+		void recreate_swapchain() override;
+		vk::ImageView get_image_view() const;
+		vk::ImageLayout get_image_layout() const;
+	protected:
+		void create_depth_attachment();
+		vk::RenderPass create_renderpass() override;
+		vk::RenderPassBeginInfo renderpass_begin() override;
+		vk::Framebuffer framebuffer;
+		vk::Image depth;
+		vk::ImageView view;
+		vk::DeviceMemory mem;
 	};
 }
 

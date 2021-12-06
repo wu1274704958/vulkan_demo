@@ -25,6 +25,7 @@ namespace vkd {
 		bool dispatchEvent(const evt::Event&) override;
 		void attach_scene(const std::weak_ptr<Scene>& scene) override;
 		void detach_scene() override;
+		void on_destroy() override;
 		int64_t idx() override { return std::numeric_limits<int64_t>::max(); }
 		
 		const glm::vec3& get_position()const;

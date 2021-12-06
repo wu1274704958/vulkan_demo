@@ -58,7 +58,7 @@ private:
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -4.0f));
 
-		scene.lock()->add_child(trans.lock());
+		main_scene.lock()->add_child(trans.lock());
 
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
@@ -66,7 +66,7 @@ private:
 		quad->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
 		quad->add_comp<vkd::DefRender>();
 		quad->add_comp<vkd::Texture>("textures/texture.jpg");
-		scene.lock()->add_child(quad_t.lock());
+		main_scene.lock()->add_child(quad_t.lock());
 
 		auto quad2 = std::make_shared<vkd::Object>("Quad2");
 		auto quad2_t = quad2->add_comp<vkd::Transform>();
@@ -75,7 +75,7 @@ private:
 		quad2->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
 		quad2->add_comp<vkd::DefRender>();
 		quad2->add_comp<vkd::Texture>("textures/texture.jpg");
-		scene.lock()->add_child(quad2_t.lock());
+		main_scene.lock()->add_child(quad2_t.lock());
 	}
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;

@@ -8,23 +8,24 @@ namespace vkd
 	{
 		auto sc = scene.lock();
 		sc->add_camera(std::dynamic_pointer_cast<Camera>(shared_from_this()));
+		attached = true;
 	}
 
 	void Camera::detach_scene()
 	{
+		if(!attached)  return;
 		auto trans = object.lock()->get_comp_raw<Transform>();
 		if(trans)
 		{
 			if (auto scene = trans->get_scene().lock();scene)
 				scene->rm_camera(std::dynamic_pointer_cast<Camera>(shared_from_this()));
 		}
+		attached = false;
 	}
 
-	void Camera::on_destroy(bool with_obj)
+	void Camera::on_destroy()
 	{
-		if(!with_obj)
-			detach_scene();
-		Component::on_destroy(with_obj);
+		detach_scene();
 	}
 
 	bool Camera::is_dirty() const

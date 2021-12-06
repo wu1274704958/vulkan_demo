@@ -60,14 +60,7 @@ namespace vkd {
 		}
 		virtual void on_clean_up()=0;
 		virtual void clean_up_pipeline(){}
-		virtual void on_destroy(bool with_obj){
-			if(is_init)
-			{ 
-				clean_up_pipeline();
-				clean_up();
-				is_init = false;
-			}
-		}
+		virtual void on_destroy(){}
 
 		std::weak_ptr<Object> object;
 		bool enable : 1 = false;
