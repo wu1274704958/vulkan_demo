@@ -144,7 +144,7 @@ private:
 		auto trans = cam_obj->add_comp<vkd::Transform>();
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
-
+		
 		main_scene.lock()->add_child(trans.lock());
 
 		quad = std::make_shared<vkd::Object>("Quad");
@@ -156,6 +156,10 @@ private:
 		quad->add_comp<vkd::Texture>("textures/texture.jpg");
 		quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f,0.f,1.f,1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
 		main_scene.lock()->add_child(quad_t.lock());
+
+		auto mscene = main_scene_obj.lock();
+		mscene->destroy_comp<vkd::DefRenderPass>();
+		mscene->add_comp<vkd::OnlyDepthRenderPass>();
 
 		//quad2 = std::make_shared<vkd::Object>("Quad2");
 		//auto quad2_t = quad2->add_comp<vkd::Transform>();
