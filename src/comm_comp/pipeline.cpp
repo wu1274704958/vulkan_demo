@@ -7,7 +7,8 @@ namespace vkd {
 	void PipelineComp::draw(vk::CommandBuffer& cmd)
 	{
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
-		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets, {});
+		const std::vector<vk::DescriptorSet>& sets = descSets;
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0,sets, {});
 		if (!get_object()->has_comp<ViewportScissor>())
 		{
 			 auto surfaceExtent = surface_extent();
@@ -24,7 +25,7 @@ namespace vkd {
 		const auto obj = object.lock();
 		vk::RenderPass render_pass = obj->get_comp_raw<Transform>()->get_scene().lock()->get_renderpass();
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), render_pass, surface_extent(),
-			vertexPath, fragPath);
+			vertexPath, fragPath,maxSetSize,instanceSet,bindingSplit);
 		if (!pipeline) return false;
 		descSets = pipeline->allocDescriptorSets();
 		return true;
@@ -39,7 +40,7 @@ namespace vkd {
 		
 	}
 	void PipelineComp::clean_up_pipeline() {
-		device().freeDescriptorSets(pipeline->descriptorPool,descSets);
+		descSets.cleanup(device());
 		pipeline.reset();
 	}
 	const gld::vkd::PipelineData const* PipelineComp::get_pipeline() const

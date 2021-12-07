@@ -47,9 +47,15 @@ namespace vkd {
 
 	struct PipelineComp : public Component
 	{
-		PipelineComp(std::string vert,std::string frag) : 
-			vertexPath(vert),fragPath(frag)
+		PipelineComp(std::string vert,std::string frag, uint32_t maxSetSize = 1) :
+			vertexPath(vert),fragPath(frag),maxSetSize(maxSetSize)
 			{}
+		PipelineComp(std::string vert, std::string frag,
+			uint32_t maxSetSize,
+			std::unordered_set<uint32_t> instanceSet = {},
+			std::vector<uint32_t> bindingSplit = {}) :
+				vertexPath(vert), fragPath(frag) ,maxSetSize(maxSetSize),instanceSet(instanceSet),bindingSplit(bindingSplit)
+		{}
 		virtual void awake() override{}
 		virtual bool on_init() override;
 		virtual void on_enable() override{}
@@ -66,8 +72,11 @@ namespace vkd {
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
 		std::string vertexPath, fragPath;
+		uint32_t maxSetSize = 1;
+		std::unordered_set<uint32_t> instanceSet;
+		std::vector<uint32_t> bindingSplit;
 	protected:
 		std::shared_ptr<gld::vkd::PipelineData> pipeline;
-		std::vector<vk::DescriptorSet> descSets;
+		gld::vkd::DescriptorSets descSets;
 	};
 }

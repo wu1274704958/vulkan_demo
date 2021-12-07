@@ -79,6 +79,11 @@ namespace gld
         {
             ResCacheMgr<Plugs...>::instance()->clear_all();
         }
+        template<DataType Rt>
+        void clear_unused()
+        {
+            ResCacheMgr<Plugs...>::instance()->template clear_unused<static_cast<size_t>(Rt)>();
+        }
 protected:
 private:    
     inline static std::shared_ptr<DataMgr<Plugs...>> self;

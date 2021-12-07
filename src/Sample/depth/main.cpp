@@ -130,10 +130,6 @@ private:
 	{
 		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
 		indices = std::make_shared<std::vector<uint16_t>>(Indices);
-		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent,
-			"shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1},std::vector<uint32_t>{3});
-		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent,
-			"shader_23/depth.vert", "shader_23/depth.frag");
 
 		prepare_instance();
 	}

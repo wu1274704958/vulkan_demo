@@ -6,17 +6,19 @@
 namespace gld::vkd {
 
 	template <>
-	std::string LoadPipelineSimpleTy::key_from_args(vk::Device, vk::RenderPass, const vk::Extent2D&, const std::string& v, const std::string& f, uint32_t maxPoolSize, const std::unordered_set<uint32_t>& ins_set, const std::vector<uint32_t>& vertextInputBindingSplit, std::function<void(vk::GraphicsPipelineCreateInfo)> on)
+	std::string LoadPipelineSimpleTy::key_from_args(vk::Device, vk::RenderPass rp, const vk::Extent2D&, const std::string& v, const std::string& f, uint32_t maxPoolSize, const std::unordered_set<uint32_t>& ins_set, const std::vector<uint32_t>& vertextInputBindingSplit, std::function<void(vk::GraphicsPipelineCreateInfo)> on)
 	{
-		return sundry::format_tup('#', v, f);
+		sundry::VkObjToId<vk::RenderPass> cover(rp);
+		return sundry::format_tup('#', v, f,cover.id);
 	}
 
 	template <>
 	std::string LoadPipelineSimpleTy::key_from_args(
-		const std::string& v, const std::string& f
+		const std::string& v, const std::string& f,vk::RenderPass rp
 	)
 	{
-		return sundry::format_tup('#', v, f);
+		sundry::VkObjToId<vk::RenderPass> cover(rp);
+		return sundry::format_tup('#', v, f,cover.id);
 	}
 	inline void push_descriptor(std::vector<std::vector<vk::DescriptorSetLayoutBinding>>& bindings,std::vector<Descriptor>& descriptors,vk::ShaderStageFlagBits stage)
 	{
@@ -87,12 +89,12 @@ namespace gld::vkd {
 	}
 
 	template<size_t N>
-	inline vk::DescriptorPool createDescriptorPool(vk::Device dev, const std::array<std::shared_ptr<SpirvRes>, N>& shaders, uint32_t maxPoolSize)
+	inline std::tuple<vk::DescriptorPool, vk::DescriptorPoolCreateInfo, std::vector<vk::DescriptorPoolSize>> createDescriptorPool(vk::Device dev, const std::array<std::shared_ptr<SpirvRes>, N>& shaders, uint32_t maxPoolSize)
 	{
 		std::vector<vk::DescriptorPoolSize> poolSizes;
 		push_descriptor_pool_size(poolSizes, shaders);
 		vk::DescriptorPoolCreateInfo info(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,maxPoolSize,poolSizes);
-		return dev.createDescriptorPool(info);
+		return std::make_tuple(dev.createDescriptorPool(info),info,poolSizes);
 	}
 
 	template<size_t N>
@@ -158,8 +160,11 @@ namespace gld::vkd {
 		data->pipelineLayout = pipelineLayout;
 		data->pipeline = pipeline;
 		data->shaderModules = std::move(shaderModules);
-		data->descriptorPool = createDescriptorPool<N>(dev,shaders,maxPoolSize * descriptorSetLayout.size());
-
+		auto[pool,poolInfo,poolSize] = createDescriptorPool<N>(dev,shaders,maxPoolSize * descriptorSetLayout.size());
+		data->descriptorPool.push_back(pool);
+		data->poolCreateInfo = poolInfo;
+		data->poolSize = std::move(poolSize);
+		data->poolCreateInfo.setPoolSizes(data->poolSize);
 		return std::make_tuple(true, data);
 	}
 
@@ -189,14 +194,60 @@ namespace gld::vkd {
 		{
 			if (r) device.destroyShaderModule(r);
 		}
-		if (descriptorPool) device.destroyDescriptorPool(descriptorPool);
+		for(auto& pool : descriptorPool)
+		{
+			device.destroyDescriptorPool(pool);
+		}
+			
 		if (pipelineLayout) device.destroyPipelineLayout(pipelineLayout);
-		for (auto s : setLayout)
+		for (auto& s : setLayout)
 			if (s) device.destroyDescriptorSetLayout(s);
 	}
-	std::vector<vk::DescriptorSet> PipelineData::allocDescriptorSets()
+	DescriptorSets PipelineData::allocDescriptorSets()
 	{
-		vk::DescriptorSetAllocateInfo info(descriptorPool, setLayout);
-		return device.allocateDescriptorSets(info);
+		vk::DescriptorSetAllocateInfo info({}, setLayout);
+		for (int i = descriptorPool.size() - 1;i >= 0;--i)
+		{
+			info.descriptorPool = descriptorPool[i];
+			try{
+				auto r = device.allocateDescriptorSets(info);
+				return DescriptorSets(r,descriptorPool[i]);
+			}catch (vk::OutOfPoolMemoryError&){}
+		}
+		if(createNewDescriptorPool())
+		{
+			return allocDescriptorSets();
+		}
+		return {};
 	}
+
+	bool PipelineData::createNewDescriptorPool()
+	{
+		try{
+			descriptorPool.push_back(device.createDescriptorPool(poolCreateInfo));
+			return true;
+		}catch (...)
+		{
+			return false;
+		}
+	}
+
+	DescriptorSets::operator bool() const
+	{
+		return pool && descriptorSets.has_value();
+	}
+
+	DescriptorSets::operator const std::vector<vk::DescriptorSet>& () const
+	{
+		return descriptorSets.value();
+	}
+
+	void DescriptorSets::cleanup(vk::Device d)
+	{
+		if (pool && descriptorSets.has_value())
+		{
+			d.freeDescriptorSets(pool, *descriptorSets);
+		}
+	}
+
 }

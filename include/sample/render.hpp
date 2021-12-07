@@ -81,6 +81,9 @@ namespace vkd {
 		virtual void mainLoop();
 		void cleanUp() ;
 		virtual bool dispatchEvent(const evt::Event&) override ;
+		bool addScene(std::shared_ptr<Object> scene);
+		bool rmScene(uint32_t idx);
+		bool insertScene(uint32_t idx,std::shared_ptr<Object> scene);
 	protected:
 		void initWindow(uint32_t w, uint32_t h);
 		virtual void initScene();

@@ -651,6 +651,8 @@ void SampleRender::cleanUpSwapChain()
 
 	onCleanUpPipeline();
 
+	gld::DefDataMgr::instance()->clear_unused<gld::DataType::PipelineSimple>();
+
 	device.destroyRenderPass(renderPass);
 
 	device.freeMemory(depthAttachment.mem);
