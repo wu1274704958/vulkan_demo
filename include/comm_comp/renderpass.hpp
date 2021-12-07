@@ -13,6 +13,7 @@ namespace vkd
 		void pre_draw(vk::CommandBuffer& cmd) override;
 		void after_draw(vk::CommandBuffer& cmd) override;
 		vk::RenderPass getRenderPass() const;
+		void recreate_swapchain() override;
 	protected:
 		virtual vk::RenderPass create_renderpass();
 		virtual vk::RenderPassBeginInfo renderpass_begin();
@@ -24,7 +25,6 @@ namespace vkd
 	{
 		void awake() override;
 		void clean_up_pipeline() override;
-		void recreate_swapchain() override;
 		vk::ImageView get_image_view() const;
 		vk::ImageLayout get_image_layout() const;
 	protected:

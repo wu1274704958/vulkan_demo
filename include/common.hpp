@@ -103,7 +103,7 @@ namespace wws{
 }
 
 namespace vkd {
-	enum class EngineState {
+	enum class EngineState : uint32_t{
 		Uninitialized,
 		Initialized,
 		Running,

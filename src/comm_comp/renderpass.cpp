@@ -43,6 +43,12 @@ namespace vkd
 		return render_pass_begin_info();
 	}
 
+	void DefRenderPass::recreate_swapchain()
+	{
+		awake();
+		on_init();
+	}
+
 	void OnlyDepthRenderPass::awake()
 	{
 		create_depth_attachment();
@@ -125,13 +131,6 @@ namespace vkd
 		dev.destroyFramebuffer(framebuffer);
 		dev.destroyRenderPass(m_render_pass);
 	}
-
-	void OnlyDepthRenderPass::recreate_swapchain()
-	{
-		awake();
-	}
-
-
 
 }
 

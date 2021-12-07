@@ -99,8 +99,8 @@ private:
 		vk::DescriptorBufferInfo buffInfo(uniformBuf->buffer, 0, sizeof(UniformBufferObject));
 		vk::DescriptorImageInfo imageInfo(image->sample,image->view,vk::ImageLayout::eShaderReadOnlyOptimal);
 		std::array<vk::WriteDescriptorSet,2> writeDescriptorSets = {
-			vk::WriteDescriptorSet(descSets[0], 0, 0, vk::DescriptorType::eUniformBuffer,{}, buffInfo),
-			vk::WriteDescriptorSet(descSets[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, imageInfo, {})
+			vk::WriteDescriptorSet(static_cast<const std::vector<vk::DescriptorSet>&>(descSets)[0], 0, 0, vk::DescriptorType::eUniformBuffer,{}, buffInfo),
+			vk::WriteDescriptorSet(static_cast<const std::vector<vk::DescriptorSet>&>(descSets)[0], 1, 0, vk::DescriptorType::eCombinedImageSampler, imageInfo, {})
 		};
 		device.updateDescriptorSets(writeDescriptorSets, {});
 
@@ -109,7 +109,7 @@ private:
 	void onRealDraw(vk::CommandBuffer& cmd) override {
 		cmd.beginRenderPass(renderPassBeginInfo,vk::SubpassContents::eInline);
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
-		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, descSets, {});
+		cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->pipelineLayout, 0, static_cast<const std::vector<vk::DescriptorSet>&>(descSets), {});
 		vk::Viewport viewport(0, 0, (float)surfaceExtent.width, (float)surfaceExtent.height, 0.0f, 1.0f);
 		cmd.setViewport(0, viewport);
 		vk::Rect2D scissor({}, surfaceExtent);
@@ -134,9 +134,9 @@ private:
 		image.reset();
 	}
 	void onCleanUpPipeline() override {
-		device.freeDescriptorSets(pipeline->descriptorPool,descSets);
+		descSets.cleanup(device);
 		pipeline.reset();
-		gld::DefDataMgr::instance()->rm_cache<gld::DataType::PipelineSimple>("shader_23/quad.vert", "shader_23/quad.frag");
+		gld::DefDataMgr::instance()->clear_unused<gld::DataType::PipelineSimple>();
 	}
 	void onUpdate(float delta) override
 	{
@@ -158,7 +158,7 @@ private:
 	}
 
 	std::shared_ptr<gld::vkd::PipelineData> pipeline;
-	std::vector<vk::DescriptorSet> descSets;
+	gld::vkd::DescriptorSets descSets;
 	std::shared_ptr<gld::vkd::VkdBuffer> verticesBuf,indicesBuf,uniformBuf;
 	std::shared_ptr<gld::vkd::VkdImage> image;
 	

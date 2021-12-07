@@ -85,6 +85,7 @@ namespace vkd {
 		bool rmScene(uint32_t idx);
 		bool insertScene(uint32_t idx,std::shared_ptr<Object> scene);
 	protected:
+		bool sceneChange(std::shared_ptr<Object> scene,bool add);
 		void initWindow(uint32_t w, uint32_t h);
 		virtual void initScene();
 		bool checkValidationLayerSupport() ;

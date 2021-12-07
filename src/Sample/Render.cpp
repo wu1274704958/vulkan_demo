@@ -709,4 +709,59 @@ SampleRender::~SampleRender()
 
 }
 
+bool SampleRender::addScene(std::shared_ptr<Object> scene)
+{
+	if(sceneChange(scene,true))
+	{
+		scenes.push_back(scene);
+		return true;
+	}
+	return false;
+}
+
+bool SampleRender::rmScene(uint32_t idx)
+{
+	if(idx < scenes.size())
+	{
+		if(sceneChange(scenes[idx],false))
+		{
+			scenes.erase(scenes.begin() + idx);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool SampleRender::insertScene(uint32_t idx, std::shared_ptr<Object> scene)
+{
+	if (sceneChange(scene, true))
+	{
+		scenes.insert(scenes.begin() + idx,scene);
+		return true;
+	}
+	return false;
+}
+
+bool SampleRender::sceneChange(std::shared_ptr<Object> scene, bool add)
+{
+	if(scene && scene->has_comp<Scene>() && engineState < EngineState::Stoped)
+	{
+		if(add)
+		{
+			if(engineState >= EngineState::Initialized && engineState <= EngineState::Running)
+				scene->init();
+			return true;
+		}else
+		{
+			if (engineState >= EngineState::Initialized) {
+				scene->clean_up_pipeline();
+				scene->clean_up();
+			}
+			scene->on_destroy();
+			return true;
+		}
+	}
+	return false;
+}
+
 }

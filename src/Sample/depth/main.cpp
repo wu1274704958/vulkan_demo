@@ -146,7 +146,7 @@ private:
 		quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
-		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag");
+		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag",1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
 		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
 		quad->add_comp<vkd::DefRenderInstance>();
 		quad->add_comp<vkd::Texture>("textures/texture.jpg");
@@ -156,6 +156,12 @@ private:
 		auto mscene = main_scene_obj.lock();
 		mscene->destroy_comp<vkd::DefRenderPass>();
 		mscene->add_comp<vkd::OnlyDepthRenderPass>();
+
+		auto scene_obj = std::make_shared<vkd::Object>("Real");
+		main_scene_obj = scene_obj;
+		main_scene = scene_obj->add_comp<vkd::Scene>();
+		scene_obj->add_comp<vkd::DefRenderPass>();
+		addScene(scene_obj);
 
 		//quad2 = std::make_shared<vkd::Object>("Quad2");
 		//auto quad2_t = quad2->add_comp<vkd::Transform>();
@@ -201,7 +207,7 @@ private:
 	{
 		vkd::SampleRender::onReCreateSwapChain();
 		quad->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
-		quad2->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+		//quad2->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
 	}
 private:
 	std::shared_ptr<vkd::Object> quad,quad2;

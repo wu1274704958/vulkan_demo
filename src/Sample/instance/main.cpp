@@ -48,8 +48,6 @@ private:
 	{
 		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
 		indices = std::make_shared<std::vector<uint16_t>>(Indices);
-		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent,
-			"shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1},std::vector<uint32_t>{3});
 
 		prepare_instance();
 	}
@@ -66,7 +64,7 @@ private:
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
 		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
-		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag");
+		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
 		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
 		quad->add_comp<vkd::DefRenderInstance>();
 		quad->add_comp<vkd::Texture>("textures/texture.jpg");
