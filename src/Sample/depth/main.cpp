@@ -73,17 +73,20 @@ protected:
 
 struct DepthSampler : public vkd::Component
 {
-	DepthSampler(std::weak_ptr<vkd::OnlyDepthRenderPass> rp,uint16_t set = 0, uint32_t binding = 1)
+	DepthSampler(std::weak_ptr<vkd::OnlyDepthRenderPass> rp,uint16_t set = 0, uint32_t imgBinding = 1,uint32_t samplerBinding = 2)
 		: rp(rp),
 		set(set),
-		binding(binding)
+		imgBinding(imgBinding),
+		samplerBinding(samplerBinding)
 	{
 	}
 
 	void awake() override
 	{
 		not_draw = true;
-		vk::SamplerCreateInfo info({});
+		vk::SamplerCreateInfo info({},vk::Filter::eLinear, vk::Filter::eLinear, vk::
+		SamplerMipmapMode::eLinear,vk::SamplerAddressMode::eClampToEdge
+		, vk::SamplerAddressMode::eClampToEdge, vk::SamplerAddressMode::eClampToEdge);
 		sampler = device().createSampler(info);
 	}
 	void update_descriptor() const
@@ -94,9 +97,13 @@ struct DepthSampler : public vkd::Component
 		if (pipeline && renderPass)
 		{
 			const auto& descStes = pipeline->get_descriptorsets();
-			vk::DescriptorImageInfo image_info(sampler, renderPass->get_image_view(),renderPass->get_image_layout());
-			vk::WriteDescriptorSet write_descriptor_set(descStes[set], binding, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
-			device().updateDescriptorSets(write_descriptor_set, {});
+			vk::DescriptorImageInfo image_info({}, renderPass->get_image_view(),vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+			vk::DescriptorImageInfo sampler_info(sampler);
+			std::array<vk::WriteDescriptorSet,2> descriptor_sets = {
+				vk::WriteDescriptorSet(descStes[set], imgBinding, 0, vk::DescriptorType::eSampledImage, image_info, {}),
+				vk::WriteDescriptorSet(descStes[set], samplerBinding, 0, vk::DescriptorType::eSampler, sampler_info, {})
+			};
+			device().updateDescriptorSets(descriptor_sets, {});
 		}
 	}
 	bool on_init() override
@@ -117,7 +124,7 @@ protected:
 	std::weak_ptr<vkd::OnlyDepthRenderPass> rp;
 	vk::Sampler sampler;
 	uint16_t set;
-	uint32_t binding;
+	uint32_t imgBinding,samplerBinding;
 };
 
 
@@ -140,38 +147,54 @@ private:
 		auto trans = cam_obj->add_comp<vkd::Transform>();
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
+
+		auto cam2_obj = std::make_shared<vkd::Object>("Camera2");
+		auto cam2_trans = cam2_obj->add_comp<vkd::Transform>();
+		cam2_obj->add_comp<vkd::Showcase>();
+		cam2_trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
 		
 		main_scene.lock()->add_child(trans.lock());
 
-		quad = std::make_shared<vkd::Object>("Quad");
-		auto quad_t = quad->add_comp<vkd::Transform>();
-		quad->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices);
-		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag",1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
-		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
-		quad->add_comp<vkd::DefRenderInstance>();
-		quad->add_comp<vkd::Texture>("textures/texture.jpg");
-		quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f,0.f,1.f,1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
-		main_scene.lock()->add_child(quad_t.lock());
+		auto quad_t = createQuad();
+		main_scene.lock()->add_child(quad_t->get_comp<vkd::Transform>().lock());
 
 		auto mscene = main_scene_obj.lock();
 		mscene->destroy_comp<vkd::DefRenderPass>();
-		mscene->add_comp<vkd::OnlyDepthRenderPass>();
+		auto depthComp = mscene->add_comp<vkd::OnlyDepthRenderPass>();
 
 		auto scene_obj = std::make_shared<vkd::Object>("Real");
 		main_scene_obj = scene_obj;
 		main_scene = scene_obj->add_comp<vkd::Scene>();
 		scene_obj->add_comp<vkd::DefRenderPass>();
+		main_scene.lock()->add_child(cam2_trans.lock());
 		addScene(scene_obj);
 
-		//quad2 = std::make_shared<vkd::Object>("Quad2");
-		//auto quad2_t = quad2->add_comp<vkd::Transform>();
-		//quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices);
-		//quad2->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
-		//quad2->add_comp<ScreenDraw>();
-		//quad2->add_comp<vkd::Texture>("textures/texture.jpg");
-		////quad2->add_comp<DepthSampler>();
-		//quad2->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
-		//scene.lock()->add_child(quad2_t.lock());
+		quad1 = std::make_shared<vkd::Object>("Quad2");
+		auto quad2_t = quad1->add_comp<vkd::Transform>();
+		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices);
+		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
+		quad1->add_comp<ScreenDraw>();
+		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
+		quad1->add_comp<DepthSampler>(depthComp);
+		quad1->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+
+		quad3 = createQuad();
+		quad3->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 0.5f, 1.0f));
+
+		main_scene.lock()->add_child(quad3->get_comp<vkd::Transform>().lock());
+		main_scene.lock()->add_child(quad2_t.lock());
+	}
+
+	std::shared_ptr<vkd::Object> createQuad()
+	{
+		auto quad = std::make_shared<vkd::Object>("Quad");
+		auto quad_t = quad->add_comp<vkd::Transform>();
+		quad->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
+		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
+		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
+		quad->add_comp<vkd::DefRenderInstance>();
+		quad->add_comp<vkd::Texture>("textures/texture.jpg");
+		return quad;
 	}
 
 	void prepare_instance()
@@ -206,11 +229,18 @@ private:
 	void onReCreateSwapChain() override
 	{
 		vkd::SampleRender::onReCreateSwapChain();
-		quad->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 1.f, 1.0f));
-		//quad2->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+		quad1->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
+		quad3->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.0f, 0.f, 0.5f, 1.0f));
+	}
+
+	void onCleanUp() override
+	{
+		quad1.reset();
+		quad3.reset();
+		vkd::SampleRender::onCleanUp();
 	}
 private:
-	std::shared_ptr<vkd::Object> quad,quad2;
+	std::shared_ptr<vkd::Object> quad1, quad3;
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;
 	std::shared_ptr<std::vector<glm::mat4>> instanceData;

@@ -8,9 +8,9 @@ namespace gld::vkd {
 
 	struct VkdBuffer
 	{
-		vk::Device device;
-		vk::Buffer buffer;
-		vk::DeviceMemory mem;
+		vk::Device device = nullptr;
+		vk::Buffer buffer = nullptr;
+		vk::DeviceMemory mem = nullptr;
 		vk::BufferUsageFlags usage;
 		vk::MemoryPropertyFlags memProperty;
 

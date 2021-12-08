@@ -17,8 +17,7 @@ bool SampleRender::dispatchEvent(const evt::Event& e) {
 	}
 	for(const auto& sc : scenes)
 	{
-		if(sc->dispatchEvent(e))
-			break;
+		sc->dispatchEvent(e);
 	}
 	return false;
 }

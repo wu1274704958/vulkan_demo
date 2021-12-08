@@ -58,7 +58,6 @@ namespace vkd
 	void OnlyDepthRenderPass::create_depth_attachment()
 	{
 		const auto& surfaceExtent = surface_extent();
-		const auto& depthAttachment = depth_attachment();
 		auto format = depthstencil_format();
 		auto dev = device();
 		vk::ImageCreateInfo imgInfo({}, vk::ImageType::e2D,format , vk::Extent3D(surfaceExtent.width, surfaceExtent.height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal,
@@ -72,7 +71,7 @@ namespace vkd
 		dev.bindImageMemory(depth, mem, 0);
 
 		vk::ImageViewCreateInfo viewInfo({}, depth, vk::ImageViewType::e2D, format, {},
-			vk::ImageSubresourceRange(depthAttachment.aspect, 0, 1, 0, 1));
+			vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
 		view = dev.createImageView(viewInfo);
 	}
 
@@ -84,10 +83,10 @@ namespace vkd
 		const auto& depthAttachment = depth_attachment();
 		std::vector<vk::AttachmentDescription> attachment = {
 			vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),format,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,
-			vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,depthAttachment.imgLayout)
+			vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,vk::ImageLayout::eUndefined,vk::ImageLayout::eDepthStencilReadOnlyOptimal)
 		};
 
-		vk::AttachmentReference depthAttachmentRef(0, depthAttachment.imgLayout);
+		vk::AttachmentReference depthAttachmentRef(0, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 		std::array<vk::SubpassDescription, 1> subpassDesc = {};
 		subpassDesc[0] = vk::SubpassDescription();
