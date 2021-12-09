@@ -170,7 +170,7 @@ private:
 		addScene(scene_obj);
 
 		quad1 = std::make_shared<vkd::Object>("Quad2");
-		auto quad2_t = quad1->add_comp<vkd::Transform>();
+		auto quad1_t = quad1->add_comp<vkd::Transform>();
 		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices);
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
 		quad1->add_comp<ScreenDraw>();
@@ -182,7 +182,7 @@ private:
 		quad3->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 0.5f, 1.0f));
 
 		main_scene.lock()->add_child(quad3->get_comp<vkd::Transform>().lock());
-		main_scene.lock()->add_child(quad2_t.lock());
+		main_scene.lock()->add_child(quad1_t.lock());
 	}
 
 	std::shared_ptr<vkd::Object> createQuad()
