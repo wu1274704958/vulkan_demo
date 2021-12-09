@@ -225,14 +225,6 @@ private:
 			bz += (size + space);
 		}
 	}
-
-	void onReCreateSwapChain() override
-	{
-		vkd::SampleRender::onReCreateSwapChain();
-		quad1->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
-		quad3->get_comp_raw<vkd::ViewportScissor>()->reset(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.0f, 0.f, 0.5f, 1.0f));
-	}
-
 	void onCleanUp() override
 	{
 		quad1.reset();

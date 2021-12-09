@@ -4,6 +4,44 @@
 #include <comm_comp/transform.hpp>
 
 namespace vkd {
+
+
+	void ViewportScissor::reset(glm::vec4 vp, glm::vec4 sc, float minDepth , float maxDepth)
+	{
+		auto extent = surface_extent();
+		viewport.x = vp.x * extent.width;
+		viewport.y = vp.y * extent.height;
+		viewport.width = vp.z * extent.width;
+		viewport.height = vp.w * extent.height;
+		scissor.offset = vk::Offset2D{ static_cast<int32_t>(sc.x * extent.width),static_cast<int32_t>(sc.y * extent.height) };
+		scissor.extent = vk::Extent2D{ static_cast<uint32_t>(sc.z * extent.width),static_cast<uint32_t>(sc.w * extent.height) };
+	}
+
+	void ViewportScissor::draw(vk::CommandBuffer& cmd)
+	{
+		cmd.setViewport(0, viewport);
+		cmd.setScissor(0, scissor);
+	}
+
+
+	void ViewportScissor::reset()
+	{
+		auto extent = surface_extent();
+		viewport.x = viewport_ratio.x * extent.width;
+		viewport.y = viewport_ratio.y * extent.height;
+		viewport.width = viewport_ratio.z * extent.width;
+		viewport.height = viewport_ratio.w * extent.height;
+		scissor.offset = vk::Offset2D{ static_cast<int32_t>(scissor_ratio.x * extent.width),static_cast<int32_t>(scissor_ratio.y * extent.height) };
+		scissor.extent = vk::Extent2D{ static_cast<uint32_t>(scissor_ratio.z * extent.width),static_cast<uint32_t>(scissor_ratio.w * extent.height) };
+	}
+
+	void ViewportScissor::recreate_swapchain()
+	{
+		reset();
+	}
+
+
+
 	void PipelineComp::draw(vk::CommandBuffer& cmd)
 	{
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline);
