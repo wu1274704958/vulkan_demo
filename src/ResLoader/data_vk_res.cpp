@@ -42,6 +42,7 @@ namespace gld::vkd {
 			void* dst = device.mapMemory(mem, offset, size);
 			memcpy(dst, data, size);
 			device.unmapMemory(mem);
+			hasData = true;
 			return true;
 		}
 		return false;
@@ -60,10 +61,17 @@ namespace gld::vkd {
 			vk::BufferCopy region({},{},size);
 			cmd.copyBuffer(buf.buffer,this->buffer, region);
 			sundry::endSingleTimeCommands(device,cmd,cmdPool,queue);
+			hasData = true;
 			return true;
 		}
 		return false;
 	}
+
+	bool VkdBuffer::has_data() const
+	{
+		return hasData;
+	}
+
 
 	inline bool createTempBuf(vk::PhysicalDevice phyDev, vk::Device dev, vk::DeviceSize size,void *data, vk::Buffer& buf, vk::DeviceMemory& mem,vk::DeviceSize offset = 0)
 	{

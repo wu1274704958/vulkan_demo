@@ -41,6 +41,9 @@ namespace gld::vkd {
 			if (mem) device.freeMemory(mem);
 			if (buffer) device.destroyBuffer(buffer);
 		}
+		bool has_data() const;
+	protected:
+		bool hasData : 1 = false;
 	};
 	template<typename ...Args>
 	struct CreateVkBuffer {

@@ -171,7 +171,7 @@ private:
 
 		quad1 = std::make_shared<vkd::Object>("Quad2");
 		auto quad1_t = quad1->add_comp<vkd::Transform>();
-		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices);
+		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices,"quad2");
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
 		quad1->add_comp<ScreenDraw>();
 		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
@@ -189,7 +189,7 @@ private:
 	{
 		auto quad = std::make_shared<vkd::Object>("Quad");
 		auto quad_t = quad->add_comp<vkd::Transform>();
-		quad->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
+		quad->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices,"quad");
 		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
 		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
 		quad->add_comp<vkd::DefRenderInstance>();

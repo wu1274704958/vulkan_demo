@@ -18,19 +18,21 @@ namespace vkd
 	template<typename VT,typename IT>
 	struct Mesh : public MeshInterface
 	{
-		Mesh(std::shared_ptr<std::vector<VT>> vertices, std::shared_ptr <std::vector<IT>> indices) : vertices(vertices),indices(indices)
-		{}
-		void awake() override
+		Mesh(std::shared_ptr<std::vector<VT>> vertices, std::shared_ptr <std::vector<IT>> indices,std::string name) : vertices(vertices),indices(indices)
 		{
-			if(vertices->empty() || indices->empty()) return;
-			vertexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(VT) * vertices->size(),
+			if (vertices->empty() || indices->empty()) return;
+			vertexBuf = gld::DefDataMgr::instance()->load<gld::DataType::VkBuffer>(name,physical_dev(), device(), sizeof(VT) * vertices->size(),
 				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
-			indexBuf = gld::DefDataMgr::instance()->load_not_cache<gld::DataType::VkBuffer>(physical_dev(), device(), sizeof(IT) * indices->size(),
+			indexBuf = gld::DefDataMgr::instance()->load<gld::DataType::VkBuffer>(name,physical_dev(), device(), sizeof(IT) * indices->size(),
 				vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-			vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *vertices);
-			indexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *indices);
+			if (!vertexBuf->has_data())
+				vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *vertices);
+			if(!indexBuf->has_data())
+				indexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *indices);
 		}
+		void awake() override
+		{}
 		bool on_init() override{return true;}
 		void draw(vk::CommandBuffer& cmd) override
 		{

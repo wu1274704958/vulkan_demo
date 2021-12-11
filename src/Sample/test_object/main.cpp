@@ -71,7 +71,7 @@ private:
 		auto quad2 = std::make_shared<vkd::Object>("Quad2");
 		auto quad2_t = quad2->add_comp<vkd::Transform>();
 		quad2_t.lock()->set_position(glm::vec3(0.0f, 0.0f, z));
-		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices);
+		quad2->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices,"quad");
 		quad2->add_comp<vkd::PipelineComp>("shader_23/quad.vert", "shader_23/quad.frag");
 		quad2->add_comp<vkd::DefRender>();
 		quad2->add_comp<vkd::Texture>("textures/texture.jpg");
