@@ -2,13 +2,15 @@
 #include <memory>
 #include <vulkan/vulkan.hpp>
 #include <event/event.hpp>
-
+#include <common.hpp>
 namespace vkd {
 	struct DepthAttachment;
 	struct Object;
 	struct Scene;
-	struct Component : public std::enable_shared_from_this<Component>, public evt::EventDispatcher
+	struct Component : public std::enable_shared_from_this<Component>, public evt::EventDispatcher,public Clone<Component>
 	{
+		Component();
+		Component(const Component&);
 		friend Object;
 		virtual bool is_enable(){return enable;}
 		virtual void set_enable(bool v) { enable = v; v ? on_enable() : on_disable();}

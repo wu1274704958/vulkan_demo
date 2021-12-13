@@ -19,6 +19,7 @@ namespace vkd {
 		void update(float delta) override;
 		void draw(vk::CommandBuffer& cmd) override{}
 		bool is_dirty() const override;
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		glm::mat4 mat_p;
 		glm::vec2 mouseLastPos, mouseMoveOffset;

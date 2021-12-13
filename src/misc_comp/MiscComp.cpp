@@ -38,6 +38,10 @@ namespace vkd
 		not_draw = false;
 	}
 
+	std::shared_ptr<Component> Texture::clone() const
+	{
+		return std::make_shared<Texture>(*this);
+	}
 
 	
 }

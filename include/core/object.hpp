@@ -74,8 +74,33 @@ namespace vkd {
 				int idx = locator[ty_id];
 				return std::dynamic_pointer_cast<T>(components[idx]);
 			}
+			return {};//get_comp_by_base<T,T>();
+		}
+		/*template<typename T, typename CT>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+		}
+		std::weak_ptr<T> get_comp_by_base()
+		{
 			return {};
 		}
+		template<typename T,typename CT>
+		requires requires()
+		{
+			requires std::is_base_of_v<Component, T>;
+			CT::__BASE_TYPE;
+		}
+		std::weak_ptr<T> get_comp_by_base()
+		{
+			size_t ty_id = typeid(CT::__BASE_TYPE).hash_code();
+			if 
+			{
+				int idx = locator[ty_id];
+				return std::dynamic_pointer_cast<T>(components[idx]);
+			}
+			return get_comp_by_base<T,CT::__BASE_TYPE>();
+		}*/
 		template<typename T>
 		requires requires()
 		{

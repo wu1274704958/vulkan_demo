@@ -9,6 +9,8 @@ namespace vkd
 {
 	struct DefRender : public Component
 	{
+		DefRender(){}
+		DefRender(const DefRender&);
 		void awake() override;
 		bool on_init() override;
 		void on_clean_up() override;
@@ -16,6 +18,7 @@ namespace vkd
 		void late_update(float delta) override;
 		void recreate_swapchain() override;
 		int64_t idx() override{ return 100000; }
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		void update_vp();
 		bool update_descriptor() const;
@@ -31,9 +34,11 @@ namespace vkd
 
 	struct DefRenderInstance : public DefRender
 	{
+		DefRenderInstance(){}
+		DefRenderInstance(const DefRenderInstance&);
 		bool on_init() override;
 		void draw(vk::CommandBuffer& cmd) override;
-
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		std::weak_ptr<MeshInstanceInterface> meshInstance;
 	};

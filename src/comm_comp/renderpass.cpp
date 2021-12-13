@@ -49,6 +49,11 @@ namespace vkd
 		on_init();
 	}
 
+	std::shared_ptr<Component> DefRenderPass::clone() const
+	{
+		return std::make_shared<DefRenderPass>(*this);
+	}
+
 	void OnlyDepthRenderPass::awake()
 	{
 		create_depth_attachment();
@@ -124,12 +129,22 @@ namespace vkd
 	void OnlyDepthRenderPass::clean_up_pipeline()
 	{
 		auto dev = device();
-		dev.freeMemory(mem);
-		dev.destroyImageView(view);
-		dev.destroyImage(depth);
-		dev.destroyFramebuffer(framebuffer);
-		dev.destroyRenderPass(m_render_pass);
+		if(mem)dev.freeMemory(mem);
+		if(view)dev.destroyImageView(view);
+		if(depth)dev.destroyImage(depth);
+		if(framebuffer)dev.destroyFramebuffer(framebuffer);
+		if(m_render_pass)dev.destroyRenderPass(m_render_pass);
 	}
+
+	std::shared_ptr<Component> OnlyDepthRenderPass::clone() const 
+	{
+		return std::make_shared<OnlyDepthRenderPass>(*this);
+	}
+
+	OnlyDepthRenderPass::OnlyDepthRenderPass(const OnlyDepthRenderPass& oth)
+	{
+	}
+
 
 }
 

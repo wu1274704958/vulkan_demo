@@ -107,5 +107,10 @@ namespace vkd
 		return Camera::is_dirty();
 	}
 
+	std::shared_ptr<Component> Showcase::clone() const
+	{
+		return std::make_shared<Showcase>(*this);
+	}
+
 
 }

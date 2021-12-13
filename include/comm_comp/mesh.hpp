@@ -53,6 +53,11 @@ namespace vkd
 			return indices->size();
 		}
 
+		std::shared_ptr<Component> clone() const override
+		{
+			return std::make_shared<Mesh<VT,IT>>(*this);
+		}
+
 		static constexpr std::optional<vk::IndexType> IndexType = wws::map_enum<IT, wws::ValList<vk::IndexType,
 			vk::IndexType::eUint16,
 			vk::IndexType::eUint32,
@@ -93,6 +98,10 @@ namespace vkd
 		size_t instance_count() const override
 		{
 			return instanceData->size();
+		}
+		std::shared_ptr<Component> clone() const override
+		{
+			return std::make_shared<MeshInstance<I>>(*this);
 		}
 		
 	protected:

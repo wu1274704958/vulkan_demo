@@ -32,6 +32,7 @@ namespace vkd {
 		virtual int64_t idx() override {
 			return 40;
 		}
+		std::shared_ptr<Component> clone() const override;
 		glm::vec4 viewport_ratio,scissor_ratio;
 		vk::Viewport viewport;
 		vk::Rect2D scissor;
@@ -49,6 +50,7 @@ namespace vkd {
 			std::vector<uint32_t> bindingSplit = {}) :
 				vertexPath(vert), fragPath(frag) ,maxSetSize(maxSetSize),instanceSet(instanceSet),bindingSplit(bindingSplit)
 		{}
+		PipelineComp(const PipelineComp&);
 		virtual void awake() override{}
 		virtual bool on_init() override;
 		virtual void on_enable() override{}
@@ -64,6 +66,7 @@ namespace vkd {
 		}
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
+		std::shared_ptr<Component> clone() const override;
 		std::string vertexPath, fragPath;
 		uint32_t maxSetSize = 1;
 		std::unordered_set<uint32_t> instanceSet;

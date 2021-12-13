@@ -3,6 +3,12 @@
 
 namespace vkd
 {
+	Scene::Scene(){}
+	Scene::Scene(const Scene& oth)
+	{
+	}
+
+
 	std::weak_ptr<Scene> Scene::get_scene()
 	{
 		return std::dynamic_pointer_cast<Scene>(shared_from_this());
@@ -59,6 +65,11 @@ namespace vkd
 	vk::RenderPass Scene::get_renderpass() const
 	{
 		return render_pass;
+	}
+
+	std::shared_ptr<Component> Scene::clone() const
+	{
+		return std::make_shared<Scene>(*this);
 	}
 
 

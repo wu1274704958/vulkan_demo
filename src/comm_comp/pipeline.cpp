@@ -40,6 +40,11 @@ namespace vkd {
 		reset();
 	}
 
+	std::shared_ptr<Component> ViewportScissor::clone() const
+	{
+		return std::make_shared<ViewportScissor>(*this);
+	}
+
 
 
 	void PipelineComp::draw(vk::CommandBuffer& cmd)
@@ -92,4 +97,21 @@ namespace vkd {
 	{
 		return descSets;
 	}
+	std::shared_ptr<Component> PipelineComp::clone() const
+	{
+		return std::make_shared<PipelineComp>(*this);
+	}
+	PipelineComp::PipelineComp(const PipelineComp& oth)
+	{
+		this->vertexPath = oth.vertexPath;
+		this->fragPath = oth.fragPath;
+		this->maxSetSize = oth.maxSetSize;
+		this->instanceSet = oth.instanceSet;
+		this->bindingSplit = oth.bindingSplit;
+		this->pipeline = oth.pipeline;
+		if(pipeline)
+			this->descSets = this->pipeline->allocDescriptorSets();
+	}
+
+
 }

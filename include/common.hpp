@@ -110,4 +110,10 @@ namespace vkd {
 		Stoped,
 		Destroyed
 	};
+
+	template<typename T>
+	struct Clone
+	{
+		virtual std::shared_ptr<T> clone() const = 0;
+	};
 }

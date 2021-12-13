@@ -1,6 +1,19 @@
 #include <core/component.hpp>
 #include <sample/render.hpp>
 namespace vkd{
+
+	Component::Component()
+	{
+		
+	}
+
+	Component::Component(const Component& oth)
+	{
+		this->enable = oth.enable;
+		this->ever_tick = oth.ever_tick;
+		this->not_draw = oth.not_draw;
+	}
+
 	vk::Instance Component::instance()
 	{
 		if(SampleRender::self_instance) return SampleRender::self_instance->instance;

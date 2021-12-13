@@ -16,6 +16,7 @@ namespace vkd
 		void recreate_swapchain() override;
 		void on_clean_up() override;
 		void awake() override;
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		std::shared_ptr<gld::vkd::VkdImage> img;
 		std::string path;

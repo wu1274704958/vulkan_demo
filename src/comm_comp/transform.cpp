@@ -343,4 +343,20 @@ namespace vkd {
 	{
 		return scene;
 	}
+
+	std::shared_ptr<Component> Transform::clone() const
+	{
+		return std::make_shared<Transform>(*this);
+	}
+
+	Transform::Transform(const Transform& oth)
+	{
+		this->position = oth.position;
+		this->rotation = oth.rotation;
+		this->scale = oth.scale;
+		this->local_mat = oth.local_mat;
+		this->mat = oth.mat;
+	}
+
+
 }

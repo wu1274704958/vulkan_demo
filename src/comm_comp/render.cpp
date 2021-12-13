@@ -4,6 +4,11 @@
 
 namespace vkd
 {
+	DefRender::DefRender(const DefRender& oth)
+	{
+		this->vp_buf = oth.vp_buf;
+		this->vp = oth.vp;
+	}
 
 	void DefRender::awake()
 	{
@@ -91,6 +96,16 @@ namespace vkd
 		vp_buf.reset();
 	}
 
+	std::shared_ptr<Component> DefRender::clone() const 
+	{
+		return std::make_shared<DefRender>(*this);
+	}
+
+	DefRenderInstance::DefRenderInstance(const DefRenderInstance&)
+	{
+	}
+
+
 	bool DefRenderInstance::on_init()
 	{
 		if(!DefRender::on_init())
@@ -114,6 +129,11 @@ namespace vkd
 			cmd.pushConstants(pipeline->get_pipeline()->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), (void*)&mat);
 			cmd.drawIndexed(mesh_ptr->index_count(), mesh_ins->instance_count(), 0, 0, 0);
 		}
+	}
+
+	std::shared_ptr<Component> DefRenderInstance::clone() const
+	{
+		return std::make_shared<DefRenderInstance>(*this);
 	}
 
 

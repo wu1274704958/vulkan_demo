@@ -66,6 +66,10 @@ struct ScreenDraw : public vkd::Component
 		}
 	}
 	void on_clean_up() override{}
+	std::shared_ptr<Component> clone() const override
+	{
+		return std::make_shared<ScreenDraw>(*this);
+	}
 protected:
 	std::weak_ptr<vkd::MeshInterface> mesh;
 	
@@ -79,6 +83,13 @@ struct DepthSampler : public vkd::Component
 		imgBinding(imgBinding),
 		samplerBinding(samplerBinding)
 	{
+	}
+	DepthSampler(const DepthSampler& oth)
+	{
+		this->imgBinding = oth.imgBinding;
+		this->samplerBinding = oth.samplerBinding;
+		this->set = oth.set;
+		this->rp = oth.rp;
 	}
 
 	void awake() override
@@ -118,6 +129,10 @@ struct DepthSampler : public vkd::Component
 	void on_clean_up() override
 	{
 		device().destroySampler(sampler);
+	}
+	std::shared_ptr<Component> clone() const override
+	{
+		return std::make_shared<DepthSampler>(*this);
 	}
 	
 protected:

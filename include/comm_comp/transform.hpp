@@ -11,6 +11,7 @@ namespace vkd {
 	struct Transform : public Component{
 		friend Object;
 		Transform();
+		Transform(const Transform&);
 		void awake() override{}
 		bool on_init() override;
 		void set_enable(bool v) override;
@@ -50,6 +51,7 @@ namespace vkd {
 		std::weak_ptr<Transform> find_child(std::string_view name) const;
 		bool matrix_dirty() const;
 		virtual std::weak_ptr<Scene> get_scene();
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		void update_matrix();
 	protected:

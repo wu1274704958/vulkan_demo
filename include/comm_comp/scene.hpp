@@ -9,6 +9,8 @@ namespace vkd
 
 	struct Scene : public Transform
 	{
+		Scene();
+		Scene(const Scene&);
 		std::weak_ptr<Scene> get_scene() override;
 
 		std::shared_ptr<const Camera> get_camera() const;
@@ -18,6 +20,7 @@ namespace vkd
 
 		void set_renderpass(vk::RenderPass render_pass);
 		vk::RenderPass get_renderpass() const;
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		std::vector<std::weak_ptr<Camera>> cameras;
 		vk::RenderPass render_pass;

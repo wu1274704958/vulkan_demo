@@ -14,6 +14,7 @@ namespace vkd
 		void after_draw(vk::CommandBuffer& cmd) override;
 		vk::RenderPass getRenderPass() const;
 		void recreate_swapchain() override;
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		virtual vk::RenderPass create_renderpass();
 		virtual vk::RenderPassBeginInfo renderpass_begin();
@@ -23,10 +24,13 @@ namespace vkd
 
 	struct OnlyDepthRenderPass : public DefRenderPass
 	{
+		OnlyDepthRenderPass() : DefRenderPass(){}
+		OnlyDepthRenderPass(const OnlyDepthRenderPass&);
 		void awake() override;
 		void clean_up_pipeline() override;
 		vk::ImageView get_image_view() const;
 		vk::ImageLayout get_image_layout() const;
+		std::shared_ptr<Component> clone() const override;
 	protected:
 		void create_depth_attachment();
 		vk::RenderPass create_renderpass() override;
