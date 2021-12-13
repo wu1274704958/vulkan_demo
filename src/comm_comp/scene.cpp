@@ -70,12 +70,7 @@ namespace vkd
 	std::shared_ptr<Component> Scene::clone() const
 	{
 		auto n = std::make_shared<Scene>(*this);
-		for (auto& ch : objects)
-		{
-			auto child = ch->clone();
-			auto trans = child->get_comp<Transform>();
-			n->add_child(trans.lock());
-		}
+		n->clone_childlren(*this);
 		return n;
 	}
 

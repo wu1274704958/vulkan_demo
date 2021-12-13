@@ -189,14 +189,20 @@ namespace vkd {
 	std::shared_ptr<Object> Object::clone() const
 	{
 		auto n = std::make_shared<Object>(*this);
-		for (auto& c : locator)
-		{
-			size_t ty_id = c.first;
-			auto comp = components[c.second]->clone();
-			n->add_comp(ty_id, comp);
-		}
+		n->clone_components(*this);
 		return n;
 	}
+
+	void Object::clone_components(const Object& oth)
+	{
+		for (auto& c : oth.locator)
+		{
+			size_t ty_id = c.first;
+			auto comp = oth.components[c.second]->clone();
+			add_comp(ty_id, comp);
+		}
+	}
+
 
 	bool Object::has_comp(size_t id) const
 	{

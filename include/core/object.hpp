@@ -170,6 +170,7 @@ namespace vkd {
 		bool good_comp_idx(int idx);
 		std::shared_ptr<Object> ptr();
 		std::weak_ptr<Object> weak_ptr();
+		void clone_components(const Object&);
 
 		std::vector<std::shared_ptr<Component>> components;
 		std::unordered_map<size_t,uint32_t> locator;

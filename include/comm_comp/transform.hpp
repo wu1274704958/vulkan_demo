@@ -53,6 +53,7 @@ namespace vkd {
 		virtual std::weak_ptr<Scene> get_scene();
 		std::shared_ptr<Component> clone() const override;
 	protected:
+		void clone_childlren(const Transform& oth);
 		void update_matrix();
 	protected:
 		glm::vec3 position,rotation,scale;

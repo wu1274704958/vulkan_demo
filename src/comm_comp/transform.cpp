@@ -347,12 +347,7 @@ namespace vkd {
 	std::shared_ptr<Component> Transform::clone() const
 	{
 		auto n = std::make_shared<Transform>(*this);
-		for (auto& ch : objects)
-		{
-			auto child = ch->clone();
-			auto trans = child->get_comp<Transform>();
-			n->add_child(trans.lock());
-		}
+		n->clone_childlren(*this);
 		return n;
 	}
 
@@ -364,6 +359,17 @@ namespace vkd {
 		this->local_mat = oth.local_mat;
 		this->mat = oth.mat;
 	}
+
+	void Transform::clone_childlren(const Transform& oth)
+	{
+		for (auto& ch : oth.objects)
+		{
+			auto child = ch->clone();
+			auto trans = child->get_comp<Transform>();
+			add_child(trans.lock());
+		}
+	}
+
 
 
 }
