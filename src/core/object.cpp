@@ -186,4 +186,58 @@ namespace vkd {
 		locator.clear();
 	}
 
+	std::shared_ptr<Object> Object::clone() const
+	{
+		auto n = std::make_shared<Object>(*this);
+		for (auto& c : locator)
+		{
+			size_t ty_id = c.first;
+			auto comp = components[c.second]->clone();
+			n->add_comp(ty_id, comp);
+		}
+		return n;
+	}
+
+	bool Object::has_comp(size_t id) const
+	{
+		return locator.contains(id);
+	}
+
+	bool Object::add_comp(size_t ty_id, std::shared_ptr<Component> comp)
+	{
+		if (has_comp(ty_id) || !comp) return false;
+		comp->attach_object(weak_ptr());
+		comp->awake();
+		comp->set_enable(true);
+		if (is_init) comp->init();
+		if (components.empty() || components.back()->idx() <= comp->idx())
+		{
+			components.push_back(comp);
+			locator.insert(std::make_pair(ty_id, components.size() - 1));
+			return true;
+		}
+		else {
+			for (int i = 0; i < components.size(); ++i)
+			{
+				if (comp->idx() <= components[i]->idx())
+				{
+					adjust_locat(i, 1);
+					components.insert(components.begin() + i, comp);
+					locator.insert(std::make_pair(ty_id, i));
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	Object::Object(const Object& oth)
+	{
+		this->active = oth.active;
+		this->name = oth.name;
+	}
+
+
+
 }

@@ -11,11 +11,12 @@ namespace vkd {
 	struct Transform;
 	struct Scene;
 
-	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher {
+	struct Object : public std::enable_shared_from_this<Object>,public evt::EventDispatcher,public Clone<Object> {
 		friend Component;
 		friend Transform;
 		Object(){}
 		Object(std::string name) : name(name){}
+		Object(const Object&);
 		template<typename T>
 		requires requires()
 		{
@@ -27,6 +28,8 @@ namespace vkd {
 			return locator.contains(ty_id);
 		}
 
+		bool has_comp(size_t id) const;
+
 		template<typename T,typename ... Args>
 		requires requires(Args&& ...args){
 			new T(std::forward<Args>(args)...);
@@ -37,30 +40,12 @@ namespace vkd {
 			if(has_comp<T>()) return {};
 			size_t ty_id = typeid(T).hash_code();
 			auto comp = std::make_shared<T>(std::forward<Args>(args)...);
-			comp->attach_object(weak_ptr());
-			comp->awake();
-			comp->set_enable(true);
-			if(is_init) comp->init();
-			if (components.empty() || components.back()->idx() <= comp->idx())
-			{
-				components.push_back(comp);
-				locator.insert(std::make_pair(ty_id,components.size() - 1));
+			if(add_comp(ty_id,std::dynamic_pointer_cast<Component>(comp)))
 				return comp;
-			}
-			else {
-				for (int i = 0; i < components.size(); ++i)
-				{
-					if (comp->idx() <= components[i]->idx())
-					{
-						adjust_locat(i,1);
-						components.insert(components.begin() + i, comp);
-						locator.insert(std::make_pair(ty_id, i));
-						return comp;
-					}
-				}
-			}
 			return {};
 		}
+		bool add_comp(size_t id, std::shared_ptr<Component> comp);
+		
 		template<typename T>
 			requires requires()
 		{
@@ -173,12 +158,12 @@ namespace vkd {
 		void late_update(float delta);
 		void clean_up();
 		void clean_up_pipeline();
+		std::shared_ptr<Object> clone() const override;
 		~Object();
 		bool dispatchEvent(const evt::Event&) override;
 		void attach_scene(const std::weak_ptr<Scene>&);
 		void detach_scene();
 		void on_destroy();
-		
 		static EngineState engine_state();
 	protected:
 		void adjust_locat(size_t i,int offset);

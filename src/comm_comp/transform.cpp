@@ -346,7 +346,14 @@ namespace vkd {
 
 	std::shared_ptr<Component> Transform::clone() const
 	{
-		return std::make_shared<Transform>(*this);
+		auto n = std::make_shared<Transform>(*this);
+		for (auto& ch : objects)
+		{
+			auto child = ch->clone();
+			auto trans = child->get_comp<Transform>();
+			n->add_child(trans.lock());
+		}
+		return n;
 	}
 
 	Transform::Transform(const Transform& oth)

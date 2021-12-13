@@ -163,28 +163,23 @@ private:
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
 		trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
 
-		auto cam2_obj = std::make_shared<vkd::Object>("Camera2");
-		auto cam2_trans = cam2_obj->add_comp<vkd::Transform>();
-		cam2_obj->add_comp<vkd::Showcase>();
-		cam2_trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
-		
 		main_scene.lock()->add_child(trans.lock());
 
 		auto quad_t = createQuad();
 		main_scene.lock()->add_child(quad_t->get_comp<vkd::Transform>().lock());
 
+		auto realSceneObj = main_scene_obj.lock()->clone();
+		auto real_scene = realSceneObj->get_comp<vkd::Scene>();
+		addScene(realSceneObj);
+
+		auto real_quad = real_scene.lock()->find_child("Quad").lock()->get_object();
+		real_quad->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 0.5f, 1.0f));
+
 		auto mscene = main_scene_obj.lock();
 		mscene->destroy_comp<vkd::DefRenderPass>();
 		auto depthComp = mscene->add_comp<vkd::OnlyDepthRenderPass>();
 
-		auto scene_obj = std::make_shared<vkd::Object>("Real");
-		main_scene_obj = scene_obj;
-		main_scene = scene_obj->add_comp<vkd::Scene>();
-		scene_obj->add_comp<vkd::DefRenderPass>();
-		main_scene.lock()->add_child(cam2_trans.lock());
-		addScene(scene_obj);
-
-		quad1 = std::make_shared<vkd::Object>("Quad2");
+		auto quad1 = std::make_shared<vkd::Object>("Quad2");
 		auto quad1_t = quad1->add_comp<vkd::Transform>();
 		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices,"quad2");
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
@@ -192,12 +187,8 @@ private:
 		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
 		quad1->add_comp<DepthSampler>(depthComp);
 		quad1->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
-
-		quad3 = createQuad();
-		quad3->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.f, 0.f, 0.5f, 1.0f));
-
-		main_scene.lock()->add_child(quad3->get_comp<vkd::Transform>().lock());
-		main_scene.lock()->add_child(quad1_t.lock());
+		
+		real_scene.lock()->add_child(quad1_t.lock());
 	}
 
 	std::shared_ptr<vkd::Object> createQuad()
@@ -242,12 +233,9 @@ private:
 	}
 	void onCleanUp() override
 	{
-		quad1.reset();
-		quad3.reset();
 		vkd::SampleRender::onCleanUp();
 	}
 private:
-	std::shared_ptr<vkd::Object> quad1, quad3;
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;
 	std::shared_ptr<std::vector<glm::mat4>> instanceData;
