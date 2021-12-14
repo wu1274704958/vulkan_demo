@@ -317,23 +317,35 @@ namespace vkd {
 	std::weak_ptr<Transform> Transform::find_child(std::string_view name_sv) const
 	{
 		if (name_sv.empty()) return {};
-		size_t idx = name_sv.find_first_of('/');
-		std::string_view pre, after;
-		if (idx == std::string::npos)
-			pre = name_sv;
-		else
+
+		const Transform* curr = this;
+
+		while (curr && !name_sv.empty())
 		{
-			pre = name_sv.substr(0, idx);
-			after = name_sv.substr(idx + 1);
-		}
-		for (const auto& ch : childlren)
-		{
-			if (const auto obj = ch->object.lock(); obj && obj->name == pre)
+			size_t idx = name_sv.find_first_of('/');
+			std::string_view pre, after;
+			bool has_child = false;
+			if (idx == std::string::npos)
+				pre = name_sv;
+			else
 			{
-				if (after.empty())
-					return ch;
-				else
-					return ch->find_child(after);
+				pre = name_sv.substr(0, idx);
+				after = name_sv.substr(idx + 1);
+				has_child = true;
+			}
+			for (const auto& ch : curr->childlren)
+			{
+				if (const auto obj = ch->object.lock(); obj && obj->name == pre)
+				{
+					if (!has_child)
+						return ch;
+					else
+					{
+						curr = ch.get();
+						name_sv = after;
+					}
+					break;
+				}
 			}
 		}
 		return {};

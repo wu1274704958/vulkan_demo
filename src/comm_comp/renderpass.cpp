@@ -20,7 +20,7 @@ namespace vkd
 
 	void DefRenderPass::pre_draw(vk::CommandBuffer& cmd)
 	{
-		cmd.beginRenderPass(renderpass_begin(),cnt);
+		renderpass_begin(cmd,cnt);
 	}
 
 	void DefRenderPass::after_draw(vk::CommandBuffer& cmd)
@@ -38,9 +38,9 @@ namespace vkd
 		return renderpass();
 	}
 
-	vk::RenderPassBeginInfo DefRenderPass::renderpass_begin()
+	void DefRenderPass::renderpass_begin(vk::CommandBuffer& cmd,vk::SubpassContents cnt)
 	{
-		return render_pass_begin_info();
+		cmd.beginRenderPass(render_pass_begin_info(), cnt);
 	}
 
 	void DefRenderPass::recreate_swapchain()
@@ -87,7 +87,7 @@ namespace vkd
 		auto dev = device();
 		const auto& depthAttachment = depth_attachment();
 		std::vector<vk::AttachmentDescription> attachment = {
-			vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),format,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eDontCare,
+			vk::AttachmentDescription(vk::AttachmentDescriptionFlags(),format,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 			vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,vk::ImageLayout::eUndefined,vk::ImageLayout::eDepthStencilReadOnlyOptimal)
 		};
 
@@ -108,12 +108,12 @@ namespace vkd
 		return renderPass;
 	}
 
-	vk::RenderPassBeginInfo OnlyDepthRenderPass::renderpass_begin()
+	void OnlyDepthRenderPass::renderpass_begin(vk::CommandBuffer& cmd, vk::SubpassContents cnt)
 	{
 		const auto& surfaceExtent = surface_extent();
 		auto clearVals = vk::ClearValue(vk::ClearDepthStencilValue(1.0f,0));
 		vk::RenderPassBeginInfo info(m_render_pass,framebuffer, vk::Rect2D({ 0,0 }, surfaceExtent), clearVals);
-		return info;
+		cmd.beginRenderPass(info,cnt);
 	}
 
 	vk::ImageLayout OnlyDepthRenderPass::get_image_layout() const

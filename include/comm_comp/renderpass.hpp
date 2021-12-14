@@ -17,7 +17,7 @@ namespace vkd
 		std::shared_ptr<Component> clone() const override;
 	protected:
 		virtual vk::RenderPass create_renderpass();
-		virtual vk::RenderPassBeginInfo renderpass_begin();
+		virtual void renderpass_begin(vk::CommandBuffer& cmd,vk::SubpassContents cnt);
 		vk::RenderPass m_render_pass;
 		vk::SubpassContents cnt;
 	};
@@ -34,7 +34,7 @@ namespace vkd
 	protected:
 		void create_depth_attachment();
 		vk::RenderPass create_renderpass() override;
-		vk::RenderPassBeginInfo renderpass_begin() override;
+		void renderpass_begin(vk::CommandBuffer& cmd, vk::SubpassContents cnt) override;
 		vk::Framebuffer framebuffer;
 		vk::Image depth;
 		vk::ImageView view;
