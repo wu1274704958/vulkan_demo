@@ -44,4 +44,22 @@ namespace vkd
 		uint16_t set;
 		uint32_t imgBinding, samplerBinding;
 	};
+
+	struct RenderOrigin : public vkd::Component
+	{
+		bool on_init() override;
+		int64_t idx() override { return std::numeric_limits<int64_t>::max() - 1; }
+		void draw(vk::CommandBuffer& cmd) override;
+		void on_clean_up() override {}
+		std::shared_ptr<Component> clone() const override;
+	protected:
+		std::weak_ptr<vkd::MeshInterface> mesh;
+	};
+
+	struct ScreenQuad: public Mesh<glm::vec4,uint16_t>
+	{
+		ScreenQuad();
+		static std::shared_ptr<std::vector<glm::vec4>> Vertices;
+		static std::shared_ptr<std::vector<uint16_t>> Indices;
+	};
 }

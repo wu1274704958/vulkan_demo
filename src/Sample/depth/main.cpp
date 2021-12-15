@@ -35,44 +35,9 @@ std::vector<Vertex> Vertices = {
 	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f} , {1.0f,1.0f}},
 	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f} ,{0.0f,1.0f}}
 };
-std::vector<Vertex> DepVertices = {
-	{{-1.f, -1.f}, {1.0f, 0.0f, 0.0f},{0.0f,0.0f}},
-	{{ 1.f, -1.f}, {0.0f, 1.0f, 0.0f}, {1.0f,0.0f}},
-	{{ 1.f,  1.f}, {0.0f, 0.0f, 1.0f} , {1.0f,1.0f}},
-	{{-1.f,  1.f}, {1.0f, 1.0f, 1.0f} ,{0.0f,1.0f}}
-};
+
 std::vector<uint16_t> Indices = {
 	 0, 2, 1, 0, 3, 2
-};
-
-struct ScreenDraw : public vkd::Component
-{
-	bool on_init() override
-	{
-		auto obj = object.lock();
-		mesh = obj->get_comp_dyn<vkd::MeshInterface>();
-		return !mesh.expired();
-	}
-	int64_t idx() override { return std::numeric_limits<int64_t>::max() - 1; }
-	void draw(vk::CommandBuffer& cmd) override
-	{
-		auto obj = object.lock();
-		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
-		auto mesh_ptr = mesh.lock();
-
-		if (pipeline && mesh_ptr)
-		{
-			cmd.drawIndexed(mesh_ptr->index_count(), 1, 0, 0, 0);
-		}
-	}
-	void on_clean_up() override{}
-	std::shared_ptr<Component> clone() const override
-	{
-		return std::make_shared<ScreenDraw>(*this);
-	}
-protected:
-	std::weak_ptr<vkd::MeshInterface> mesh;
-	
 };
 
 class Quad : public vkd::SampleRender {
@@ -113,9 +78,9 @@ private:
 
 		auto quad1 = std::make_shared<vkd::Object>("Quad2");
 		auto quad1_t = quad1->add_comp<vkd::Transform>();
-		quad1->add_comp<vkd::Mesh<Vertex, uint16_t>>(std::make_shared<std::vector<Vertex>>(DepVertices), indices,"quad2");
+		quad1->add_comp<vkd::ScreenQuad>();
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
-		quad1->add_comp<ScreenDraw>();
+		quad1->add_comp<vkd::RenderOrigin>();
 		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
 		quad1->add_comp<vkd::DepthSampler>(depthComp);
 		quad1->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));

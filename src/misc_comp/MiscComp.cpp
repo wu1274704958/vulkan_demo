@@ -1,3 +1,4 @@
+#include <comm_comp/mesh.hpp>
 #include <comm_comp/renderpass.hpp>
 #include <misc_comp/MiscComp.hpp>
 
@@ -104,4 +105,40 @@ namespace vkd
 	{
 		return std::make_shared<DepthSampler>(*this);
 	}
+
+
+	bool RenderOrigin::on_init()
+	{
+		auto obj = object.lock();
+		mesh = obj->get_comp_dyn<vkd::MeshInterface>();
+		return !mesh.expired();
+	}
+	void RenderOrigin::draw(vk::CommandBuffer& cmd)
+	{
+		auto obj = object.lock();
+		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
+		auto mesh_ptr = mesh.lock();
+
+		if (pipeline && mesh_ptr)
+		{
+			cmd.drawIndexed(mesh_ptr->index_count(), 1, 0, 0, 0);
+		}
+	}
+
+	std::shared_ptr<Component> RenderOrigin::clone() const
+	{
+		return std::make_shared<RenderOrigin>(*this);
+	}
+
+	ScreenQuad::ScreenQuad() : Mesh(Vertices, Indices, "_SYS_ScreenQuadVertices") {}
+
+	std::shared_ptr<std::vector<glm::vec4>> ScreenQuad::Vertices = std::make_shared<std::vector<glm::vec4>>(std::vector<glm::vec4>{
+		{-1.f, -1.f, 0.0f, 0.0f},
+		{ 1.f, -1.f,1.0f,0.0f },
+		{ 1.f,  1.f,1.0f,1.0f },
+		{ -1.f,  1.f,0.0f,1.0f }}
+	);
+
+	std::shared_ptr<std::vector<uint16_t>> ScreenQuad::Indices = std::make_shared<std::vector<uint16_t>>(std::vector<uint16_t>{
+		0, 2, 1, 0, 3, 2});
 }
