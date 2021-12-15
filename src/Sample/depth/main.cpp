@@ -75,74 +75,6 @@ protected:
 	
 };
 
-struct DepthSampler : public vkd::Component
-{
-	DepthSampler(std::weak_ptr<vkd::OnlyDepthRenderPass> rp,uint16_t set = 0, uint32_t imgBinding = 1,uint32_t samplerBinding = 2)
-		: rp(rp),
-		set(set),
-		imgBinding(imgBinding),
-		samplerBinding(samplerBinding)
-	{
-	}
-	DepthSampler(const DepthSampler& oth)
-	{
-		this->imgBinding = oth.imgBinding;
-		this->samplerBinding = oth.samplerBinding;
-		this->set = oth.set;
-		this->rp = oth.rp;
-	}
-
-	void awake() override
-	{
-		not_draw = true;
-		vk::SamplerCreateInfo info({},vk::Filter::eLinear, vk::Filter::eLinear, vk::
-		SamplerMipmapMode::eLinear,vk::SamplerAddressMode::eClampToEdge
-		, vk::SamplerAddressMode::eClampToEdge, vk::SamplerAddressMode::eClampToEdge);
-		sampler = device().createSampler(info);
-	}
-	void update_descriptor() const
-	{
-		auto obj = object.lock();
-		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
-		auto renderPass = rp.lock();
-		if (pipeline && renderPass)
-		{
-			const auto& descStes = pipeline->get_descriptorsets();
-			vk::DescriptorImageInfo image_info({}, renderPass->get_image_view(),vk::ImageLayout::eDepthStencilReadOnlyOptimal);
-			vk::DescriptorImageInfo sampler_info(sampler);
-			std::array<vk::WriteDescriptorSet,2> descriptor_sets = {
-				vk::WriteDescriptorSet(descStes[set], imgBinding, 0, vk::DescriptorType::eSampledImage, image_info, {}),
-				vk::WriteDescriptorSet(descStes[set], samplerBinding, 0, vk::DescriptorType::eSampler, sampler_info, {})
-			};
-			device().updateDescriptorSets(descriptor_sets, {});
-		}
-	}
-	bool on_init() override
-	{
-		update_descriptor();
-		return true;
-	}
-	void recreate_swapchain() override
-	{
-		update_descriptor();
-	}
-	void on_clean_up() override
-	{
-		device().destroySampler(sampler);
-	}
-	std::shared_ptr<Component> clone() const override
-	{
-		return std::make_shared<DepthSampler>(*this);
-	}
-	
-protected:
-	std::weak_ptr<vkd::OnlyDepthRenderPass> rp;
-	vk::Sampler sampler;
-	uint16_t set;
-	uint32_t imgBinding,samplerBinding;
-};
-
-
 class Quad : public vkd::SampleRender {
 public:
 	Quad(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers, sample_name) {}
@@ -185,7 +117,7 @@ private:
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
 		quad1->add_comp<ScreenDraw>();
 		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
-		quad1->add_comp<DepthSampler>(depthComp);
+		quad1->add_comp<vkd::DepthSampler>(depthComp);
 		quad1->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
 		
 		real_scene.lock()->add_child(quad1_t.lock());
