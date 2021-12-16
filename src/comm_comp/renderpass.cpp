@@ -77,7 +77,7 @@ namespace vkd
 
 		vk::ImageViewCreateInfo viewInfo({}, depth, vk::ImageViewType::e2D, format, {},
 			vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
-		view = dev.createImageView(viewInfo);
+		*view = dev.createImageView(viewInfo);
 	}
 
 	vk::RenderPass OnlyDepthRenderPass::create_renderpass()
@@ -101,7 +101,7 @@ namespace vkd
 		vk::RenderPassCreateInfo info(vk::RenderPassCreateFlags(), attachment, subpassDesc);
 		auto renderPass = dev.createRenderPass(info);
 
-		vk::FramebufferCreateInfo fbinfo({}, renderPass, view, surfaceExtent.width, surfaceExtent.height, 1);
+		vk::FramebufferCreateInfo fbinfo({}, renderPass, *view, surfaceExtent.width, surfaceExtent.height, 1);
 	
 		framebuffer = dev.createFramebuffer(fbinfo);
 
@@ -121,7 +121,7 @@ namespace vkd
 		return depth_attachment().imgLayout;
 	}
 
-	vk::ImageView OnlyDepthRenderPass::get_image_view() const
+	std::weak_ptr<vk::ImageView> OnlyDepthRenderPass::get_image_view() const
 	{
 		return view;
 	}
@@ -130,7 +130,7 @@ namespace vkd
 	{
 		auto dev = device();
 		if(mem)dev.freeMemory(mem);
-		if(view)dev.destroyImageView(view);
+		if(*view)dev.destroyImageView(*view);
 		if(depth)dev.destroyImage(depth);
 		if(framebuffer)dev.destroyFramebuffer(framebuffer);
 		if(m_render_pass)dev.destroyRenderPass(m_render_pass);
@@ -144,6 +144,12 @@ namespace vkd
 	OnlyDepthRenderPass::OnlyDepthRenderPass(const OnlyDepthRenderPass& oth)
 	{
 	}
+
+	void OnlyDepthRenderPass::on_destroy()
+	{
+		view.reset();
+	}
+
 
 
 }

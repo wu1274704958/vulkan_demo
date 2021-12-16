@@ -28,7 +28,7 @@ namespace vkd
 
 	struct DepthSampler : public vkd::Component
 	{
-		DepthSampler(std::weak_ptr<vkd::OnlyDepthRenderPass> rp, uint16_t set = 0, uint32_t imgBinding = 1, uint32_t samplerBinding = 2);
+		DepthSampler(std::weak_ptr<vk::ImageView> imgView, uint16_t set = 0, uint32_t imgBinding = 1, uint32_t samplerBinding = 2);
 		DepthSampler(const DepthSampler& oth);
 
 		void awake() override;
@@ -39,7 +39,7 @@ namespace vkd
 		std::shared_ptr<Component> clone() const override;
 
 	protected:
-		std::weak_ptr<vkd::OnlyDepthRenderPass> rp;
+		std::weak_ptr< vk::ImageView > imgView;
 		vk::Sampler sampler;
 		uint16_t set;
 		uint32_t imgBinding, samplerBinding;

@@ -45,8 +45,8 @@ namespace vkd
 		return std::make_shared<Texture>(*this);
 	}
 
-	DepthSampler::DepthSampler(std::weak_ptr<vkd::OnlyDepthRenderPass> rp, uint16_t set, uint32_t imgBinding, uint32_t samplerBinding)
-		: rp(rp),
+	DepthSampler::DepthSampler(std::weak_ptr<vk::ImageView> imgView, uint16_t set, uint32_t imgBinding, uint32_t samplerBinding)
+		: imgView(imgView),
 		set(set),
 		imgBinding(imgBinding),
 		samplerBinding(samplerBinding)
@@ -58,7 +58,7 @@ namespace vkd
 		this->imgBinding = oth.imgBinding;
 		this->samplerBinding = oth.samplerBinding;
 		this->set = oth.set;
-		this->rp = oth.rp;
+		this->imgView = oth.imgView;
 	}
 
 	void DepthSampler::awake()
@@ -74,11 +74,11 @@ namespace vkd
 	{
 		auto obj = object.lock();
 		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
-		auto renderPass = rp.lock();
-		if (pipeline && renderPass)
+		auto img_view = imgView.lock();
+		if (pipeline && img_view)
 		{
 			const auto& descStes = pipeline->get_descriptorsets();
-			vk::DescriptorImageInfo image_info({}, renderPass->get_image_view(), vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+			vk::DescriptorImageInfo image_info({}, *img_view, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
 			vk::DescriptorImageInfo sampler_info(sampler);
 			std::array<vk::WriteDescriptorSet, 2> descriptor_sets = {
 				vk::WriteDescriptorSet(descStes[set], imgBinding, 0, vk::DescriptorType::eSampledImage, image_info, {}),

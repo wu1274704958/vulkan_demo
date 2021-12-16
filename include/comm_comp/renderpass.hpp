@@ -24,21 +24,22 @@ namespace vkd
 
 	struct OnlyDepthRenderPass : public DefRenderPass
 	{
-		OnlyDepthRenderPass() : DefRenderPass(){}
+		OnlyDepthRenderPass() : DefRenderPass(),view(std::make_shared<vk::ImageView>())  {}
 		OnlyDepthRenderPass(const OnlyDepthRenderPass&);
 		void awake() override;
 		void clean_up_pipeline() override;
-		vk::ImageView get_image_view() const;
+		std::weak_ptr<vk::ImageView> get_image_view() const;
 		vk::ImageLayout get_image_layout() const;
 		std::shared_ptr<Component> clone() const override;
+		void on_destroy() override;
 	protected:
 		void create_depth_attachment();
 		vk::RenderPass create_renderpass() override;
 		void renderpass_begin(vk::CommandBuffer& cmd, vk::SubpassContents cnt) override;
 		vk::Framebuffer framebuffer;
 		vk::Image depth;
-		vk::ImageView view;
 		vk::DeviceMemory mem;
+		std::shared_ptr<vk::ImageView> view;
 	};
 }
 

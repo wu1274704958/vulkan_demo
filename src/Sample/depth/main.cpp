@@ -82,7 +82,7 @@ private:
 		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/depth.frag");
 		quad1->add_comp<vkd::RenderOrigin>();
 		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
-		quad1->add_comp<vkd::DepthSampler>(depthComp);
+		quad1->add_comp<vkd::DepthSampler>(depthComp.lock()->get_image_view());
 		quad1->add_comp<vkd::ViewportScissor>(glm::vec4(0.f, 0.f, 1.f, 1.f), glm::vec4(0.5f, 0.f, 0.5f, 1.0f));
 		
 		real_scene.lock()->add_child(quad1_t.lock());
