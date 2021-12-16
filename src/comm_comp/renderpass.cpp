@@ -254,10 +254,11 @@ namespace vkd
 	{
 		const auto& surfaceExtent = surface_extent();
 		auto format = depthstencil_format();
+		auto colorFormat = surface_format();
 		auto dev = device();
 		const auto& depthAttachment = depth_attachment();
 		std::vector<vk::AttachmentDescription> attachment = {
-			vk::AttachmentDescription({},format,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
+			vk::AttachmentDescription({},colorFormat,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 			vk::AttachmentLoadOp::eDontCare,vk::AttachmentStoreOp::eDontCare,vk::ImageLayout::eUndefined,vk::ImageLayout::eShaderReadOnlyOptimal),
 			vk::AttachmentDescription({},format,vk::SampleCountFlagBits::e1,vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,
 			vk::AttachmentLoadOp::eClear,vk::AttachmentStoreOp::eStore,vk::ImageLayout::eUndefined,vk::ImageLayout::eDepthStencilReadOnlyOptimal)

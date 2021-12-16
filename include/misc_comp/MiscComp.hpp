@@ -62,4 +62,23 @@ namespace vkd
 		static std::shared_ptr<std::vector<glm::vec4>> Vertices;
 		static std::shared_ptr<std::vector<uint16_t>> Indices;
 	};
+
+	struct ImageComp : public vkd::Component
+	{
+		ImageComp(std::weak_ptr<vk::ImageView> imgView, vk::ImageLayout layout = vk::ImageLayout::eShaderReadOnlyOptimal, uint16_t set = 0, uint32_t imgBinding = 1);
+		ImageComp(const ImageComp& oth) = default;
+
+		void awake() override;
+		void update_descriptor() const;
+		bool on_init() override;
+		void recreate_swapchain() override;
+		void on_clean_up() override;
+		std::shared_ptr<Component> clone() const override;
+
+	protected:
+		std::weak_ptr< vk::ImageView > imgView;
+		uint16_t set;
+		uint32_t imgBinding, samplerBinding;
+		vk::ImageLayout layout;
+	};
 }

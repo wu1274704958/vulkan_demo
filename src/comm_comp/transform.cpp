@@ -333,10 +333,12 @@ namespace vkd {
 				after = name_sv.substr(idx + 1);
 				has_child = true;
 			}
+			bool find = false;
 			for (const auto& ch : curr->childlren)
 			{
 				if (const auto obj = ch->object.lock(); obj && obj->name == pre)
 				{
+					find = true;
 					if (!has_child)
 						return ch;
 					else
@@ -347,6 +349,7 @@ namespace vkd {
 					break;
 				}
 			}
+			if(!find) return {};
 		}
 		return {};
 	}

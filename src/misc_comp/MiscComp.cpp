@@ -141,4 +141,51 @@ namespace vkd
 
 	std::shared_ptr<std::vector<uint16_t>> ScreenQuad::Indices = std::make_shared<std::vector<uint16_t>>(std::vector<uint16_t>{
 		0, 2, 1, 0, 3, 2});
+
+	ImageComp::ImageComp(std::weak_ptr<vk::ImageView> imgView,vk::ImageLayout layout, uint16_t set, uint32_t imgBinding)
+		: imgView(imgView), set(set),imgBinding(imgBinding),layout(layout)
+	{
+		
+	}
+	
+	std::shared_ptr<Component> ImageComp::clone() const
+	{
+		return std::make_shared<ImageComp>(*this);
+	}
+
+	void ImageComp::awake()
+	{
+		not_draw = true;
+	}
+
+	void ImageComp::update_descriptor() const
+	{
+		auto obj = object.lock();
+		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
+		auto img_view = imgView.lock();
+		if (pipeline && img_view)
+		{
+			const auto& descStes = pipeline->get_descriptorsets();
+			vk::DescriptorImageInfo image_info({}, *img_view, layout);
+			std::array<vk::WriteDescriptorSet, 1> descriptor_sets = {
+				vk::WriteDescriptorSet(descStes[set], imgBinding, 0, vk::DescriptorType::eSampledImage, image_info, {}),
+			};
+			device().updateDescriptorSets(descriptor_sets, {});
+		}
+	}
+
+	bool ImageComp::on_init()
+	{
+		update_descriptor();
+		return true;
+	}
+	void ImageComp::recreate_swapchain()
+	{
+		update_descriptor();
+	}
+	void ImageComp::on_clean_up()
+	{
+	}
+
+
 }
