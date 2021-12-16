@@ -18,6 +18,8 @@ namespace vkd
 	protected:
 		virtual vk::RenderPass create_renderpass();
 		virtual void renderpass_begin(vk::CommandBuffer& cmd,vk::SubpassContents cnt);
+		void create_depth_attachment(vk::Image& img, vk::DeviceMemory& mem, vk::ImageView& view);
+		void create_color_attachment(vk::Image& img, vk::DeviceMemory& mem, vk::ImageView& view);
 		vk::RenderPass m_render_pass;
 		vk::SubpassContents cnt;
 	};
@@ -40,6 +42,29 @@ namespace vkd
 		vk::Image depth;
 		vk::DeviceMemory mem;
 		std::shared_ptr<vk::ImageView> view;
+
+	};
+
+	struct OfflineRenderPass : public DefRenderPass
+	{
+		OfflineRenderPass();
+		OfflineRenderPass(const OfflineRenderPass&);
+		void awake() override;
+		void clean_up_pipeline() override;
+		std::weak_ptr<vk::ImageView> get_depth_image_view() const;
+		std::weak_ptr<vk::ImageView> get_image_view() const;
+		std::shared_ptr<Component> clone() const override;
+		void on_destroy() override;
+	protected:
+		void create_depth_attachment();
+		void create_color_attachment();
+		vk::RenderPass create_renderpass() override;
+		void renderpass_begin(vk::CommandBuffer& cmd, vk::SubpassContents cnt) override;
+
+		vk::Framebuffer framebuffer;
+		vk::Image depthImage,image;
+		vk::DeviceMemory depthMem,mem;
+		std::shared_ptr<vk::ImageView> depthView,view;
 
 	};
 }
