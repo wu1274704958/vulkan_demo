@@ -28,7 +28,7 @@ namespace vkd
 		OnlyDepthRenderPass(const OnlyDepthRenderPass&);
 		void awake() override;
 		void clean_up_pipeline() override;
-		std::weak_ptr<vk::ImageView> get_image_view() const;
+		std::weak_ptr<vk::ImageView> get_depth_image_view() const;
 		vk::ImageLayout get_image_layout() const;
 		std::shared_ptr<Component> clone() const override;
 		void on_destroy() override;
@@ -40,6 +40,7 @@ namespace vkd
 		vk::Image depth;
 		vk::DeviceMemory mem;
 		std::shared_ptr<vk::ImageView> view;
+
 	};
 }
 

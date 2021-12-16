@@ -121,7 +121,7 @@ namespace vkd
 		return depth_attachment().imgLayout;
 	}
 
-	std::weak_ptr<vk::ImageView> OnlyDepthRenderPass::get_image_view() const
+	std::weak_ptr<vk::ImageView> OnlyDepthRenderPass::get_depth_image_view() const
 	{
 		return view;
 	}
