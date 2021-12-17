@@ -58,7 +58,7 @@ private:
 		auto cam_obj = std::make_shared<vkd::Object>("Camera");
 		auto trans = cam_obj->add_comp<vkd::Transform>();
 		auto cam = cam_obj->add_comp<vkd::Showcase>();
-		trans.lock()->set_position(glm::vec3(0.f, 0.f, -12.0f));
+		trans.lock()->set_position(glm::vec3(0.f, 0.f, -1.0f));
 
 		main_scene.lock()->add_child(trans.lock());
 
@@ -100,11 +100,11 @@ private:
 
 	void prepare_instance()
 	{
-		int w = 10,h = 10,d = 10;
-		float space = 0.5f,size = 1.0f;
+		int w = 10,h = 10,d = 30;
+		float space = 1.2f,size = 1.0f;
 		float bx = -((w - 1) * size + (w - 1) * space) / 2.0f;
 		float by = -((h - 1) * size + (h - 1) * space) / 2.0f;
-		float bz = -((d - 1) * size + (d - 1) * 0.1f) / 2.0f;
+		float bz = -((d - 1) * size + (d - 1) * 0.6f) / 2.0f;
 
 		instanceData = std::make_shared<std::vector<glm::mat4>>();
 		for(int z = 0;z < d;++z)
@@ -114,6 +114,7 @@ private:
 				for (int x = 0; x < w; ++x)
 				{
 					glm::mat4 mat(1.0f);
+					mat = glm::scale(mat, glm::vec3(0.2f, 0.2f, 0.2f));
 					mat = glm::translate(mat,glm::vec3(bx,by,bz));
 					instanceData->push_back(mat);
 					bx += (size + space);

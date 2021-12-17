@@ -13,7 +13,8 @@ void main()
     vec2 Uv = uv;
     float a = texture(sampler2D(depthImg,samplerColorMap), Uv).x;
     vec3 color = texture(sampler2D(Img,samplerColorMap),Uv).xyz;
-    outColor = vec4( mix(color, _FogColor, a * a) ,1.0);
+    //step(0.6,a) * (a*a)
+    outColor = vec4( mix(color, _FogColor, smoothstep (0.6, 1.0, a )) ,1.0);
 }
 
 
