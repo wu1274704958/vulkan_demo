@@ -49,8 +49,7 @@ private:
 	{
 		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
 		indices = std::make_shared<std::vector<uint16_t>>(Indices);
-
-		prepare_instance();
+		
 	}
 	void initScene() override
 	{
@@ -62,51 +61,10 @@ private:
 
 		main_scene.lock()->add_child(trans.lock());
 
-		auto quad_t = createQuad();
-		main_scene.lock()->add_child(quad_t->get_comp<vkd::Transform>().lock());
+		gld::DefResMgr::instance()->load<gld::DataType::>()
+		
 	}
 
-	std::shared_ptr<vkd::Object> createQuad()
-	{
-		auto quad = std::make_shared<vkd::Object>("Quad");
-		auto quad_t = quad->add_comp<vkd::Transform>();
-		quad->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices,"quad");
-		quad->add_comp<vkd::PipelineComp>("shader_23/instance.vert", "shader_23/instance.frag", 1, std::unordered_set<uint32_t>{1}, std::vector<uint32_t>{3});
-		quad->add_comp<vkd::MeshInstance<glm::mat4>>(instanceData);
-		quad->add_comp<vkd::DefRenderInstance>();
-		quad->add_comp<vkd::Texture>("textures/texture.jpg");
-		return quad;
-	}
-
-	void prepare_instance()
-	{
-		int w = 10,h = 10,d = 30;
-		float space = 1.2f,size = 1.0f;
-		float bx = -((w - 1) * size + (w - 1) * space) / 2.0f;
-		float by = -((h - 1) * size + (h - 1) * space) / 2.0f;
-		float bz = -((d - 1) * size + (d - 1) * 0.6f) / 2.0f;
-
-		instanceData = std::make_shared<std::vector<glm::mat4>>();
-		for(int z = 0;z < d;++z)
-		{
-			for (int y = 0; y < h; ++y)
-			{
-				for (int x = 0; x < w; ++x)
-				{
-					glm::mat4 mat(1.0f);
-					mat = glm::scale(mat, glm::vec3(0.2f, 0.2f, 0.2f));
-					mat = glm::translate(mat,glm::vec3(bx,by,bz));
-					instanceData->push_back(mat);
-					bx += (size + space);
-				}
-				bx = -((w - 1) * size + (w - 1) * space) / 2.0f;
-				by += (size + space);
-			}
-			bx = -((w - 1) * size + (w - 1) * space) / 2.0f;
-			by = -((h - 1) * size + (h - 1) * space) / 2.0f;
-			bz += (size + space);
-		}
-	}
 	void onCleanUp() override
 	{
 		vkd::SampleRender::onCleanUp();
@@ -114,7 +72,6 @@ private:
 private:
 	std::shared_ptr<std::vector<Vertex>> vertices;
 	std::shared_ptr<std::vector<uint16_t>> indices;
-	std::shared_ptr<std::vector<glm::mat4>> instanceData;
 };
 
 #include <event/event.hpp>
