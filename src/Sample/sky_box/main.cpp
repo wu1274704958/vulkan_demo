@@ -142,17 +142,8 @@ private:
 int main()
 {
 
-	Json::Reader reader;
-	Json::Value v;
-	if(reader.parse("{\"a\":1,}",v))
-	{
-		Json::Value def = 0;
-		auto a = v.get("a",def);
-	}else
-	{
-		printf_s("%s\n",reader.getFormatedErrorMessages().c_str());
-	}
-
+	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
+	auto j = gld::DefResMgr::instance()->load<gld::ResType::json>("skybox/skybox.json");
 
 	return 0;
 	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));

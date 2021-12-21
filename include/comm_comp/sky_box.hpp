@@ -1,3 +1,5 @@
+#pragma once
+
 #include <core/object.hpp>
 #include <core/component.hpp>
 
