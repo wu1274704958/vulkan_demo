@@ -67,6 +67,8 @@ namespace gld::vkd {
 		vk::DeviceMemory mem;
 		vk::Format format;
 		vk::ImageTiling tiling;
+		uint32_t arrayLayers;
+		uint32_t mipLevels;
 		~VkdImage();
 	};
 

@@ -64,26 +64,6 @@ private:
 
 		auto quad_t = createQuad();
 		main_scene.lock()->add_child(quad_t->get_comp<vkd::Transform>().lock());
-
-		auto realSceneObj = main_scene_obj.lock()->clone();
-		auto real_scene = realSceneObj->get_comp<vkd::Scene>();
-		real_scene.lock()->rm_child(1);
-		addScene(realSceneObj);
-	
-		auto mscene = main_scene_obj.lock();
-		mscene->destroy_comp<vkd::DefRenderPass>();
-		auto depthComp = mscene->add_comp<vkd::OfflineRenderPass>();
-
-		auto quad1 = std::make_shared<vkd::Object>("Quad2");
-		auto quad1_t = quad1->add_comp<vkd::Transform>();
-		quad1->add_comp<vkd::ScreenQuad>();
-		quad1->add_comp<vkd::PipelineComp>("shader_23/depth.vert", "shader_23/fog.frag");
-		quad1->add_comp<vkd::RenderOrigin>();
-		//quad1->add_comp<vkd::Texture>("textures/texture.jpg");
-		quad1->add_comp<vkd::DepthSampler>(depthComp.lock()->get_depth_image_view());
-		quad1->add_comp<vkd::ImageComp>(depthComp.lock()->get_image_view(), vk::ImageLayout::eShaderReadOnlyOptimal,0,3);
-		
-		real_scene.lock()->add_child(quad1_t.lock());
 	}
 
 	std::shared_ptr<vkd::Object> createQuad()
@@ -141,13 +121,8 @@ private:
 #include <json/reader.h>
 int main()
 {
-
 	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
-	auto j = gld::DefResMgr::instance()->load<gld::ResType::json>("skybox/skybox.json");
-
-	return 0;
-	gld::DefResMgr::create_instance(std::make_tuple("../../../res"));
-	auto quad = new Quad(true, "Fog");
+	auto quad = new Quad(true, "SkyBox");
 	quad->init(800, 600);
 	quad->mainLoop();
 	gld::DefDataMgr::instance()->clear_all();

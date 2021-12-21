@@ -5,11 +5,12 @@
 
 namespace gld{
     enum class DataType{
-        SquareVertices,
+        SquareVertices = 5000,
         SquareIndices,
         PipelineSimple,
         VkBuffer,
-        VkImage
+        VkImage,
+        VkImageArray
     };
 
     namespace data_ck{
