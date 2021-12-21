@@ -45,7 +45,7 @@ namespace gld::vkd
 		if(Json::Value& v = conf["type"];v.isNull() || v.asInt() != static_cast<int>(DataType::VkImageArray))
 			return std::make_tuple(false, nullptr);
 		bool absolute = false;
-		if (Json::Value& v = conf["absolute"]; !v.isNull() || v.asBool())
+		if (Json::Value& v = conf["absolute"]; !v.isNull() && v.asBool())
 			absolute = true;
 		std::string_view parent = absolute ? "" : key;
 		if(!absolute && !wws::up_path<'/'>(parent))
@@ -69,12 +69,12 @@ namespace gld::vkd
 			std::string path;
 			if(absolute)
 			{
-				path = images.asString();
+				path = images[i].asString();
 			}else
 			{
 				path = std::string(parent);
 				path += '/';
-				path += images.asString();
+				path += images[i].asString();
 			}
 			std::shared_ptr<StbImage> img = gld::DefResMgr::instance()->load<ResType::image>(path, flag);
 			if (!img) return std::make_tuple(false, nullptr);
