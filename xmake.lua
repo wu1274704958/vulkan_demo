@@ -32,6 +32,7 @@ example("test_object")
 example("instance")
 example("depth")
 example("fog")
+example("cd_rom")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
