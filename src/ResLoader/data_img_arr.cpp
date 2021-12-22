@@ -47,7 +47,7 @@ namespace gld::vkd
 		bool absolute = false;
 		if (Json::Value& v = conf["absolute"]; !v.isNull() && v.asBool())
 			absolute = true;
-		std::string_view parent = absolute ? "" : key;
+		std::string parent = absolute ? "" : key;
 		if(!absolute && !wws::up_path<'/'>(parent))
 			return std::make_tuple(false, nullptr);
 		Json::Value& images = conf["images"];
@@ -60,7 +60,7 @@ namespace gld::vkd
 		auto imageSize = images.size();
 		vk::BufferImageCopy copy;
 		copy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-		copy.imageSubresource.layerCount = imageSize;
+		copy.imageSubresource.layerCount = 1;
 		copy.imageSubresource.mipLevel = 0;
 		std::optional<vk::Format> format;
 		for(int i = 0;i < imageSize;++i)
@@ -72,7 +72,7 @@ namespace gld::vkd
 				path = images[i].asString();
 			}else
 			{
-				path = std::string(parent);
+				path = parent;
 				path += '/';
 				path += images[i].asString();
 			}
@@ -96,13 +96,13 @@ namespace gld::vkd
 		}
 		
 		vk::Buffer tmpBuffer; vk::DeviceMemory tmpMem;
-		if (!createTempBuf(phyDev, dev, imageSize, (void*)imagesData.data(), tmpBuffer, tmpMem))
+		if (!createTempBuf(phyDev, dev, bufferSize, (void*)imagesData.data(), tmpBuffer, tmpMem))
 			return std::make_tuple(false, nullptr);
 
 		auto res = std::make_shared<VkdImage>();
 
 		if (!sundry::createImage(phyDev, dev, bufferCopyRegions[0].imageExtent.width, bufferCopyRegions[0].imageExtent.height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
-			res->image, res->mem, onCreateImage))
+			res->image, res->mem, onCreateImage,static_cast<uint32_t>(imageSize)))
 			return std::make_tuple(false, nullptr);
 
 		res->arrayLayers = imageSize;

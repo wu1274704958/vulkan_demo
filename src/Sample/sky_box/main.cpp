@@ -61,7 +61,7 @@ private:
 
 		main_scene.lock()->add_child(trans.lock());
 
-		auto skybox = gld::DefDataMgr::instance()->load<gld::DataType::VkImageArray>("skybox/skybox.json",0,
+		auto skybox = gld::DefDataMgr::instance()->load<gld::DataType::VkImageArray>("skybox/skybox.json",4,
 		physicalDevice,device,commandPool,graphicsQueue);
 		
 	}
