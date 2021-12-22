@@ -76,8 +76,16 @@ private:
 	{
 		vertices = std::make_shared<std::vector<Vertex>>(Vertices);
 		indices = std::make_shared<std::vector<uint16_t>>(Indices);
-		
+
+		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device,renderPass,surfaceExtent,"shader_23/skybox.vert", "shader_23/skybox.frag", 1, std::unordered_set<uint32_t>{},
+			std::vector<uint32_t>{},onCreatePipeline);
 	}
+
+	static void onCreatePipeline(vk::GraphicsPipelineCreateInfo& info)
+	{
+		const_cast<vk::PipelineRasterizationStateCreateInfo*>(info.pRasterizationState)->cullMode = vk::CullModeFlagBits::eFront;
+	}
+
 	void initScene() override
 	{
 		SampleRender::initScene();
@@ -103,6 +111,13 @@ private:
 	void onCleanUp() override
 	{
 		vkd::SampleRender::onCleanUp();
+	}
+
+	void onReCreateSwapChain() override
+	{
+		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent, "shader_23/skybox.vert", "shader_23/skybox.frag", 1, std::unordered_set<uint32_t>{},
+			std::vector<uint32_t>{}, onCreatePipeline);
+		SampleRender::onReCreateSwapChain();
 	}
 private:
 	std::shared_ptr<std::vector<Vertex>> vertices;
