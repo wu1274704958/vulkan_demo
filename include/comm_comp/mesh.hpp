@@ -1,3 +1,5 @@
+#pragma once
+
 #include <core/component.hpp>
 #include <vulkan/vulkan.hpp>
 #include <res_loader/data_mgr.hpp>

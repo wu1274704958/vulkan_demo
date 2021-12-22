@@ -64,16 +64,39 @@ namespace vkd
 	{
 		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), renderpass(), surface_extent(), "shader_23/skybox.vert", "shader_23/skybox.frag", 1, std::unordered_set<uint32_t>{},
 			std::vector<uint32_t>{}, onCreatePipeline);
-
+		not_draw = true;
 		auto obj = object.lock();
 		obj->add_comp<vkd::Mesh<Vertex, uint16_t>>(vertices, indices, "Sys_Skybox");
 		obj->add_comp<vkd::PipelineComp>("shader_23/skybox.vert", "shader_23/skybox.frag");
 		obj->add_comp<vkd::DefRender>();
-		obj->add_comp<vkd::TextureArray>("skybox/skybox.json");
+		obj->add_comp<vkd::TextureArray>(path);
 	}
 
-	static std::shared_ptr<std::vector<Vertex>> vertices = std::make_shared<std::vector<Vertex>>(Vertices);
-	static std::shared_ptr<std::vector<uint16_t>> indices = std::make_shared<std::vector<uint16_t>>(Indices);
+	SkyBox::SkyBox(std::string path) : path(path)
+	{
+		
+	}
+
+	std::shared_ptr<Component> SkyBox::clone() const
+	{
+		return std::make_shared<SkyBox>(*this);
+	}
+
+	void SkyBox::recreate_swapchain()
+	{
+		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), renderpass(), surface_extent(), "shader_23/skybox.vert", "shader_23/skybox.frag", 1, std::unordered_set<uint32_t>{},
+			std::vector<uint32_t>{}, onCreatePipeline);
+	}
+
+	void SkyBox::attach_scene(const std::weak_ptr<Scene>& scene)
+	{
+		
+	}
+
+
+
+	std::shared_ptr<std::vector<Vertex>> SkyBox::vertices = std::make_shared<std::vector<Vertex>>(Vertices);
+	std::shared_ptr<std::vector<uint16_t>> SkyBox::indices = std::make_shared<std::vector<uint16_t>>(Indices);
 
 
 
