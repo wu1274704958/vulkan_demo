@@ -1,0 +1,12 @@
+{
+        "type":5005,
+        "absolute":false,
+        "images":[
+                "top.jpg",
+                "left.jpg",
+                "front.jpg",
+                "right.jpg",
+                "back.jpg",
+                "bottom.jpg"
+        ]
+}

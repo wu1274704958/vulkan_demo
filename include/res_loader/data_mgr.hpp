@@ -109,12 +109,21 @@ private:
         static RealRetTy load(Args...);
     };
 
-    typedef DataMgr<
-        DataLoadPlugTy<DataType::SquareIndices,GenSquareIndices,float,float>,
-        DataLoadPlugTy<DataType::SquareVertices,GenSquareVertices>,
-        DataLoadPlugTy<DataType::PipelineSimple,vkd::LoadPipelineSimple,vk::Device,vk::RenderPass,const vk::Extent2D&,std::string,std::string,
-			uint32_t,std::unordered_set<uint32_t>,std::vector<uint32_t>,std::function<void(vk::GraphicsPipelineCreateInfo)>>,
-        DataLoadPlugTy<DataType::VkBuffer,vkd::CreateVkBuffer, std::string, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags>,
-		DataLoadPlugTy<DataType::VkImage, vkd::LoadVkImage, std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,std::function<void(vk::SamplerCreateInfo&)>>
-        > DefDataMgr;
+    
 } // namespace gld
+
+#include <data_img_arr.hpp>
+
+namespace gld
+{
+
+    typedef DataMgr<
+        DataLoadPlugTy<DataType::SquareIndices, GenSquareIndices, float, float>,
+        DataLoadPlugTy<DataType::SquareVertices, GenSquareVertices>,
+        DataLoadPlugTy<DataType::PipelineSimple, vkd::LoadPipelineSimple, vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string,
+        uint32_t, std::unordered_set<uint32_t>, std::vector<uint32_t>, std::function<void(vk::GraphicsPipelineCreateInfo)>>,
+        DataLoadPlugTy<DataType::VkBuffer, vkd::CreateVkBuffer, std::string, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags, vk::MemoryPropertyFlags>,
+        DataLoadPlugTy<DataType::VkImage, vkd::LoadVkImage, std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>, std::function<void(vk::SamplerCreateInfo&)>>,
+        DataLoadPlugTy<DataType::VkImageArray, vkd::LoadVkImageArray, std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>, std::function<void(vk::SamplerCreateInfo&)>>
+        > DefDataMgr;
+}

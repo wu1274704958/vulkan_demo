@@ -299,10 +299,19 @@ namespace gld{
 		static RealRetTy load(FStream*, const std::string&, uint32_t flag = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	};
 
-	typedef ResourceMgr<ResMgrCxtTy,DefStream,PerfectUri,ResLoadPlugTy<ResType::text,LoadText>,
-	ResLoadPlugTy<ResType::image,LoadImage,int>,
-	ResLoadPlugTy<ResType::model,LoadScene,uint32_t>,
-	ResLoadPlugTy<ResType::spirv_with_meta,vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion,std::vector<uint32_t>>> DefResMgr;
+	
+}
+
+#include <res_loader/res_json.hpp>
+
+namespace gld
+{
+	typedef ResourceMgr<ResMgrCxtTy, DefStream, PerfectUri, ResLoadPlugTy<ResType::text, LoadText>,
+		ResLoadPlugTy<ResType::image, LoadImage, int>,
+		ResLoadPlugTy<ResType::model, LoadScene, uint32_t>,
+		ResLoadPlugTy<ResType::spirv_with_meta, vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion, std::vector<uint32_t>>,
+		ResLoadPlugTy<ResType::json, ::vkd::LoadJson,bool>
+	> DefResMgr;
 }
 
 #ifdef PF_ANDROID

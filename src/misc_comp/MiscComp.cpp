@@ -45,6 +45,47 @@ namespace vkd
 		return std::make_shared<Texture>(*this);
 	}
 
+	void TextureArray::update_descriptor() const
+	{
+		auto obj = object.lock();
+		auto pipeline = obj->get_comp_raw<vkd::PipelineComp>();
+		if (pipeline)
+		{
+			const auto& descStes = pipeline->get_descriptorsets();
+			vk::DescriptorImageInfo image_info(img->sample, img->view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vk::WriteDescriptorSet write_descriptor_set(descStes[set], binding, 0, vk::DescriptorType::eCombinedImageSampler, image_info, {});
+			device().updateDescriptorSets(write_descriptor_set, {});
+		}
+	}
+
+	bool TextureArray::on_init()
+	{
+		update_descriptor();
+		return true;
+	}
+
+	void TextureArray::recreate_swapchain()
+	{
+		update_descriptor();
+	}
+
+	void TextureArray::on_clean_up()
+	{
+		img.reset();
+	}
+
+	void TextureArray::awake()
+	{
+		img = gld::DefDataMgr::instance()->load<gld::DataType::VkImageArray>(path, 4, physical_dev(), device(),
+			command_pool(), graphics_queue());
+		not_draw = false;
+	}
+
+	std::shared_ptr<Component> TextureArray::clone() const
+	{
+		return std::make_shared<TextureArray>(*this);
+	}
+
 	DepthSampler::DepthSampler(std::weak_ptr<vk::ImageView> imgView, uint16_t set, uint32_t imgBinding, uint32_t samplerBinding)
 		: imgView(imgView),
 		set(set),

@@ -115,7 +115,8 @@ namespace gld::vkd {
 		if (!sundry::createImage(phyDev, dev, img->width, img->height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
 		                         res->image, res->mem,onCreateImage))
 			return std::make_tuple(false, nullptr);
-
+		res->arrayLayers = 1;
+		res->mipLevels = 1;
 		res->device = dev;
 		res->format = *format;
 		res->tiling = vk::ImageTiling::eOptimal;

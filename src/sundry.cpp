@@ -66,15 +66,16 @@ namespace sundry
 	}
 
 	bool createImage(vk::PhysicalDevice phyDev, vk::Device dev, uint32_t w, uint32_t h, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
-		vk::MemoryPropertyFlagBits memProp, vk::Image& img, vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage)
+		vk::MemoryPropertyFlagBits memProp, vk::Image& img, vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage,uint32_t arrayLayers,
+		vk::ImageType ty)
 	{
 		vk::ImageCreateInfo info;
 		info.extent = vk::Extent3D(w, h, 1);
 		info.format = format;
 		info.tiling = tiling;
-		info.imageType = vk::ImageType::e2D;
+		info.imageType = ty;
 		info.usage = usage;
-		info.arrayLayers = 1;
+		info.arrayLayers = arrayLayers;
 		info.mipLevels = 1;
 		info.initialLayout = vk::ImageLayout::eUndefined;
 		info.sharingMode = vk::SharingMode::eExclusive;

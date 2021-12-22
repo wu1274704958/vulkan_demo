@@ -100,6 +100,19 @@ namespace wws{
 			adjust_down<T>(vec, 0, i,comp);
 		}
 	}
+
+	template<char Ap = '/'>
+	bool up_path(std::string_view& res)
+	{
+		if (res.empty()) return false;
+		while (res.back() != Ap)
+		{
+			if (res.empty()) return false;
+			res = res.substr(0,res.size() - 1);
+		}
+		res = res.substr(0, res.size() - 1);
+		return true;
+	}
 }
 
 namespace vkd {

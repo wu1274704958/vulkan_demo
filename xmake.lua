@@ -1,9 +1,9 @@
 add_rules("mode.debug", "mode.release")
 add_repositories("local-repo deps")
-add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp","spirv-tools","glslang","spirv-cross")
+add_requires("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp","spirv-tools","glslang","spirv-cross","jsoncpp")
 set_languages("c17", "c++20")
 add_includedirs("include/","include/res_loader/") 
-add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp","spirv-tools","glslang","spirv-cross")
+add_packages("stb","glm","vulkan-hpp","vulkan-loader","glfw","mini-test","assimp","spirv-tools","glslang","spirv-cross","jsoncpp")
 after_build(function()
     os.cp("$(curdir)/res","$(buildir)")
     print("after_build $(buildir) $(curdir)")
@@ -33,6 +33,7 @@ example("instance")
 example("depth")
 example("fog")
 example("cd_rom")
+example("sky_box")
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

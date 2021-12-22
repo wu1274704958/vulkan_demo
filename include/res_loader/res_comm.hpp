@@ -11,11 +11,12 @@ namespace gld
     
     enum class ResType{
         text = 0x0,
-        glsl,
+        json,
         image,
         model,
         font,
         spirv_with_meta,
+
     };
 
 #ifdef PF_ANDROID
