@@ -67,9 +67,9 @@ namespace sundry
 
 	bool createImage(vk::PhysicalDevice phyDev, vk::Device dev, uint32_t w, uint32_t h, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
 		vk::MemoryPropertyFlagBits memProp, vk::Image& img, vk::DeviceMemory& mem, std::function<void(vk::ImageCreateInfo&)> onCreateImage,uint32_t arrayLayers,
-		vk::ImageType ty)
+		vk::ImageType ty, vk::ImageCreateFlagBits craete_flag_bits)
 	{
-		vk::ImageCreateInfo info;
+		vk::ImageCreateInfo info(craete_flag_bits);
 		info.extent = vk::Extent3D(w, h, 1);
 		info.format = format;
 		info.tiling = tiling;

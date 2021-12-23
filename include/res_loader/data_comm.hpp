@@ -10,7 +10,8 @@ namespace gld{
         PipelineSimple,
         VkBuffer,
         VkImage,
-        VkImageArray
+        VkImageArray,
+        VkImageCube
     };
 
     namespace data_ck{
