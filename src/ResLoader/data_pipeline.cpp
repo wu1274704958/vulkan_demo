@@ -6,7 +6,7 @@
 namespace gld::vkd {
 
 	template <>
-	std::string LoadPipelineSimpleTy::key_from_args(vk::Device, vk::RenderPass rp, const vk::Extent2D&, const std::string& v, const std::string& f, uint32_t maxPoolSize, const std::unordered_set<uint32_t>& ins_set, const std::vector<uint32_t>& vertextInputBindingSplit, std::function<void(vk::GraphicsPipelineCreateInfo)> on)
+	std::string LoadPipelineSimpleTy::key_from_args(vk::Device, vk::RenderPass rp, const vk::Extent2D&, const std::string& v, const std::string& f, uint32_t maxPoolSize, const std::unordered_set<uint32_t>& ins_set, const std::vector<uint32_t>& vertextInputBindingSplit, std::function<void(vk::GraphicsPipelineCreateInfo&)> on)
 	{
 		sundry::VkObjToId<vk::RenderPass> cover(rp);
 		return sundry::format_tup('#', v, f,cover.id);
@@ -99,7 +99,7 @@ namespace gld::vkd {
 
 	template<size_t N>
 	LoadPipelineSimpleTy::RealRetTy 
-		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo)>& on,
+		realCreatePipeline(vk::Device dev, vk::RenderPass renderPass, const vk::Extent2D& extent,const std::unordered_set<uint32_t>& is_instance_set, std::function<void(vk::GraphicsPipelineCreateInfo&)>& on,
 		const std::array<std::shared_ptr<SpirvRes>,N>& shaders, uint32_t maxPoolSize)
 	{
 		std::vector<std::vector<vk::DescriptorSetLayoutBinding>> bindings;
@@ -172,7 +172,7 @@ namespace gld::vkd {
 	LoadPipelineSimpleTy::RealRetTy
 	LoadPipelineSimpleTy::load(vk::Device dev, vk::RenderPass r, const vk::Extent2D& extent, std::string vert_s, std::string frag_s, 
 		uint32_t maxPoolSize, std::unordered_set<uint32_t> ins_set, std::vector<uint32_t> vertextInputBindingSplit, 
-		std::function<void(vk::GraphicsPipelineCreateInfo)> on)
+		std::function<void(vk::GraphicsPipelineCreateInfo&)> on)
 	{
 		auto vert = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(vert_s, glslang::EShTargetClientVersion::EShTargetVulkan_1_2,vertextInputBindingSplit);
 		auto frag = gld::DefResMgr::instance()->load<gld::ResType::spirv_with_meta>(frag_s);

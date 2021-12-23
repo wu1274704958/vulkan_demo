@@ -4,6 +4,7 @@
 #include <comm_comp/scene.hpp>
 #include <res_loader/data_vk_res.hpp>
 #include <comm_comp/mesh.hpp>
+#include <common.hpp>
 
 namespace vkd
 {
@@ -17,7 +18,7 @@ namespace vkd
 		void draw(vk::CommandBuffer& cmd) override;
 		void late_update(float delta) override;
 		void recreate_swapchain() override;
-		int64_t idx() override{ return 100000; }
+		int64_t idx() override{ return static_cast<int64_t>(CompIdx::Render); }
 		std::shared_ptr<Component> clone() const override;
 	protected:
 		void update_vp();

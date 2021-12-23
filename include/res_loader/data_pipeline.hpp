@@ -47,17 +47,17 @@ namespace gld::vkd {
 			uint32_t maxPoolSize = 1,
 			const std::unordered_set<uint32_t>& ins_set = {},
 			const std::vector<uint32_t>& vertextInputBindingSplit = {},
-			std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
+			std::function<void(vk::GraphicsPipelineCreateInfo&)> on = {});
 		static RealRetTy load(vk::Device, vk::RenderPass, const vk::Extent2D&,std::string, std::string,
 			uint32_t maxPoolSize = 1, 
 			std::unordered_set<uint32_t> ins_set = {},
 			std::vector<uint32_t> vertextInputBindingSplit = {},
-			std::function<void(vk::GraphicsPipelineCreateInfo)> on = {});
+			std::function<void(vk::GraphicsPipelineCreateInfo&)> on = {});
 	};
 
 	using LoadPipelineSimpleTy = LoadPipelineSimple<vk::Device, vk::RenderPass, const vk::Extent2D&, std::string, std::string,
 		uint32_t,
 		std::unordered_set<uint32_t>,
 		std::vector<uint32_t>,
-		std::function<void(vk::GraphicsPipelineCreateInfo)>>;
+		std::function<void(vk::GraphicsPipelineCreateInfo&)>>;
 }

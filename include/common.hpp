@@ -129,4 +129,15 @@ namespace vkd {
 	{
 		virtual std::shared_ptr<T> clone() const = 0;
 	};
+
+	enum class CompIdx : int64_t
+	{
+		RenderPass = 0,
+		Pipeline = 20,
+		ViewportScissor = 40,
+		Mesh = 50,
+		MeshInstance = 60,
+		Render = 100000,
+		Transform = 9223372036854775807i64,
+	};
 }

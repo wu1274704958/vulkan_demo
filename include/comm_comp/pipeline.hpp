@@ -29,9 +29,7 @@ namespace vkd {
 		virtual void late_update(float delta) override{}
 		virtual void on_clean_up() override{}
 		virtual void clean_up_pipeline() override{}
-		virtual int64_t idx() override {
-			return 40;
-		}
+		int64_t idx() override { return static_cast<int64_t>(CompIdx::ViewportScissor); }
 		std::shared_ptr<Component> clone() const override;
 		glm::vec4 viewport_ratio,scissor_ratio;
 		vk::Viewport viewport;
@@ -61,9 +59,7 @@ namespace vkd {
 		virtual void late_update(float delta) override{}
 		virtual void on_clean_up() override;
 		virtual void clean_up_pipeline() override;
-		virtual int64_t idx() override {
-			return 20;
-		}
+		int64_t idx() override { return static_cast<int64_t>(CompIdx::Pipeline); }
 		const gld::vkd::PipelineData const* get_pipeline() const;
 		const std::vector<vk::DescriptorSet>& get_descriptorsets() const;
 		std::shared_ptr<Component> clone() const override;
