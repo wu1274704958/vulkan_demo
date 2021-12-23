@@ -2,11 +2,11 @@
         "type":5006,
         "absolute":false,
         "images":[
-                "bottom.jpg",
                 "left.jpg",
-                "top.jpg",
                 "right.jpg",
-                "back.jpg",
-                "front.jpg"
+                "bottom.jpg",
+                "top.jpg",
+                "front.jpg",
+                "back.jpg"
         ]
 }
