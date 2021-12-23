@@ -69,7 +69,7 @@ namespace shape {
 					}
 					return std::make_optional(std::make_tuple(*_v, *_c, *_u));
 				});
-				return std::make_shared<Shape<V, C, U>::ItrVCU>(itr);
+				return std::make_shared<std::remove_cvref_t<decltype(itr)>>(itr);
 			}
 	};
 
@@ -108,7 +108,7 @@ namespace shape {
 
 	//class Circle : public Shape<glm::vec2, glm::vec2, glm::vec2> {
 	//public:
-	//	int divin; // ϸ�̶ֳ�
+	//	int divin; // 细分程度
 	//	Circle(int d) : divin(d) {}
 	//	Circle() : divin(90){}
 

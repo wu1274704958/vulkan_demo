@@ -25,7 +25,7 @@
 int main()
 {
 	shape::Test test;
-	auto t = test.generate_vcu().get();
+	auto t = test.generate_vcu();
 	while (true)
 	{
 		auto d = t->next();
