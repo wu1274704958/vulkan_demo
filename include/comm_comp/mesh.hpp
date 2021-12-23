@@ -42,7 +42,7 @@ namespace vkd
 			cmd.bindVertexBuffers(0, vertexBuf->buffer, offset);
 			cmd.bindIndexBuffer(indexBuf->buffer, 0, *IndexType);
 		}
-		int64_t idx() override {return  50;}
+		int64_t idx() override { return static_cast<int64_t>(CompIdx::Mesh); }
 		void on_clean_up()
 		{
 			indexBuf.reset();
@@ -86,7 +86,7 @@ namespace vkd
 			instanceBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *instanceData);
 		}
 		bool on_init() override { return true; }
-		int64_t idx() override { return  60; }
+		int64_t idx() override { return static_cast<long long>(CompIdx::MeshInstance); }
 		void draw(vk::CommandBuffer& cmd) override
 		{
 			vk::DeviceSize offset = 0;

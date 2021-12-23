@@ -66,7 +66,9 @@ namespace vkd {
 	{
 		if (vertexPath.empty() || fragPath.empty()) return false;
 		const auto obj = object.lock();
-		vk::RenderPass render_pass = obj->get_comp_raw<Transform>()->get_scene().lock()->get_renderpass();
+		const auto trans = obj->get_comp_dyn<Transform>().lock();
+		if(!trans) return false;
+		vk::RenderPass render_pass = trans->get_scene().lock()->get_renderpass();
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), render_pass, surface_extent(),
 			vertexPath, fragPath,maxSetSize,instanceSet,bindingSplit);
 		if (!pipeline) return false;
