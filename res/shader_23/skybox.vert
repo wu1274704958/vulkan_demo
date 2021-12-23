@@ -21,9 +21,9 @@ layout(location = 1) out vec3 uv;
 
 void main()
 {
-    gl_Position = ((ubo.proj /** ubo.view*/) * model_mat.model) * vec4(inPosition, 1.0);
+    gl_Position = ((ubo.proj * ubo.view) * model_mat.model) * vec4(inPosition, 1.0);
 
-    gl_Position.z = gl_Position.w;
+    gl_Position.w = gl_Position.z;
 
     uv = inUv;
 }
