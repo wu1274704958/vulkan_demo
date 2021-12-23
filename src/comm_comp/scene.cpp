@@ -1,5 +1,7 @@
 #include <comm_comp/scene.hpp>
 #include <comm_comp/showcase.hpp>
+#include <comm_comp/sky_box.hpp>
+
 
 namespace vkd
 {
@@ -14,65 +16,59 @@ namespace vkd
 		return std::dynamic_pointer_cast<Scene>(shared_from_this());
 	}
 
-	std::shared_ptr<const Camera> Scene::get_camera() const
-	{
-		for(int64_t i = static_cast<int64_t>(cameras.size()) - 1;i >= 0;--i)
-		{
-			if(const auto& p = cameras[i].lock();p && p->is_enable())
-			{
-				return p;
-			}
-		}
-		return nullptr;
-	}
-
-	void Scene::add_camera(std::weak_ptr<Camera> cam)
-	{
-		//if(!has_camera(cam))
-		{
-			cameras.push_back(cam);
-		}
-	}
-
-	bool Scene::has_camera(std::weak_ptr<Camera> cam) const
-	{
-		return false;
-	}
-
-	bool Scene::rm_camera(std::shared_ptr<Camera> cam)
-	{
-		int64_t k = -1;
-		for (int64_t i = static_cast<int64_t>(cameras.size()) - 1; i >= 0; --i)
-		{
-			if (const auto& p = cameras[i].lock(); p && p == cam)
-			{
-				k = i;break;
-			}
-		}
-		if(k >= 0)
-		{
-			 cameras.erase(cameras.begin() + k);
-			 return true;
-		}
-		return false;
-	}
-
-	void Scene::set_renderpass(vk::RenderPass render_pass)
-	{
-		this->render_pass = render_pass;
-	}
-
-	vk::RenderPass Scene::get_renderpass() const
-	{
-		return render_pass;
-	}
-
 	std::shared_ptr<Component> Scene::clone() const
 	{
 		auto n = std::make_shared<Scene>(*this);
 		n->clone_childlren(*this);
 		return n;
 	}
+
+	std::shared_ptr<Component> Scene::iterat(std::vector<std::weak_ptr<Component>>& cs, std::function<bool(std::shared_ptr<Component>&)> f)
+	{
+		for (int i = cs.size() - 1; i >= 0; --i)
+		{
+			auto comp = cs[i].lock();
+			if (!comp || !(comp->get_object()))
+			{
+				cs.erase(cs.begin() + i);
+				continue;
+			}
+			auto trans = comp->get_object()->get_comp_dyn<Transform>().lock();
+			if (!trans || trans->get_scene().expired() || trans->get_scene().lock().get() != this)
+			{
+				cs.erase(cs.begin() + i);
+				continue;
+			}
+
+			if (comp->is_enable())
+			{
+				if(f(comp))
+					return comp;
+			}
+		}
+		return nullptr;
+	}
+
+
+	bool Scene::add_bind_comp(std::type_index idx, std::shared_ptr<Component> comp)
+	{
+		if (bind_comps.contains(idx))
+		{
+			auto& cs = bind_comps[idx];
+			auto find = iterat(cs,[&comp](std::shared_ptr<Component>& c)
+			{
+				return c.get() == comp.get();	
+			});
+			if(find) return false;
+			cs.push_back(comp);
+		}else
+		{
+			bind_comps.insert(std::make_pair(idx,std::vector<std::weak_ptr<Component>>()));
+			bind_comps[idx].push_back(comp);
+		}
+		return true;
+	}
+
 
 
 

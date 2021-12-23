@@ -59,7 +59,8 @@ namespace shape {
 				auto v = (this->vertex()).get();
 				auto c = (this->color()).get();
 				auto uv = (this->uv()).get();
-				ForwardIter<std::tuple<V, C, U>> itr(INT_MAX, [this, v, c, uv](long i, long count) {
+				
+				return std::make_shared<ForwardIter<std::tuple<V, C, U>>>(std::numeric_limits<int>::max(), [this, v, c, uv](long i, long count) {
 					auto _v = v->next();
 					auto _c = c->next();
 					auto _u = uv->next();
@@ -69,7 +70,6 @@ namespace shape {
 					}
 					return std::make_optional(std::make_tuple(*_v, *_c, *_u));
 				});
-				return std::make_shared<std::remove_cvref_t<decltype(itr)>>(itr);
 			}
 	};
 

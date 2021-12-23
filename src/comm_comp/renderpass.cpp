@@ -14,7 +14,7 @@ namespace vkd
 	{
 		const auto obj = object.lock();
 		auto scene = obj->get_comp_raw<Scene>();
-		scene->set_renderpass(m_render_pass);
+		scene->add_bind_comp<DefRenderPass>(std::dynamic_pointer_cast<DefRenderPass>(shared_from_this()));
 		return true;
 	}
 
