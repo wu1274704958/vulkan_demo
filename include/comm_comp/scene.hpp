@@ -36,7 +36,7 @@ namespace vkd
 			
 			return std::dynamic_pointer_cast<T>(iterat(cs, [](std::shared_ptr<Component>& c)
 			{
-				return true;
+				return c->is_enable();
 			}));
 		}
 		std::shared_ptr<Component> iterat(std::vector<std::weak_ptr<Component>>& cs,std::function<bool(std::shared_ptr<Component>&)> f);

@@ -40,11 +40,8 @@ namespace vkd
 				continue;
 			}
 
-			if (comp->is_enable())
-			{
-				if(f(comp))
-					return comp;
-			}
+			if(f(comp))
+				return comp;
 		}
 		return nullptr;
 	}
