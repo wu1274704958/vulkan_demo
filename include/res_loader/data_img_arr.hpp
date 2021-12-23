@@ -19,4 +19,16 @@ namespace gld::vkd {
 			std::function<void(vk::SamplerCreateInfo&)> onCreateSample = {});
 	};
 
+	template<typename ...Args>
+	struct LoadVkImageCube {
+		using RetTy = std::shared_ptr<VkdImage>;
+		using ArgsTy = std::tuple<Args...>;
+		using RealRetTy = std::tuple<bool, RetTy>;
+		static std::string key_from_args(const std::string&, int);
+		static std::string key_from_args(const std::string&, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)> onCreateImage = {},
+			std::function<void(vk::SamplerCreateInfo&)> onCreateSample = {});
+		static RealRetTy load(const std::string&, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)> onCreateImage = {},
+			std::function<void(vk::SamplerCreateInfo&)> onCreateSample = {});
+	};
+
 }

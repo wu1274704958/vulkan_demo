@@ -10,6 +10,8 @@ namespace gld::vkd
 {
 	using LoadVkImageArrayTy = LoadVkImageArray< std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
 		std::function<void(vk::SamplerCreateInfo&)>>;
+	using LoadVkImageCubeTy = LoadVkImageCube< std::string, int, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
+		std::function<void(vk::SamplerCreateInfo&)>>;
 
 	template<>
 	std::string LoadVkImageArrayTy::key_from_args(const std::string& key, int comp)
@@ -18,6 +20,18 @@ namespace gld::vkd
 	}
 	template<>
 	std::string LoadVkImageArrayTy::key_from_args(const std::string& key, int comp, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
+		std::function<void(vk::SamplerCreateInfo&)>)
+	{
+		return sundry::format_tup('#', key, comp);
+	}
+
+	template<>
+	std::string LoadVkImageCubeTy::key_from_args(const std::string& key, int comp)
+	{
+		return sundry::format_tup('#', key, comp);
+	}
+	template<>
+	std::string LoadVkImageCubeTy::key_from_args(const std::string& key, int comp, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
 		std::function<void(vk::SamplerCreateInfo&)>)
 	{
 		return sundry::format_tup('#', key, comp);
@@ -33,44 +47,29 @@ namespace gld::vkd
 		return true;
 	}
 
-	
-	template <>
-	LoadVkImageArrayTy::RealRetTy LoadVkImageArrayTy::load(const std::string& key, int flag, vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue,
-		std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample)
+	std::tuple<bool,std::shared_ptr<VkdImage>> realLoadImages(const Json::Value& images,bool absolute,const std::string& parent,int flag,
+		vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue,
+		std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample, vk::ImageViewType viewType,
+		vk::ImageCreateFlagBits craeteFlag = {})
 	{
-		std::shared_ptr<Json::Value> json = ::gld::DefResMgr::instance()->load<gld::ResType::json>(key);
-		if(!json) return std::make_tuple(false,nullptr);
-
-		Json::Value& conf = *json;
-		if(Json::Value& v = conf["type"];v.isNull() || v.asInt() != static_cast<int>(DataType::VkImageArray))
-			return std::make_tuple(false, nullptr);
-		bool absolute = false;
-		if (Json::Value& v = conf["absolute"]; !v.isNull() && v.asBool())
-			absolute = true;
-		std::string parent = absolute ? "" : key;
-		if(!absolute && !wws::up_path<'/'>(parent))
-			return std::make_tuple(false, nullptr);
-		Json::Value& images = conf["images"];
-		if(images.isNull() || !images.isArray() || images.size() == 0)
-			return std::make_tuple(false, nullptr);
-
 		std::vector<vk::BufferImageCopy> bufferCopyRegions;
 		std::vector<std::byte> imagesData;
-		vk::DeviceSize bufOffset = 0,bufferSize = 0;
+		vk::DeviceSize bufOffset = 0, bufferSize = 0;
 		auto imageSize = images.size();
 		vk::BufferImageCopy copy;
 		copy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 		copy.imageSubresource.layerCount = 1;
 		copy.imageSubresource.mipLevel = 0;
 		std::optional<vk::Format> format;
-		for(int i = 0;i < imageSize;++i)
+		for (int i = 0; i < imageSize; ++i)
 		{
-			if(images[i].isNull() || !images[i].isString())continue;
+			if (images[i].isNull() || !images[i].isString())continue;
 			std::string path;
-			if(absolute)
+			if (absolute)
 			{
 				path = images[i].asString();
-			}else
+			}
+			else
 			{
 				path = parent;
 				path += '/';
@@ -79,11 +78,11 @@ namespace gld::vkd
 			std::shared_ptr<StbImage> img = gld::DefResMgr::instance()->load<ResType::image>(path, flag);
 			if (!img) return std::make_tuple(false, nullptr);
 			if (flag == STBI_rgb_alpha) img->channel = 4;
-			if(!format)
-				format = wws::map_enum<wws::ValList<int, 1, 3, 4>,wws::ValList<vk::Format,vk::Format::eR8Unorm, vk::Format::eR8G8B8Unorm, vk::Format::eR8G8B8A8Unorm>>(img->channel);
+			if (!format)
+				format = wws::map_enum<wws::ValList<int, 1, 3, 4>, wws::ValList<vk::Format, vk::Format::eR8Unorm, vk::Format::eR8G8B8Unorm, vk::Format::eR8G8B8A8Unorm>>(img->channel);
 			if (!format) return std::make_tuple(false, nullptr);
-			
-			copy.setImageExtent(vk::Extent3D(img->width,img->height,1));
+
+			copy.setImageExtent(vk::Extent3D(img->width, img->height, 1));
 			copy.imageSubresource.baseArrayLayer = i;
 			copy.bufferOffset = bufOffset;
 			bufferCopyRegions.push_back(copy);
@@ -91,10 +90,10 @@ namespace gld::vkd
 			vk::DeviceSize size = img->width * img->height * img->channel;
 			bufferSize += size;
 			imagesData.resize(bufferSize);
-			memcpy(imagesData.data() + bufOffset,img->data,size);
+			memcpy(imagesData.data() + bufOffset, img->data, size);
 			bufOffset += size;
 		}
-		
+
 		vk::Buffer tmpBuffer; vk::DeviceMemory tmpMem;
 		if (!createTempBuf(phyDev, dev, bufferSize, (void*)imagesData.data(), tmpBuffer, tmpMem))
 			return std::make_tuple(false, nullptr);
@@ -102,7 +101,7 @@ namespace gld::vkd
 		auto res = std::make_shared<VkdImage>();
 
 		if (!sundry::createImage(phyDev, dev, bufferCopyRegions[0].imageExtent.width, bufferCopyRegions[0].imageExtent.height, *format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal,
-			res->image, res->mem, onCreateImage,static_cast<uint32_t>(imageSize)))
+			res->image, res->mem, onCreateImage, static_cast<uint32_t>(imageSize),vk::ImageType::e2D, craeteFlag))
 			return std::make_tuple(false, nullptr);
 
 		res->arrayLayers = imageSize;
@@ -133,7 +132,7 @@ namespace gld::vkd
 			res->sample = dev.createSampler(info);
 		}
 		{
-			vk::ImageViewCreateInfo info({}, res->image, vk::ImageViewType::e2DArray, *format, vk::ComponentMapping(), barrier.subresourceRange);
+			vk::ImageViewCreateInfo info({}, res->image, viewType, *format, vk::ComponentMapping(), barrier.subresourceRange);
 			res->view = dev.createImageView(info);
 		}
 
@@ -143,6 +142,53 @@ namespace gld::vkd
 		dev.destroyBuffer(tmpBuffer);
 
 		return std::make_tuple(true, res);
+	}
+	
+	template <>
+	LoadVkImageArrayTy::RealRetTy LoadVkImageArrayTy::load(const std::string& key, int flag, vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue,
+		std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample)
+	{
+		std::shared_ptr<Json::Value> json = ::gld::DefResMgr::instance()->load<gld::ResType::json>(key);
+		if(!json) return std::make_tuple(false,nullptr);
+
+		Json::Value& conf = *json;
+		if(Json::Value& v = conf["type"];v.isNull() || v.asInt() != static_cast<int>(DataType::VkImageArray))
+			return std::make_tuple(false, nullptr);
+		bool absolute = false;
+		if (Json::Value& v = conf["absolute"]; !v.isNull() && v.asBool())
+			absolute = true;
+		std::string parent = absolute ? "" : key;
+		if(!absolute && !wws::up_path<'/'>(parent))
+			return std::make_tuple(false, nullptr);
+		Json::Value& images = conf["images"];
+		if(images.isNull() || !images.isArray() || images.size() == 0)
+			return std::make_tuple(false, nullptr);
+
+		return realLoadImages(images,absolute,parent,flag,phyDev,dev,cmdPool,queue,onCreateImage,onCreateSample,vk::ImageViewType::e2DArray);
+	}
+
+	template <>
+	LoadVkImageCubeTy::RealRetTy LoadVkImageCubeTy::load(const std::string& key, int flag, vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue,
+		std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample)
+	{
+		std::shared_ptr<Json::Value> json = ::gld::DefResMgr::instance()->load<gld::ResType::json>(key);
+		if (!json) return std::make_tuple(false, nullptr);
+
+		Json::Value& conf = *json;
+		if (Json::Value& v = conf["type"]; v.isNull() || v.asInt() != static_cast<int>(DataType::VkImageCube))
+			return std::make_tuple(false, nullptr);
+		bool absolute = false;
+		if (Json::Value& v = conf["absolute"]; !v.isNull() && v.asBool())
+			absolute = true;
+		std::string parent = absolute ? "" : key;
+		if (!absolute && !wws::up_path<'/'>(parent))
+			return std::make_tuple(false, nullptr);
+		Json::Value& images = conf["images"];
+		if (images.isNull() || !images.isArray() || images.size() != 6)
+			return std::make_tuple(false, nullptr);
+
+		return realLoadImages(images, absolute, parent, flag, phyDev, dev, cmdPool, queue, onCreateImage, onCreateSample, 
+			vk::ImageViewType::eCube,vk::ImageCreateFlagBits::eCubeCompatible);
 	}
 
 }

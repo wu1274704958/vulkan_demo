@@ -14,7 +14,6 @@ layout(push_constant) uniform model { // 这里接住数据
 
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 2) in vec3 inUv;
 
 layout(location = 1) out vec3 uv;
 
@@ -25,5 +24,5 @@ void main()
 
     gl_Position.w = gl_Position.z;
 
-    uv = inUv;
+    uv = inPosition;
 }
