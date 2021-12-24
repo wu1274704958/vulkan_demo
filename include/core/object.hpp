@@ -45,6 +45,16 @@ namespace vkd {
 			return {};
 		}
 		bool add_comp(size_t id, std::shared_ptr<Component> comp);
+
+		template<typename T>
+		requires requires() {
+			requires std::is_base_of_v<Component, T>;
+		}
+		bool add_comp(std::shared_ptr<T> comp)
+		{
+			size_t ty_id = typeid(T).hash_code();
+			return add_comp(ty_id,comp);
+		}
 		
 		template<typename T>
 			requires requires()

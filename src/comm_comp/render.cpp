@@ -25,7 +25,7 @@ namespace vkd
 		{
 			if(auto scene = trans->get_scene().lock();scene)
 			{
-				if(auto cam = scene->get_camera();cam)
+				if(auto cam = scene->get_bind_comp<Camera>();cam)
 				{
 					if(cam->is_dirty())
 					{

@@ -1,4 +1,5 @@
 #include <comm_comp/pipeline.hpp>
+#include <comm_comp/renderpass.hpp>
 #include <comm_comp/scene.hpp>
 #include <core/object.hpp>
 #include <comm_comp/transform.hpp>
@@ -68,7 +69,9 @@ namespace vkd {
 		const auto obj = object.lock();
 		const auto trans = obj->get_comp_dyn<Transform>().lock();
 		if(!trans) return false;
-		vk::RenderPass render_pass = trans->get_scene().lock()->get_renderpass();
+		auto defRp = trans->get_scene().lock()->get_bind_comp<DefRenderPass>();
+		if(!defRp) return false;
+		vk::RenderPass render_pass = defRp->getRenderPass();
 		pipeline = gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device(), render_pass, surface_extent(),
 			vertexPath, fragPath,maxSetSize,instanceSet,bindingSplit);
 		if (!pipeline) return false;

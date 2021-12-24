@@ -89,7 +89,8 @@ namespace vkd
 
 	void SkyBox::attach_scene(const std::weak_ptr<Scene>& scene)
 	{
-		
+		if(const auto ptr = scene.lock();ptr)
+			ptr->add_bind_comp<SkyBox>(std::dynamic_pointer_cast<SkyBox>(shared_from_this()));
 	}
 
 
