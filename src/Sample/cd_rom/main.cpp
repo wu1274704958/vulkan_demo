@@ -21,18 +21,20 @@
 #include <event/event.hpp>
 
 #include <sample/shape.hpp>
+#include <ranges>
 
 int main()
 {
-	shape::Test test;
-	auto t = test.generate_vcu();
-	while (true)
-	{
-		auto d = t->next();
-		if (!d) { break; }
-		auto [a, b, c] = d.value();
-		printf("a: %d, b: %d, c: %c", a, b, c);
-	}
+	shape::Circle c(180);
+	auto t = c.generate_vcu();
+	auto v = t->vector();
+	std::ranges::for_each(v, [](auto d) {
+		auto [a, b, c] = d;
+		printf("v: { %f, %f }, c: { %f, %f, %f }, uv: { %f, %f } \r\n",
+			a.x, a.y,
+			b.x, b.y, b.z,
+			c.x, c.y);
+	});
 	return 0;
 }
 

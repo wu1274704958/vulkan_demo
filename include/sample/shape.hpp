@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 #include <functional>
+#include <iterator>
+#include <memory>
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -21,13 +23,24 @@ namespace shape {
 	public:
 		using Opt = std::optional<Item>;
 		virtual Opt next() = 0;
+		virtual std::vector<Item> vector() {
+			std::vector<Item> v;
+			while (true)
+			{
+				auto d = this->next();
+				if (!d) { break; }
+				v.push_back(d.value());
+			}
+			return v;
+		}
+
 	};
 
 	template<typename Item>
 	class ForwardIter : public Iter<Item> {
 	public:
 		int count;
-		int current;
+		int current = 0;
 	private:
 		using R = ForwardIter<Item>::Opt;
 		std::function<R (int, int)> apply;
@@ -56,11 +69,10 @@ namespace shape {
 			virtual std::shared_ptr < ItrU > uv() = 0;
 
 			virtual std::shared_ptr < ItrVCU > generate_vcu() {
-				auto v = (this->vertex()).get();
-				auto c = (this->color()).get();
-				auto uv = (this->uv()).get();
-				
-				return std::make_shared<ForwardIter<std::tuple<V, C, U>>>(std::numeric_limits<int>::max(), [this, v, c, uv](long i, long count) {
+				auto v = (this->vertex());
+				auto c = (this->color());
+				auto uv = (this->uv());
+				return std::make_shared<ForwardIter<std::tuple<V, C, U>>>(INT_MAX, [this, v, c, uv](long i, long count) {
 					auto _v = v->next();
 					auto _c = c->next();
 					auto _u = uv->next();
@@ -73,71 +85,39 @@ namespace shape {
 			}
 	};
 
-	//template<
-	//	typename V, typename C, typename U
-	//>
-	//class vcu_itr :public Iter<std::tuple<V, C, U>> {
-	//	
-	//	public:
-	//		Shape<V, C, U>* sp;
-	//		std::tuple<V, C, U> v;
-	//	public:
-	//		vcu_itr(Shape<V,C,U>* s): sp(s){}
 
-	//		vcu_itr::Opt next() override {
-	//			auto v = (sp->vertex()).get()->next();
-	//			auto c = (sp->color()).get()->next();
-	//			auto uv = (sp->uv()).get()->next();
-	//			if (!v || !c || !uv) {
-	//				return std::nullopt;
-	//			}
-	//			return std::make_optional(std::make_tuple(*v, *c, *uv));
-	//		}
-	//};
 
-	
 
-	class Test : public Shape<int, int, int> {
-		public:
-			virtual std::shared_ptr < ItrV > vertex() override;
-			virtual std::shared_ptr < ItrC > color() override;
-			virtual std::shared_ptr < ItrU > uv() override;
+	class Circle : public Shape<glm::vec2, glm::vec3, glm::vec2> {
+	public:
+		int divin; // 细分度
+		Circle(int d) : divin(d) {}
+		Circle() : divin(90){}
+
+	public:
+		virtual std::shared_ptr < ItrV > vertex() override {
+			return std::make_shared<ForwardIter<glm::vec2>>(this->divin+1, [](int i, int d) {
+				if (i == 0)
+				{
+					return std::optional<glm::vec2>({ 0., 0. });
+				}
+				auto x = cosf(2. * PI * ((float)(i - 1) / (d-1)));
+				auto y = sinf(2. * PI * ((float)(i - 1) / (d-1)));
+				return std::optional<glm::vec2>({x,y});
+			});
+		}
+		virtual std::shared_ptr < ItrC > color() override {
+			return std::make_shared<ForwardIter<glm::vec3>>(this->divin+1, [](int i, int d) {
+				return std::optional<glm::vec3>({ 0.,0.,0. });
+			});
+		}
+		virtual std::shared_ptr < ItrU > uv() override {
+			return std::make_shared<ForwardIter<glm::vec2>>(this->divin+1, [](int i, int d) {
+				auto x = i == 0? 0. : cosf(2 * PI * ((float)(i - 1) / (d - 1)));
+				auto y = i == 0? 0. : sinf(2 * PI * ((float)(i - 1) / (d - 1)));
+				return std::optional<glm::vec2>({ (x + 1) / 2, (y + 1) / 2 });
+			});
+		}
+
 	};
-	
-	
-
-	//class Circle : public Shape<glm::vec2, glm::vec2, glm::vec2> {
-	//public:
-	//	int divin; // 细分程度
-	//	Circle(int d) : divin(d) {}
-	//	Circle() : divin(90){}
-
-	//public:
-	//	virtual ItrV vertex() override;
-	//	virtual ItrC color() override;
-	//	virtual ItrU uv() override;
-
-	//protected:
-	//	class itrv : public Iter<glm::vec2> {
-	//	private:
-	//		int divin;
-	//		int i;
-	//	public:
-	//		itrv(Circle& c): divin(c.divin){}
-	//		virtual itrv::Opt next() override;
-	//	};
-	//};
-
-	//Circle::itrv::Opt Circle::itrv::next() {
-	//	if (i > divin) return std::nullopt;
-	//	auto x = cosf(2 * PI * (i / divin));
-	//	auto y = sinf(2 * PI * (i / divin));
-	//	++i;
-	//	return std::make_optional(glm::vec2{ x, y });
-	//}
-
-	//Circle::ItrV Circle::vertex() {
-	//	
-	//}
-	
 }
