@@ -1,6 +1,8 @@
 #include <comm_comp/mesh.hpp>
 #include <comm_comp/renderpass.hpp>
+#include <comm_comp/scene.hpp>
 #include <misc_comp/MiscComp.hpp>
+#include <comm_comp/sky_box.hpp>
 
 namespace vkd
 {
@@ -22,6 +24,17 @@ namespace vkd
 		update_descriptor();
 		return true;
 	}
+
+	void Texture::set_binding(uint32_t v)
+	{
+		binding = v;
+	}
+
+	void Texture::set_set_index(uint32_t v)
+	{
+		set = v;
+	}
+
 
 	void Texture::recreate_swapchain()
 	{
@@ -214,6 +227,80 @@ namespace vkd
 	void ImageComp::on_clean_up()
 	{
 	}
+
+	SkyBoxSampler::SkyBoxSampler(uint32_t binding, uint32_t set) : binding(binding),set(set)
+	{
+		
+	}
+
+	SkyBoxSampler::SkyBoxSampler(const SkyBoxSampler& oth)
+	{
+		this->binding = oth.binding;
+		this->set = oth.set;
+	}
+
+	std::shared_ptr<Component> SkyBoxSampler::clone() const
+	{
+		return std::make_shared<SkyBoxSampler>(*this);
+	}
+
+	void SkyBoxSampler::awake()
+	{
+		not_draw = true;
+	}
+
+	bool SkyBoxSampler::on_init()
+	{
+		bind_cube();
+		return true;
+	}
+
+	void SkyBoxSampler::bind_cube()
+	{
+		const auto obj = object.lock();
+		if (auto trans = obj->get_comp_raw<Transform>();trans && !(trans->get_scene().expired()))
+		{
+			auto scene = trans->get_scene().lock();
+			auto box = scene->get_bind_comp<SkyBox>();
+			if(!box)
+			{
+				skybox.reset();
+				obj->destroy_comp<TextureCube>();
+			}else
+			{
+				if(skybox.expired())
+					real_bind_cube(box);
+				else
+				{
+					auto old = skybox.lock();
+					if(old.get() != box.get())
+					{
+						real_bind_cube(box);
+					}
+				}
+			}
+		}
+	}
+
+	void SkyBoxSampler::real_bind_cube(std::shared_ptr<SkyBox> box)
+	{
+		if(auto c = box->get_object()->get_comp<TextureCube>().lock();c)
+		{
+			skybox = box;
+			auto obj = get_object();
+			obj->destroy_comp<TextureCube>();
+			auto tc = std::dynamic_pointer_cast<TextureCube>(c->clone());
+			tc->set_binding(binding);
+			tc->set_set_index(set);
+			obj->add_comp<TextureCube>(tc);
+		}
+	}
+
+	void SkyBoxSampler::late_update(float delta)
+	{
+		bind_cube();
+	}
+
 
 
 }
