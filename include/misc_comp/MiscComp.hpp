@@ -107,6 +107,7 @@ namespace vkd
 		SkyBoxSampler(const SkyBoxSampler&);
 		void awake() override;
 		bool on_init() override;
+		int64_t idx() override;
 		std::shared_ptr<Component> clone() const override;
 		void on_clean_up() override{}
 		void bind_cube();

@@ -3,7 +3,7 @@
 #include <comm_comp/scene.hpp>
 #include <misc_comp/MiscComp.hpp>
 #include <comm_comp/sky_box.hpp>
-
+#include <common.hpp>
 namespace vkd
 {
 	void Texture::update_descriptor() const
@@ -247,6 +247,7 @@ namespace vkd
 	void SkyBoxSampler::awake()
 	{
 		not_draw = true;
+		this->ever_tick = true;
 	}
 
 	bool SkyBoxSampler::on_init()
@@ -300,6 +301,12 @@ namespace vkd
 	{
 		bind_cube();
 	}
+
+	int64_t SkyBoxSampler::idx()
+	{
+		return static_cast<int64_t>(CompIdx::Transform) - 1;
+	}
+
 
 
 
