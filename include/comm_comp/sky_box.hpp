@@ -18,7 +18,7 @@ namespace vkd
 		bool on_init() override {return true;} 
 		void on_clean_up() override {}
 		void draw(vk::CommandBuffer& cmd) override{};
-		int64_t idx() override{ return static_cast<int64_t>(CompIdx::Pipeline) - 1; }
+		int64_t idx() const override{ return static_cast<int64_t>(CompIdx::Pipeline) - 1; }
 
 		static std::shared_ptr<std::vector<Vertex>> vertices;
 		static std::shared_ptr<std::vector<uint16_t>> indices;

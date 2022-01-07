@@ -27,7 +27,7 @@ namespace vkd {
 		void attach_scene(const std::weak_ptr<Scene>& scene) override;
 		void detach_scene() override;
 		void on_destroy() override;
-		int64_t idx() override { return static_cast<int64_t>(CompIdx::Transform); }
+		int64_t idx() const override { return static_cast<int64_t>(CompIdx::Transform); }
 		
 		const glm::vec3& get_position()const;
 		const glm::vec3& get_rotation()const;

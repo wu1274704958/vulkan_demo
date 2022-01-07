@@ -65,7 +65,7 @@ namespace vkd
 	struct RenderOrigin : public vkd::Component
 	{
 		bool on_init() override;
-		int64_t idx() override { return std::numeric_limits<int64_t>::max() - 1; }
+		int64_t idx() const  override { return std::numeric_limits<int64_t>::max() - 1; }
 		void draw(vk::CommandBuffer& cmd) override;
 		void on_clean_up() override {}
 		std::shared_ptr<Component> clone() const override;
@@ -107,7 +107,7 @@ namespace vkd
 		SkyBoxSampler(const SkyBoxSampler&);
 		void awake() override;
 		bool on_init() override;
-		int64_t idx() override;
+		int64_t idx()  const  override;
 		std::shared_ptr<Component> clone() const override;
 		void on_clean_up() override{}
 		void bind_cube();

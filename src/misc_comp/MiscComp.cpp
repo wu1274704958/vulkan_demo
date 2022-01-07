@@ -294,6 +294,8 @@ namespace vkd
 			tc->set_binding(binding);
 			tc->set_set_index(set);
 			obj->add_comp<TextureCube>(tc);
+			if(!tc->initialized())
+				tc->on_init();
 		}
 	}
 
@@ -302,7 +304,7 @@ namespace vkd
 		bind_cube();
 	}
 
-	int64_t SkyBoxSampler::idx()
+	int64_t SkyBoxSampler::idx() const
 	{
 		return static_cast<int64_t>(CompIdx::Transform) - 1;
 	}

@@ -14,6 +14,16 @@ namespace vkd{
 		this->not_draw = oth.not_draw;
 	}
 
+
+	bool Component::is_enable() { return enable; }
+	void Component::set_enable(bool v) { enable = v; v ? on_enable() : on_disable(); }
+	bool Component::is_ever_tick() { return ever_tick; }
+	void Component::set_ever_tick(bool v) { ever_tick = v; }
+	int64_t Component::idx() const { return 10000; }
+	bool Component::initialized() const {return is_init;}
+	Component::~Component() = default;
+	std::shared_ptr<Object> Component::get_object() const { return object.lock(); }
+
 	vk::Instance Component::instance()
 	{
 		if(SampleRender::self_instance) return SampleRender::self_instance->instance;
