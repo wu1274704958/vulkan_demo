@@ -54,7 +54,7 @@ private:
 		heart->add_comp<vkd::PipelineComp>("shader_23/mirror.vert", "shader_23/mirror.frag");
 		heart->add_comp<vkd::Mesh<Vertex,uint16_t>>(vertices,indices,"Heart");
 		//在“心”上添加 天空盒采样器 组件
-		heart->add_comp<vkd::SkyBoxSampler>(1,0);
+		heart->add_comp<vkd::SkyBoxSampler>(1,0);//binding,描述符集合index
 		heart->add_comp<vkd::DefRender>();
 
 		main_scene.lock()->add_child(heart_trans.lock());
