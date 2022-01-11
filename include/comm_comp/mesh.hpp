@@ -42,7 +42,7 @@ namespace vkd
 			cmd.bindVertexBuffers(0, vertexBuf->buffer, offset);
 			cmd.bindIndexBuffer(indexBuf->buffer, 0, *IndexType);
 		}
-		int64_t idx() override { return static_cast<int64_t>(CompIdx::Mesh); }
+		int64_t idx() const  override { return static_cast<int64_t>(CompIdx::Mesh); }
 		void on_clean_up()
 		{
 			indexBuf.reset();

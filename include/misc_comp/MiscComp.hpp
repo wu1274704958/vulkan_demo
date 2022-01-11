@@ -18,6 +18,8 @@ namespace vkd
 		void awake() override;
 		std::shared_ptr<Component> clone() const override;
 		virtual void load_image();
+		void set_binding(uint32_t v);
+		void set_set_index(uint32_t v);
 	protected:
 		std::shared_ptr<gld::vkd::VkdImage> img;
 		std::string path;
@@ -63,7 +65,7 @@ namespace vkd
 	struct RenderOrigin : public vkd::Component
 	{
 		bool on_init() override;
-		int64_t idx() override { return std::numeric_limits<int64_t>::max() - 1; }
+		int64_t idx() const  override { return std::numeric_limits<int64_t>::max() - 1; }
 		void draw(vk::CommandBuffer& cmd) override;
 		void on_clean_up() override {}
 		std::shared_ptr<Component> clone() const override;
@@ -95,5 +97,25 @@ namespace vkd
 		uint16_t set;
 		uint32_t imgBinding, samplerBinding;
 		vk::ImageLayout layout;
+	};
+
+	struct SkyBox;
+
+	struct SkyBoxSampler : public Component
+	{
+		SkyBoxSampler(uint32_t binding,uint32_t set);
+		SkyBoxSampler(const SkyBoxSampler&);
+		void awake() override;
+		bool on_init() override;
+		int64_t idx()  const  override;
+		std::shared_ptr<Component> clone() const override;
+		void on_clean_up() override{}
+		void bind_cube();
+		void late_update(float delta) override;
+		
+	protected:
+		void real_bind_cube(std::shared_ptr<SkyBox> skybox);
+		uint32_t binding,set;
+		std::weak_ptr<SkyBox> skybox;
 	};
 }

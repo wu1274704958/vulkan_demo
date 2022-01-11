@@ -12,14 +12,15 @@ namespace vkd {
 		Component();
 		Component(const Component&);
 		friend Object;
-		virtual bool is_enable(){return enable;}
-		virtual void set_enable(bool v) { enable = v; v ? on_enable() : on_disable();}
-		virtual bool is_ever_tick() { return ever_tick; }
-		virtual void set_ever_tick(bool v) { ever_tick = v; }
-		virtual int64_t idx() { return 10000; }
+		virtual bool is_enable();
+		virtual void set_enable(bool v) ;
+		virtual bool is_ever_tick() ;
+		virtual void set_ever_tick(bool v) ;
+		virtual int64_t idx() const;
+		bool initialized() const;
 
-		virtual ~Component() {}
-		std::shared_ptr<Object> get_object() { return object.lock(); }
+		virtual ~Component();
+		std::shared_ptr<Object> get_object() const;
 
 		static vk::Instance instance();
 		static vk::Device device();

@@ -18,7 +18,7 @@ namespace vkd
 		void draw(vk::CommandBuffer& cmd) override;
 		void late_update(float delta) override;
 		void recreate_swapchain() override;
-		int64_t idx() override{ return static_cast<int64_t>(CompIdx::Render); }
+		int64_t idx()const  override{ return static_cast<int64_t>(CompIdx::Render); }
 		std::shared_ptr<Component> clone() const override;
 	protected:
 		void update_vp();
