@@ -10,22 +10,20 @@
 #endif
 
 
-struct Vertex {
-	glm::vec2 pos;
-	glm::vec3 color;
-	glm::vec2 uv;
-};
+
 
 namespace shape {
-
 	template<typename Item>
 	class Iter {
 	public:
-		using Opt = std::optional<Item>;
-		virtual Opt next() = 0;
-		virtual std::vector<Item> vector() {
+		using R = std::optional<Item>;
+		virtual R next() = 0;
+
+		virtual bool end() = 0;
+
+		virtual std::vector<Item> vector(){
 			std::vector<Item> v;
-			while (true)
+			while (!end())
 			{
 				auto d = this->next();
 				if (!d) { break; }
@@ -42,7 +40,7 @@ namespace shape {
 		int count;
 		int current = 0;
 	private:
-		using R = ForwardIter<Item>::Opt;
+		using R = ForwardIter<Item>::R;
 		std::function<R (int, int)> apply;
 	public:
 		ForwardIter(int count, std::function<R (int, int)> callback)
@@ -85,14 +83,14 @@ namespace shape {
 			}
 	};
 
-
+	 
 
 
 	class Circle : public Shape<glm::vec2, glm::vec3, glm::vec2> {
 	public:
 		int divin; // 细分度
-		Circle(int d) : divin(d) {}
-		Circle() : divin(90){}
+		 Circle(int d) : divin(d) {}
+		 Circle() : divin(90){}
 
 	public:
 		virtual std::shared_ptr < ItrV > vertex() override {

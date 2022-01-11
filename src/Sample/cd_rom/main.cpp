@@ -23,18 +23,35 @@
 #include <sample/shape.hpp>
 #include <ranges>
 
+class CD_ROM : public vkd::SampleRender {
+public:
+	CD_ROM(bool enableValidationLayers, const char* sample_name) : vkd::SampleRender(enableValidationLayers, sample_name) {}
+	using Vertex = std::tuple<glm::vec2, glm::vec3, glm::vec2>;
+private:
+	std::shared_ptr<std::vector<Vertex>> vertices;
+	std::shared_ptr<std::vector<uint16_t>> indices;
+	
+	void onCreatePipeline(vk::GraphicsPipelineCreateInfo& info)
+	{
+		const_cast<vk::PipelineInputAssemblyStateCreateInfo*>(info.pInputAssemblyState)->topology = vk::PrimitiveTopology::eTriangleFan;
+	}
+
+	void onInit() override
+	{
+		shape::Circle circle(180);
+		auto vertex = circle.generate_vcu()->vector();
+
+
+		vertices = std::make_shared<std::vector<Vertex>>( vertex );
+
+		gld::DefDataMgr::instance()->load<gld::DataType::PipelineSimple>(device, renderPass, surfaceExtent,
+			"shader_23/cd_rom.vert", "shader_23/cd_rom.frag", onCreatePipeline);
+	}
+};
+
 int main()
 {
-	shape::Circle c(180);
-	auto t = c.generate_vcu();
-	auto v = t->vector();
-	std::ranges::for_each(v, [](auto d) {
-		auto [a, b, c] = d;
-		printf("v: { %f, %f }, c: { %f, %f, %f }, uv: { %f, %f } \r\n",
-			a.x, a.y,
-			b.x, b.y, b.z,
-			c.x, c.y);
-	});
+	
 	return 0;
 }
 
