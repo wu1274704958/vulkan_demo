@@ -88,7 +88,7 @@ private:
 	static void OnCreatePipeline(vk::GraphicsPipelineCreateInfo& info)
 	{
 		const_cast<vk::PipelineInputAssemblyStateCreateInfo*>(info.pInputAssemblyState)->topology = vk::PrimitiveTopology::eTriangleFan;
-		const_cast<vk::PipelineRasterizationStateCreateInfo*>(info.pRasterizationState)->cullMode = vk::CullModeFlagBits::eNone;
+		const_cast<vk::PipelineRasterizationStateCreateInfo*>(info.pRasterizationState)->cullMode = vk::CullModeFlagBits::eFront;
 	}
 
 private:
