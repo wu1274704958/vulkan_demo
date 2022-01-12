@@ -43,4 +43,13 @@ namespace vkd
 	protected:
 		std::weak_ptr<MeshInstanceInterface> meshInstance;
 	};
+
+	struct RenderNoIndex : public DefRender
+	{
+		RenderNoIndex() {}
+		RenderNoIndex(const RenderNoIndex&);
+		void draw(vk::CommandBuffer& cmd) override;
+		std::shared_ptr<Component> clone() const override;
+	protected:
+	};
 }

@@ -111,4 +111,43 @@ namespace vkd
 		std::shared_ptr<std::vector<I>> instanceData;
 		std::shared_ptr<gld::vkd::VkdBuffer> instanceBuf;
 	};
+
+	template<typename VT>
+	struct MeshNoIndex : public MeshInterface
+	{
+		MeshNoIndex(std::shared_ptr<std::vector<VT>> vertices, std::string name) : vertices(vertices)
+		{
+			if (vertices->empty()) return;
+			vertexBuf = gld::DefDataMgr::instance()->load<gld::DataType::VkBuffer>(name, physical_dev(), device(), sizeof(VT) * vertices->size(),
+				vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal);
+			
+			if (!vertexBuf->has_data())
+				vertexBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *vertices);
+		}
+		void awake() override
+		{}
+		bool on_init() override { return true; }
+		void draw(vk::CommandBuffer& cmd) override
+		{
+			vk::DeviceSize offset = 0;
+			cmd.bindVertexBuffers(0, vertexBuf->buffer, offset);
+		}
+		int64_t idx() const  override { return static_cast<int64_t>(CompIdx::Mesh); }
+		void on_clean_up()
+		{
+			vertexBuf.reset();
+			vertices.reset();
+		}
+		size_t index_count() const override
+		{
+			return vertices->size();
+		}
+		std::shared_ptr<Component> clone() const override
+		{
+			return std::make_shared<MeshNoIndex<VT>>(*this);
+		}
+	protected:
+		std::shared_ptr<std::vector<VT>> vertices;
+		std::shared_ptr<gld::vkd::VkdBuffer> vertexBuf;
+	};
 }

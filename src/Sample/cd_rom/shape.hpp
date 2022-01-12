@@ -18,20 +18,6 @@ namespace shape {
 	public:
 		using R = std::optional<Item>;
 		virtual R next() = 0;
-
-		virtual bool end() = 0;
-
-		virtual std::vector<Item> vector(){
-			std::vector<Item> v;
-			while (!end())
-			{
-				auto d = this->next();
-				if (!d) { break; }
-				v.push_back(d.value());
-			}
-			return v;
-		}
-
 	};
 
 	template<typename Item>
@@ -106,7 +92,7 @@ namespace shape {
 		}
 		virtual std::shared_ptr < ItrC > color() override {
 			return std::make_shared<ForwardIter<glm::vec3>>(this->divin+1, [](int i, int d) {
-				return std::optional<glm::vec3>({ 0.,0.,0. });
+				return std::optional<glm::vec3>({ 0.,0.,-1. });
 			});
 		}
 		virtual std::shared_ptr < ItrU > uv() override {

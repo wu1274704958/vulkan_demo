@@ -137,7 +137,29 @@ namespace vkd
 	}
 
 
+	RenderNoIndex::RenderNoIndex(const RenderNoIndex&)
+	{
+	}
 
+	void RenderNoIndex::draw(vk::CommandBuffer& cmd)
+	{
+		auto obj = object.lock();
+		auto pipeline = obj->get_comp_raw<PipelineComp>();
+		auto trans = obj->get_comp_raw<Transform>();
+		auto mesh_ptr = mesh.lock();
+
+		if (trans && pipeline && mesh_ptr)
+		{
+			const auto& mat = trans->get_matrix();
+			cmd.pushConstants(pipeline->get_pipeline()->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), (void*)&mat);
+			cmd.draw(mesh_ptr->index_count(),1,0,0);
+		}
+	}
+
+	std::shared_ptr<Component> RenderNoIndex::clone() const
+	{
+		return std::make_shared<RenderNoIndex>(*this);
+	}
 
 }
 
