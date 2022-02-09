@@ -86,7 +86,7 @@ namespace vkd
 			instanceBuf->copyToEx(physical_dev(), command_pool(), graphics_queue(), *instanceData);
 		}
 		bool on_init() override { return true; }
-		int64_t idx() override { return static_cast<long long>(CompIdx::MeshInstance); }
+		int64_t idx() const override { return static_cast<int64_t>(CompIdx::MeshInstance); }
 		void draw(vk::CommandBuffer& cmd) override
 		{
 			vk::DeviceSize offset = 0;
