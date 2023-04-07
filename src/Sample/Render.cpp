@@ -366,7 +366,7 @@ void SampleRender::createSwapChain(bool recreate)
 	auto presentMode = chooseSwapPresent(physicalDevice.getSurfacePresentModesKHR(surface));
 	auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 	auto extent = chooseSwapExtent(surfaceCapabilities);
-	const uint32_t temp[] = { queueFamilyIndices.graphicsFamily,queueFamilyIndices.presentFamily };
+	const uint32_t temp[] = { static_cast<uint32_t>(queueFamilyIndices.graphicsFamily),static_cast<uint32_t>(queueFamilyIndices.presentFamily) };
 	vk::ArrayProxyNoTemporaries<const uint32_t> familyIndicesArr = queueFamilyIndices.isSame() ? vk::ArrayProxyNoTemporaries<const uint32_t>() :
 		vk::ArrayProxyNoTemporaries(2, temp);
 	vk::SwapchainKHR oldSwapchain = {};

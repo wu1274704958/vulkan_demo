@@ -7,16 +7,17 @@
 
 namespace gld::vkd {
 
+    template<>
 	std::string CreateVkBufferTy::key_from_args(const std::string& name, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		return sundry::format_tup('#',name,(uint32_t)usage,(uint32_t)prop);
 	}
-
+    template<>
 	std::string CreateVkBufferTy::key_from_args(const std::string& name, vk::PhysicalDevice, vk::Device, vk::DeviceSize, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		return sundry::format_tup('#', name, (uint32_t)usage, (uint32_t)prop);
 	}
-
+    template<>
 	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		auto buff = std::make_shared<VkdBuffer>();
@@ -29,7 +30,7 @@ namespace gld::vkd {
 		}
 		return std::make_tuple(false, nullptr);
 	}
-
+    template<>
 	CreateVkBufferTy::RealRetTy CreateVkBufferTy::load(const std::string&, vk::PhysicalDevice phy, vk::Device dev, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags prop)
 	{
 		return load(phy,dev,size,usage,prop);
@@ -93,7 +94,7 @@ namespace gld::vkd {
 		if (image) device.destroyImage(image);
 		if (sample) device.destroySampler(sample);
 	}
-
+    template<>
 	LoadVkImageTy::RealRetTy LoadVkImageTy::load(const std::string& key, int flag, vk::PhysicalDevice phyDev, vk::Device dev, vk::CommandPool cmdPool, vk::Queue queue, std::function<void(vk::ImageCreateInfo&)> onCreateImage, std::function<void(vk::SamplerCreateInfo&)> onCreateSample)
 	{
 		std::shared_ptr<StbImage> img = DefResMgr::instance()->load<ResType::image>(key,flag);
@@ -157,11 +158,12 @@ namespace gld::vkd {
 
 		return std::make_tuple(true, res);
 	}
-
+    template<>
 	std::string LoadVkImageTy::key_from_args(const std::string& str, int f)
 	{
 		return sundry::format_tup('#',str,f);
 	}
+    template<>
 	std::string LoadVkImageTy::key_from_args(const std::string& str, int f, vk::PhysicalDevice, vk::Device, vk::CommandPool, vk::Queue, std::function<void(vk::ImageCreateInfo&)>,
 		std::function<void(vk::SamplerCreateInfo&)>)
 	{

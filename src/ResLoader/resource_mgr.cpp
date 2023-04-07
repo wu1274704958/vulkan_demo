@@ -66,15 +66,15 @@ namespace gld {
 		return res;
 	}
 
-
-gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::string& key)
-{
-	auto str = std::make_shared<string>();
-	stream->read([&str](const char * buf,size_t r) {
-		str->append(buf,r);
-	},1024 * 1024);
-	return std::make_tuple(true,str);
-}
+    template<>
+    gld::LoadText<>::RealRetTy gld::LoadText<>::load(FStream* stream, const std::string& key)
+    {
+        auto str = std::make_shared<string>();
+        stream->read([&str](const char * buf,size_t r) {
+            str->append(buf,r);
+        },1024 * 1024);
+        return std::make_tuple(true,str);
+    }
 
 
 gld::StbImage::~StbImage()
@@ -83,38 +83,38 @@ gld::StbImage::~StbImage()
 		stbi_image_free(data);
 }
 
-#ifndef PF_ANDROID
-namespace fs = std::filesystem;
-
-LoadImage<int>::RealRetTy LoadImage<int>::load(FStream* stream, const std::string& path, int req_comp)
-{
-	stream->close();
-	int width, height, nrComponents = 0;
-	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, req_comp);
-	if (data)
-	{
-		auto res = new gld::StbImage();
-		res->data = data;
-		res->width = width;
-		res->height = height;
-		res->channel = nrComponents;
-		return std::make_tuple(true,std::shared_ptr<gld::StbImage>(res));
-	}
-	else
-		return std::make_tuple(false,std::shared_ptr<gld::StbImage>());
+    #ifndef PF_ANDROID
+    namespace fs = std::filesystem;
+    template<>
+    LoadImage<int>::RealRetTy LoadImage<int>::load(FStream* stream, const std::string& path, int req_comp)
+    {
+        stream->close();
+        int width, height, nrComponents = 0;
+        unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, req_comp);
+        if (data)
+        {
+            auto res = new gld::StbImage();
+            res->data = data;
+            res->width = width;
+            res->height = height;
+            res->channel = nrComponents;
+            return std::make_tuple(true,std::shared_ptr<gld::StbImage>(res));
+        }
+        else
+            return std::make_tuple(false,std::shared_ptr<gld::StbImage>());
+    }
+    template<>
+    std::string LoadImage<int>::key_from_args(int req_comp)
+    {
+        return wws::to_string(req_comp);
+    }
 }
-
-std::string LoadImage<int>::key_from_args(int req_comp)
-{
-	return wws::to_string(req_comp);
-}
-}
-
+template<>
 std::string gld::LoadScene<uint32_t>::key_from_args(uint32_t flag)
 {
 	return wws::to_string(flag);
 }
-
+template<>
 gld::LoadScene<uint32_t>::RealRetTy gld::LoadScene<uint32_t>::load(FStream* stream, const std::string& path, uint32_t flag)
 {
 	stream->close();

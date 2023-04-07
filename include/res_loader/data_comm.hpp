@@ -71,8 +71,8 @@ namespace gld{
 
     template<DataType ty,template<typename ...As> class T,typename ... ARGS>
 	requires requires (ARGS... args) {
-		T<ARGS...>::RetTy;
-		T<ARGS...>::ArgsTy;
+		typename T<ARGS...>::RetTy;
+		typename T<ARGS...>::ArgsTy;
 		T<ARGS...>::load(args...);
 		T<ARGS...>::key_from_args(args...);
         requires HasRealRetTy<T<ARGS...>, typename T<ARGS...>::RetTy>;

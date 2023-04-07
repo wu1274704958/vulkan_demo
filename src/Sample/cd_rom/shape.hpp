@@ -26,7 +26,7 @@ namespace shape {
 		int count;
 		int current = 0;
 	private:
-		using R = ForwardIter<Item>::R;
+		using R = typename ForwardIter<Item>::R;
 		std::function<R (int, int)> apply;
 	public:
 		ForwardIter(int count, std::function<R (int, int)> callback)

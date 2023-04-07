@@ -65,7 +65,7 @@ namespace gld{
 
     template<typename TUP,typename Stream,typename PU,typename ...Plugs>
         requires requires{ 
-            PU::CxtTy;
+            typename PU::CxtTy;
             PU::perfect(std::declval<TUP&>(),std::declval<const std::string&>());
 			PU::path_to_key(std::declval<TUP&>(), std::declval<const std::string&>());
             requires std::derived_from<Stream,FStream>;
@@ -306,7 +306,7 @@ namespace gld{
 
 namespace gld
 {
-	typedef ResourceMgr<ResMgrCxtTy, DefStream, PerfectUri, ResLoadPlugTy<ResType::text, LoadText>,
+	typedef typename ResourceMgr<ResMgrCxtTy, DefStream, PerfectUri, ResLoadPlugTy<ResType::text, LoadText>,
 		ResLoadPlugTy<ResType::image, LoadImage, int>,
 		ResLoadPlugTy<ResType::model, LoadScene, uint32_t>,
 		ResLoadPlugTy<ResType::spirv_with_meta, vkd::LoadSpirvWithMetaData, glslang::EShTargetClientVersion, std::vector<uint32_t>>,

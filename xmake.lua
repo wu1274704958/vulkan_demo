@@ -11,6 +11,7 @@ end)
 
 if is_plat("windows") then
     add_defines("PF_WIN32")
+    add_cxflags("/EHsc")
 end
 if is_plat("Android") then
     add_defines("PF_ANDROID")

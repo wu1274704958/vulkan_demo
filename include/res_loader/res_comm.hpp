@@ -50,8 +50,8 @@ namespace gld
 
 	template<ResType ty, template<typename ...As> class T, typename ... ARGS>
 	requires requires (ARGS... args) {
-		T<ARGS...>::RetTy;
-		T<ARGS...>::ArgsTy;
+		typename T<ARGS...>::RetTy;
+		typename T<ARGS...>::ArgsTy;
 		T<ARGS...>::load(std::declval<FStream*>(),std::declval<std::string&>(),std::forward<ARGS>(args)...);
 		//T<ARGS...>::key_from_args(args...);
 		requires HasRealRetTy<T<ARGS...>, typename T<ARGS...>::RetTy>;
