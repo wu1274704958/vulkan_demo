@@ -77,7 +77,7 @@ namespace gld
             if constexpr (Rt == Fir::res_type)
             {
                 using T = typename Fir::type;
-                return std::declval<T>();
+                return T{};
             }
             else
             {
@@ -86,7 +86,7 @@ namespace gld
                 {
                     static_assert("Error Type!!!");
                 }
-                return std::declval<T>();
+                return T{};
             }
         }
         using type = typename std::remove_reference_t<decltype(func())>;

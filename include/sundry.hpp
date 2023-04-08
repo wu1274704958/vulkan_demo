@@ -9,6 +9,7 @@
 #include <serialization.hpp>
 #include <random>
 #include <glm/gtc/random.hpp>
+#include <functional>
 
 #ifdef PF_ANDROID
 #include <EGL/egl.h>

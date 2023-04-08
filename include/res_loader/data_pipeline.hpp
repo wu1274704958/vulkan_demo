@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.hpp>
 #include <unordered_set>
 #include <optional>
+#include <functional>
 
 namespace gld::vkd {
 

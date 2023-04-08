@@ -158,7 +158,7 @@ namespace gld::vkd {
 
 		data->setLayout = descriptorSetLayout;
 		data->pipelineLayout = pipelineLayout;
-		data->pipeline = pipeline;
+		data->pipeline = pipeline.value;
 		data->shaderModules = std::move(shaderModules);
 		auto[pool,poolInfo,poolSize] = createDescriptorPool<N>(dev,shaders,maxPoolSize * descriptorSetLayout.size());
 		data->descriptorPool.push_back(pool);

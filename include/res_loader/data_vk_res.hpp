@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vulkan/vulkan.hpp>
+#include <functional>
 
 namespace gld::vkd {
 

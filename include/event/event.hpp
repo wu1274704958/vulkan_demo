@@ -74,11 +74,13 @@ namespace vkd::evt{
 		{
 			if constexpr (ET == F::Et)
 			{
-				return std::declval<typename F::Ty>();
+				using  T = typename F::Ty;
+				return T{};
 			}
 			else
 			{
-				return std::declval<typename MapEventTy<ET,S...>::Ty>();
+				using T = typename MapEventTy<ET,S...>::Ty;
+				return T{};
 			}
 		}
 		using Ty = typename std::remove_reference_t<decltype(func())>;
